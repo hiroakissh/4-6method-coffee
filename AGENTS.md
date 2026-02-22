@@ -1,4 +1,4 @@
-# AGENT.md
+# AGENTS.md
 
 このリポジトリは **SwiftUI + Observation Framework** を使った iOS アプリを想定しています。
 
