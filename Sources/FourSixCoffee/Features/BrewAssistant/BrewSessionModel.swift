@@ -54,6 +54,11 @@ final class BrewSessionModel {
         currentStepIndex = 0
     }
 
+    func resetTimer() {
+        pause()
+        resetRuntime()
+    }
+
     func saveLogIfPossible(plan: BrewPlan, store: AppStore) {
         let ratings = TasteRatings(
             sweetness: sweetness,

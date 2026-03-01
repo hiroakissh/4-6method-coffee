@@ -87,7 +87,7 @@ struct BrewAssistantView: View {
             .buttonStyle(.borderedProminent)
 
             Button("リセット") {
-                session.resetRuntime()
+                session.resetTimer()
             }
             .buttonStyle(.bordered)
         }

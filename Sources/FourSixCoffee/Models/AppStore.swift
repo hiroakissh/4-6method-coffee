@@ -27,9 +27,18 @@ final class AppStore {
         preferredUnit: String = "g"
     ) {
         self.beans = beans
-        self.selectedBeanID = selectedBeanID ?? beans.first?.id
-        self.currentInput = currentInput
-        self.currentPlan = BrewPlanner.makePlan(from: currentInput)
+        let resolvedSelectedBeanID = selectedBeanID ?? beans.first?.id
+        self.selectedBeanID = resolvedSelectedBeanID
+
+        var resolvedInput = currentInput
+        if let resolvedSelectedBeanID,
+           let selectedBean = beans.first(where: { $0.id == resolvedSelectedBeanID }) {
+            // Keep initial calculation aligned with the initially selected bean.
+            resolvedInput.roastLevel = selectedBean.roastLevel
+        }
+
+        self.currentInput = resolvedInput
+        self.currentPlan = BrewPlanner.makePlan(from: resolvedInput)
         self.brewLogs = brewLogs
         self.enableStepHaptics = enableStepHaptics
         self.preferredUnit = preferredUnit
