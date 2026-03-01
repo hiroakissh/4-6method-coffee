@@ -32,5 +32,5 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
-        .environment(AppStore())
+        .environment(AppStore.preview)
 }

@@ -34,9 +34,13 @@ struct BeansView: View {
                     }
                     .buttonStyle(.plain)
                 }
+                .onDelete(perform: store.deleteBeans)
             }
             .navigationTitle("豆")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    EditButton()
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingAddSheet = true
@@ -100,5 +104,5 @@ private struct AddBeanSheet: View {
 
 #Preview {
     BeansView()
-        .environment(AppStore())
+        .environment(AppStore.preview)
 }

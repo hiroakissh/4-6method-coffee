@@ -192,5 +192,5 @@ struct BrewAssistantView: View {
 
 #Preview {
     BrewAssistantView()
-        .environment(AppStore())
+        .environment(AppStore.preview)
 }

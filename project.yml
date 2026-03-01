@@ -56,7 +56,22 @@ targets:
         build:
           targets:
             FourSixCoffee: all
+        test:
+          config: Debug
+          targets:
+            - FourSixCoffeeTests
         run:
           config: Debug
         archive:
           config: Release
+  FourSixCoffeeTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Tests/FourSixCoffeeTests
+    dependencies:
+      - target: FourSixCoffee
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES

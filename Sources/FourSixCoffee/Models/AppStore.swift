@@ -1,8 +1,14 @@
 import Foundation
 import Observation
 
+@MainActor
 @Observable
 final class AppStore {
+    @ObservationIgnored
+    private let beanUseCase: BeanUseCase
+    @ObservationIgnored
+    private let brewLogUseCase: BrewLogUseCase
+
     var selectedTab: AppTab = .planner
 
     var beans: [Bean]
@@ -18,31 +24,34 @@ final class AppStore {
     var enableStepHaptics: Bool
     var preferredUnit: String
 
+    var lastErrorMessage: String?
+
     init(
-        beans: [Bean] = SampleData.beans,
-        selectedBeanID: UUID? = nil,
-        currentInput: BrewInput = .default,
-        brewLogs: [BrewLog] = SampleData.brewLogs,
+        dependencies: AppDependencies = .live(),
+        seedSampleDataIfEmpty: Bool = false,
         enableStepHaptics: Bool = true,
         preferredUnit: String = "g"
     ) {
-        self.beans = beans
-        let resolvedSelectedBeanID = selectedBeanID ?? beans.first?.id
-        self.selectedBeanID = resolvedSelectedBeanID
+        self.beanUseCase = dependencies.beanUseCase
+        self.brewLogUseCase = dependencies.brewLogUseCase
 
-        var resolvedInput = currentInput
-        if let resolvedSelectedBeanID,
-           let selectedBean = beans.first(where: { $0.id == resolvedSelectedBeanID }) {
-            // Keep initial calculation aligned with the initially selected bean.
-            resolvedInput.roastLevel = selectedBean.roastLevel
-        }
-
-        self.currentInput = resolvedInput
-        self.currentPlan = BrewPlanner.makePlan(from: resolvedInput)
-        self.brewLogs = brewLogs
+        self.beans = []
+        self.selectedBeanID = nil
+        self.currentInput = .default
+        self.currentPlan = BrewPlanner.makePlan(from: .default)
+        self.brewLogs = []
         self.enableStepHaptics = enableStepHaptics
         self.preferredUnit = preferredUnit
-        recalculatePlan()
+        self.lastErrorMessage = nil
+
+        loadInitialState(seedSampleDataIfEmpty: seedSampleDataIfEmpty)
+    }
+
+    static var preview: AppStore {
+        AppStore(
+            dependencies: .preview(),
+            seedSampleDataIfEmpty: true
+        )
     }
 
     var selectedBean: Bean? {
@@ -76,16 +85,21 @@ final class AppStore {
     }
 
     func addBean(name: String, roaster: String, origin: String, process: String, roastLevel: RoastLevel) {
-        let bean = Bean(
-            name: name,
-            roaster: roaster,
-            origin: origin,
-            process: process,
-            roastLevel: roastLevel
-        )
-        beans.insert(bean, at: 0)
-        selectedBeanID = bean.id
-        currentInput.roastLevel = bean.roastLevel
+        do {
+            let bean = try beanUseCase.createBean(
+                name: name,
+                roaster: roaster,
+                origin: origin,
+                process: process,
+                roastLevel: roastLevel
+            )
+            beans.insert(bean, at: 0)
+            selectedBeanID = bean.id
+            currentInput.roastLevel = bean.roastLevel
+            lastErrorMessage = nil
+        } catch {
+            store(error: error)
+        }
     }
 
     func addBrewLog(
@@ -93,26 +107,111 @@ final class AppStore {
         ratings: TasteRatings,
         actualBrewSeconds: Int
     ) {
-        let log = BrewLog(
-            bean: selectedBean,
-            input: currentInput,
-            plan: currentPlan,
-            ratings: ratings,
-            memo: memo.trimmingCharacters(in: .whitespacesAndNewlines),
-            actualBrewSeconds: actualBrewSeconds
-        )
-        brewLogs.insert(log, at: 0)
+        do {
+            let log = try brewLogUseCase.createLog(
+                bean: selectedBean,
+                input: currentInput,
+                plan: currentPlan,
+                ratings: ratings,
+                memo: memo,
+                actualBrewSeconds: actualBrewSeconds
+            )
+            brewLogs.insert(log, at: 0)
+            lastErrorMessage = nil
+        } catch {
+            store(error: error)
+        }
     }
 
     func apply(log: BrewLog) {
         currentInput = log.input
-        if let beanID = log.bean?.id, beans.contains(where: { $0.id == beanID }) {
+        if let beanID = log.bean?.id,
+           beans.contains(where: { $0.id == beanID }) {
             selectedBeanID = beanID
+        } else {
+            selectedBeanID = nil
         }
         selectedTab = .planner
     }
 
     func deleteLogs(at offsets: IndexSet) {
-        brewLogs.remove(atOffsets: offsets)
+        let ids = offsets.map { brewLogs[$0].id }
+
+        do {
+            try brewLogUseCase.deleteLogs(ids: ids)
+            brewLogs.remove(atOffsets: offsets)
+            lastErrorMessage = nil
+        } catch {
+            store(error: error)
+        }
+    }
+
+    func deleteBeans(at offsets: IndexSet) {
+        let ids = offsets.map { beans[$0].id }
+
+        do {
+            try beanUseCase.deleteBeans(ids: ids)
+            beans.remove(atOffsets: offsets)
+
+            if let selectedBeanID,
+               !beans.contains(where: { $0.id == selectedBeanID }) {
+                self.selectedBean = beans.first
+            }
+
+            for index in brewLogs.indices {
+                if let beanID = brewLogs[index].bean?.id,
+                   ids.contains(beanID) {
+                    brewLogs[index].bean = nil
+                    try brewLogUseCase.save(log: brewLogs[index])
+                }
+            }
+
+            lastErrorMessage = nil
+        } catch {
+            store(error: error)
+        }
+    }
+
+    private func loadInitialState(seedSampleDataIfEmpty: Bool) {
+        do {
+            beans = try beanUseCase.fetchBeans()
+            brewLogs = try brewLogUseCase.fetchBrewLogs()
+
+            if seedSampleDataIfEmpty,
+               beans.isEmpty,
+               brewLogs.isEmpty {
+                try seedSampleData()
+                beans = try beanUseCase.fetchBeans()
+                brewLogs = try brewLogUseCase.fetchBrewLogs()
+            }
+
+            selectedBeanID = beans.first?.id
+            if let selectedBean {
+                currentInput.roastLevel = selectedBean.roastLevel
+            }
+            recalculatePlan()
+            lastErrorMessage = nil
+        } catch {
+            store(error: error)
+        }
+    }
+
+    private func seedSampleData() throws {
+        for bean in SampleData.beans {
+            try beanUseCase.save(bean: bean)
+        }
+
+        for log in SampleData.brewLogs {
+            try brewLogUseCase.save(log: log)
+        }
+    }
+
+    private func store(error: Error) {
+        if let localized = error as? LocalizedError,
+           let description = localized.errorDescription {
+            lastErrorMessage = description
+            return
+        }
+        lastErrorMessage = error.localizedDescription
     }
 }

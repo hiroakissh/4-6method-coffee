@@ -80,5 +80,5 @@ struct BrewLogsView: View {
 
 #Preview {
     BrewLogsView()
-        .environment(AppStore())
+        .environment(AppStore.preview)
 }
