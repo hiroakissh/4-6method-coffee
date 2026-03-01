@@ -30,5 +30,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-        .environment(AppStore())
+        .environment(AppStore.preview)
 }

@@ -1,47 +1,74 @@
-# Architecture (MVP)
+# Architecture
 
 ## Target
 - iOS app using SwiftUI + Observation Framework (`@Observable`)
 - Xcode 26.3+
+- Local persistence with SwiftData
 
-## Domain models
+## Core domain models
+- **Bean**
+  - 豆メタデータ（名前 / ロースター / 産地 / プロセス / 焙煎度 / メモ）
 - **BrewInput**
   - `coffeeDose`, `tasteProfile`, `roastLevel`, `grindSize`
-- **BrewPlan**
-  - `totalWater`, `recommendedTemperature`, `steps(1...6)`
-- **PourStep**
-  - `index`, `amountGrams`, `startSecond`, `waitSeconds`, `phase`
+- **BrewPlan / PourStep**
+  - 6投分の注湯量、開始時刻、待機秒数、推奨湯温、総湯量
 - **BrewLog**
-  - `date`, `input`, `plan`, `memo`, `ratings`
+  - `date`, `bean`, `input`, `plan`, `ratings`, `memo`, `actualBrewSeconds`
 
-## Layers
+## Layers (Clean Architecture oriented)
 ```text
+App/
+  FourSixCoffeeApp.swift
+  AppDependencies.swift
 Features/
-  Home/              // 今日の推奨プランと直近ログ
-  BrewAssistant/     // 6投タイマーと進行ガイド
-  BrewLogs/          // 履歴一覧と再利用
-  Beans/             // 豆管理(最小)
-  Settings/          // アプリ設定(最小)
-Models/
-  AppStore.swift     // @Observable, app-wide state
-  BrewModels.swift   // Domain model definitions
-  BrewPlanner.swift  // Pure calculation logic
+  ... SwiftUI views + @Observable feature models
+Application/
+  AppStore.swift
+  UseCases/
+    BeanUseCase.swift
+    BrewLogUseCase.swift
+Domain/
+  Models/
+    BrewModels.swift
+  Repositories/
+    BeanRepository.swift
+    BrewLogRepository.swift
+  Services/
+    BrewPlanner.swift
+Infrastructure/
+  Persistence/
+    SwiftData/
+      Entities/
+        BeanEntity.swift
+        BrewLogEntity.swift
+      Repositories/
+        SwiftDataBeanRepository.swift
+        SwiftDataBrewLogRepository.swift
+      PersistenceStack.swift
 Preview/
   SampleData.swift
 ```
 
-## State strategy
-- グローバル状態は `AppStore` で一元管理し `@Observable` で配信する。
-- 画面は `@Environment(AppStore.self)` で状態を取得し、描画を宣言的に保つ。
-- タイマー進行など画面ローカルな可変状態は Feature 内モデルで保持する。
+## Dependency rules
+1. `Features` は `Application` の公開インターフェースを使う。
+2. `Application` は `Domain` の protocol（Repository）に依存する。
+3. `Infrastructure` が `Domain` protocol を実装する。
+4. `Domain` は SwiftUI / SwiftData へ依存しない。
 
 ## Data flow
-1. Planner入力を `AppStore.currentInput` に反映。
-2. `BrewPlanner` が `BrewPlan` を算出し `AppStore.currentPlan` に保持。
-3. Assistant が `currentPlan.steps` を使って6投タイマーを進行。
-4. 抽出終了後、メモと評価を `BrewLog` として保存。
-5. History から任意ログを選択すると `currentInput` を復元し再計算する。
+1. View から Store（`@Observable`）にイベントを渡す。
+2. Store が UseCase を呼び、入力検証とユースケース実行を行う。
+3. UseCase が Repository protocol 経由で読み書きする。
+4. SwiftData Repository が Entity と Domain model を相互変換する。
+5. Store が state を更新し、View が再描画される。
 
-## Notes
-- 4-6計算ロジックは副作用なしの関数にしてUIから分離する。
-- 補正係数（味方向/焙煎度/挽き目）は `BrewPlanner` に集約し、変更点を追跡しやすくする。
+## Persistence policy
+- Bean と BrewLog を SwiftData に保存する。
+- `BrewLog` は `beanID` を保持し、豆削除時はログを残して参照のみ `nil` 扱いにする。
+- `BrewLog` の複合構造（`BrewInput`, `BrewPlan`, `TasteRatings`）は JSON エンコードで保存する。
+
+## Testing policy
+- Domain service（`BrewPlanner`）は純粋関数としてテストする。
+- UseCase は in-memory repository で分岐をテストする。
+- SwiftData repository は in-memory `ModelContainer` で永続化挙動をテストする。
+- 目標は高カバレッジ（90%）だが、実効性を損なう過剰なテストは避ける。
