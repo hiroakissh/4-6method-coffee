@@ -1,43 +1,47 @@
-# Architecture (Minimal)
+# Architecture (MVP)
 
 ## Target
-- iOS app using SwiftUI + Observation Framework
+- iOS app using SwiftUI + Observation Framework (`@Observable`)
 - Xcode 26.3+
 
-## Core domains
-- **RecipeInput**: 豆量(g), 味方向(甘め/普通/薄め), 焙煎度(浅/中/深)
-- **PourPlan**: 1投目〜6投目の注湯量(g)と時間目安
-- **BrewRecord**: 実測値とテイスティングメモ
+## Domain models
+- **BrewInput**
+  - `coffeeDose`, `tasteProfile`, `roastLevel`, `grindSize`
+- **BrewPlan**
+  - `totalWater`, `recommendedTemperature`, `steps(1...6)`
+- **PourStep**
+  - `index`, `amountGrams`, `startSecond`, `waitSeconds`, `phase`
+- **BrewLog**
+  - `date`, `input`, `plan`, `memo`, `ratings`
 
-## Proposed minimal structure
+## Layers
 ```text
-App/
-  AppEntry.swift
-  RootView.swift
 Features/
-  Calculator/
-    CalculatorView.swift
-    CalculatorModel.swift      // @Observable
-  Record/
-    RecordView.swift
-    RecordModel.swift          // @Observable
-  History/
-    HistoryView.swift
-    HistoryModel.swift         // @Observable
-Domain/
-  FourSixCalculator.swift      // 4-6メソッド算出ロジック
-  Models.swift                 // RecipeInput / PourPlan / BrewRecord
-Shared/
-  Components/
-  Extensions/
+  Home/              // 今日の推奨プランと直近ログ
+  BrewAssistant/     // 6投タイマーと進行ガイド
+  BrewLogs/          // 履歴一覧と再利用
+  Beans/             // 豆管理(最小)
+  Settings/          // アプリ設定(最小)
+Models/
+  AppStore.swift     // @Observable, app-wide state
+  BrewModels.swift   // Domain model definitions
+  BrewPlanner.swift  // Pure calculation logic
+Preview/
+  SampleData.swift
 ```
 
+## State strategy
+- グローバル状態は `AppStore` で一元管理し `@Observable` で配信する。
+- 画面は `@Environment(AppStore.self)` で状態を取得し、描画を宣言的に保つ。
+- タイマー進行など画面ローカルな可変状態は Feature 内モデルで保持する。
+
 ## Data flow
-1. CalculatorView が入力値を CalculatorModel に渡す。
-2. CalculatorModel が FourSixCalculator を呼び、PourPlan を生成。
-3. RecordView で実測値/メモを BrewRecord として保存。
-4. HistoryView で過去レシピを参照し、再計算に再利用。
+1. Planner入力を `AppStore.currentInput` に反映。
+2. `BrewPlanner` が `BrewPlan` を算出し `AppStore.currentPlan` に保持。
+3. Assistant が `currentPlan.steps` を使って6投タイマーを進行。
+4. 抽出終了後、メモと評価を `BrewLog` として保存。
+5. History から任意ログを選択すると `currentInput` を復元し再計算する。
 
 ## Notes
-- 算出ロジックは UI から分離し、Domain 層でテスト可能にする。
-- 味方向・焙煎度の補正係数は将来拡張を見越して定数管理する。
+- 4-6計算ロジックは副作用なしの関数にしてUIから分離する。
+- 補正係数（味方向/焙煎度/挽き目）は `BrewPlanner` に集約し、変更点を追跡しやすくする。
