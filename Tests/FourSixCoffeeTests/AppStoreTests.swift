@@ -56,6 +56,33 @@ final class AppStoreTests: XCTestCase {
         XCTAssertNil(reloaded.brewLogs[0].bean)
     }
 
+    func testDeleteSelectedBeanUpdatesRoastLevelToRemainingBean() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+
+        store.addBean(
+            name: "Light Bean",
+            roaster: "R",
+            origin: "O",
+            process: "P",
+            roastLevel: .light
+        )
+        store.addBean(
+            name: "Dark Bean",
+            roaster: "R",
+            origin: "O",
+            process: "P",
+            roastLevel: .dark
+        )
+
+        XCTAssertEqual(store.currentInput.roastLevel, .dark)
+        store.deleteBeans(at: IndexSet(integer: 0))
+
+        XCTAssertEqual(store.beans.count, 1)
+        XCTAssertEqual(store.selectedBean?.name, "Light Bean")
+        XCTAssertEqual(store.currentInput.roastLevel, .light)
+    }
+
     func testInputUpdateHelpersAndSelectedBeanSetter() {
         let dependencies = makeInMemoryDependencies()
         let store = AppStore(dependencies: dependencies)

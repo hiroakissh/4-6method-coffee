@@ -155,7 +155,7 @@ final class AppStore {
 
             if let selectedBeanID,
                !beans.contains(where: { $0.id == selectedBeanID }) {
-                self.selectedBeanID = beans.first?.id
+                self.selectedBean = beans.first
             }
 
             for index in brewLogs.indices {
