@@ -1,0 +1,408 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3C7D9FB08A79E639DBF058BA /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A6CCF050417A12E47A8753A /* AppStore.swift */; };
+		5905477BD2809DC092E9A61C /* BrewSessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44C8E86B7C15D777D790F919 /* BrewSessionModel.swift */; };
+		6A8E6BDF11396A23F0ADC47F /* BrewPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4A1F41E3B717BD1D95ECF0 /* BrewPlanner.swift */; };
+		7041FBFEC87CAA20AE69AF76 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206EB8AD08062974E927C867 /* HomeView.swift */; };
+		8153AEBCC168482BD5578F2D /* BrewModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BB5340479D43A70B3915FE /* BrewModels.swift */; };
+		97282535B9435CF346488501 /* BrewLogsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39706010236FC957564111EE /* BrewLogsView.swift */; };
+		BB81760E5226084661A6C872 /* BeansView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEEF6AFC5A982AE323662ADA /* BeansView.swift */; };
+		C62773AEC5C02E8D8969FD4F /* FourSixCoffeeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A351F116823D94C84DF92B /* FourSixCoffeeApp.swift */; };
+		CD1EA62C9554EADAAA756FD6 /* BrewAssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A032B286F9767A1531D5FED2 /* BrewAssistantView.swift */; };
+		E152A1EAAA86BEEE994C506F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134C29672E1D64C982C98011 /* MainTabView.swift */; };
+		E2D880844F9DE16D1432E92B /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8108DC79E368692E9A3FDE /* SampleData.swift */; };
+		E61ED182B7FCCA94024C3D42 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D0A7FAAEA0A7B513F56D726 /* SettingsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0E8108DC79E368692E9A3FDE /* SampleData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleData.swift; sourceTree = "<group>"; };
+		134C29672E1D64C982C98011 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		1C4A1F41E3B717BD1D95ECF0 /* BrewPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewPlanner.swift; sourceTree = "<group>"; };
+		206EB8AD08062974E927C867 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		25BB5340479D43A70B3915FE /* BrewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewModels.swift; sourceTree = "<group>"; };
+		39706010236FC957564111EE /* BrewLogsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewLogsView.swift; sourceTree = "<group>"; };
+		44C8E86B7C15D777D790F919 /* BrewSessionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionModel.swift; sourceTree = "<group>"; };
+		49A351F116823D94C84DF92B /* FourSixCoffeeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FourSixCoffeeApp.swift; sourceTree = "<group>"; };
+		6A6CCF050417A12E47A8753A /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		6D0A7FAAEA0A7B513F56D726 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A032B286F9767A1531D5FED2 /* BrewAssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewAssistantView.swift; sourceTree = "<group>"; };
+		C5DF3D03AEB070C98DC5FEF4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CA47F9EDB93CA791F0C0203E /* FourSixCoffee.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FourSixCoffee.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEEF6AFC5A982AE323662ADA /* BeansView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeansView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0000D30E69E8095D2587352B /* BrewAssistant */ = {
+			isa = PBXGroup;
+			children = (
+				A032B286F9767A1531D5FED2 /* BrewAssistantView.swift */,
+				44C8E86B7C15D777D790F919 /* BrewSessionModel.swift */,
+			);
+			path = BrewAssistant;
+			sourceTree = "<group>";
+		};
+		1452F124E59936187A03581C /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				206EB8AD08062974E927C867 /* HomeView.swift */,
+				134C29672E1D64C982C98011 /* MainTabView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		14CDCF4CF3121D47B550EA1F /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				6A6CCF050417A12E47A8753A /* AppStore.swift */,
+				25BB5340479D43A70B3915FE /* BrewModels.swift */,
+				1C4A1F41E3B717BD1D95ECF0 /* BrewPlanner.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1D080FC233602158E8359C3D = {
+			isa = PBXGroup;
+			children = (
+				F22E7BFAB3D0C1789692D22F /* Sources */,
+				C9B6C2CC07316789FBA5FB98 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		33D60D90818A6C0D591E84C0 /* Beans */ = {
+			isa = PBXGroup;
+			children = (
+				CEEF6AFC5A982AE323662ADA /* BeansView.swift */,
+			);
+			path = Beans;
+			sourceTree = "<group>";
+		};
+		81A106A1867B93D482492390 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				33D60D90818A6C0D591E84C0 /* Beans */,
+				0000D30E69E8095D2587352B /* BrewAssistant */,
+				AAFD6FC46E86A4F30924214F /* BrewLogs */,
+				1452F124E59936187A03581C /* Home */,
+				D0D0E5ECA5CF5EFF2B67805A /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		AAFD6FC46E86A4F30924214F /* BrewLogs */ = {
+			isa = PBXGroup;
+			children = (
+				39706010236FC957564111EE /* BrewLogsView.swift */,
+			);
+			path = BrewLogs;
+			sourceTree = "<group>";
+		};
+		C09A0B2BCE27544E97A67439 /* Preview */ = {
+			isa = PBXGroup;
+			children = (
+				0E8108DC79E368692E9A3FDE /* SampleData.swift */,
+			);
+			path = Preview;
+			sourceTree = "<group>";
+		};
+		C9B6C2CC07316789FBA5FB98 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CA47F9EDB93CA791F0C0203E /* FourSixCoffee.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D0D0E5ECA5CF5EFF2B67805A /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				6D0A7FAAEA0A7B513F56D726 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		E96E63D93F2A13EE481A4258 /* FourSixCoffee */ = {
+			isa = PBXGroup;
+			children = (
+				49A351F116823D94C84DF92B /* FourSixCoffeeApp.swift */,
+				C5DF3D03AEB070C98DC5FEF4 /* Info.plist */,
+				81A106A1867B93D482492390 /* Features */,
+				14CDCF4CF3121D47B550EA1F /* Models */,
+				C09A0B2BCE27544E97A67439 /* Preview */,
+			);
+			path = FourSixCoffee;
+			sourceTree = "<group>";
+		};
+		F22E7BFAB3D0C1789692D22F /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				E96E63D93F2A13EE481A4258 /* FourSixCoffee */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2C31A34DB9B5C34D7AE9FEE0 /* FourSixCoffee */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D27AD5506D60524B7A5925C /* Build configuration list for PBXNativeTarget "FourSixCoffee" */;
+			buildPhases = (
+				9C8AB22D0CB7723AD60B2C54 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FourSixCoffee;
+			productName = FourSixCoffee;
+			productReference = CA47F9EDB93CA791F0C0203E /* FourSixCoffee.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2B15AF3C007C13F5C6DFD271 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+			};
+			buildConfigurationList = 800943CEBD91884A7EFD70E4 /* Build configuration list for PBXProject "FourSixCoffee" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 1D080FC233602158E8359C3D;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2C31A34DB9B5C34D7AE9FEE0 /* FourSixCoffee */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9C8AB22D0CB7723AD60B2C54 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C7D9FB08A79E639DBF058BA /* AppStore.swift in Sources */,
+				BB81760E5226084661A6C872 /* BeansView.swift in Sources */,
+				CD1EA62C9554EADAAA756FD6 /* BrewAssistantView.swift in Sources */,
+				97282535B9435CF346488501 /* BrewLogsView.swift in Sources */,
+				8153AEBCC168482BD5578F2D /* BrewModels.swift in Sources */,
+				6A8E6BDF11396A23F0ADC47F /* BrewPlanner.swift in Sources */,
+				5905477BD2809DC092E9A61C /* BrewSessionModel.swift in Sources */,
+				C62773AEC5C02E8D8969FD4F /* FourSixCoffeeApp.swift in Sources */,
+				7041FBFEC87CAA20AE69AF76 /* HomeView.swift in Sources */,
+				E152A1EAAA86BEEE994C506F /* MainTabView.swift in Sources */,
+				E2D880844F9DE16D1432E92B /* SampleData.swift in Sources */,
+				E61ED182B7FCCA94024C3D42 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4D7CD892ECE1050E7C4EF3F9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = X5LBWH4CYQ;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = Sources/FourSixCoffee/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hiroaki.foursixcoffee;
+				PRODUCT_NAME = FourSixCoffee;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		67FC26683A35F6785325B9D8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		D60905436279BED49B03C2E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F2FE88479416EEB836D47CE4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = X5LBWH4CYQ;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = Sources/FourSixCoffee/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.hiroaki.foursixcoffee;
+				PRODUCT_NAME = FourSixCoffee;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2D27AD5506D60524B7A5925C /* Build configuration list for PBXNativeTarget "FourSixCoffee" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F2FE88479416EEB836D47CE4 /* Debug */,
+				4D7CD892ECE1050E7C4EF3F9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		800943CEBD91884A7EFD70E4 /* Build configuration list for PBXProject "FourSixCoffee" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D60905436279BED49B03C2E3 /* Debug */,
+				67FC26683A35F6785325B9D8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2B15AF3C007C13F5C6DFD271 /* Project object */;
+}

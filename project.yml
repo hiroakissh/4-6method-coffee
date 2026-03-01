@@ -1,0 +1,62 @@
+name: FourSixCoffee
+options:
+  createIntermediateGroups: true
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    IPHONEOS_DEPLOYMENT_TARGET: 26.0
+    SWIFT_VERSION: 6.0
+    TARGETED_DEVICE_FAMILY: 1
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 1
+  configs:
+    Debug:
+      GCC_PREPROCESSOR_DEFINITIONS: $(inherited) DEBUG=1
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: -O
+      SWIFT_COMPILATION_MODE: wholemodule
+targets:
+  FourSixCoffee:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Sources/FourSixCoffee
+    resources:
+      - path: Resources/Assets.xcassets
+    info:
+      path: Sources/FourSixCoffee/Info.plist
+      properties:
+        CFBundleDisplayName: 4:6 Coffee
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+        UIRequiredDeviceCapabilities: [arm64]
+        NSCameraUsageDescription: カメラを使用して抽出や豆の写真を追加します。
+        NSPhotoLibraryAddUsageDescription: 写真を保存するためにフォトライブラリを使用します。
+        NSPhotoLibraryUsageDescription: 写真を読み込むためにフォトライブラリへアクセスします。
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hiroaki.foursixcoffee
+        PRODUCT_NAME: FourSixCoffee
+        INFOPLIST_FILE: Sources/FourSixCoffee/Info.plist
+        ENABLE_PREVIEWS: YES
+    schemes:
+      - name: FourSixCoffee
+        build:
+          targets:
+            FourSixCoffee: all
+        run:
+          config: Debug
+        archive:
+          config: Release
