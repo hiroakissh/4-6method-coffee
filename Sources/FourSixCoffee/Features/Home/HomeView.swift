@@ -95,7 +95,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(bean.name)
                         .font(.title3.bold())
-                    Text("\(bean.roaster) · \(bean.origin) · \(bean.process)")
+                    Text("\(bean.shopName) · \(bean.origin) · \(bean.process)")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                     Text("焙煎: \(bean.roastLevel.displayName)")

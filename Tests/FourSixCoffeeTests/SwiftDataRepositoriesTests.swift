@@ -10,7 +10,8 @@ final class SwiftDataRepositoriesTests: XCTestCase {
 
         let bean = Bean(
             name: "Kenya",
-            roaster: "Roaster",
+            shopName: "Roaster",
+            purchasedAt: .now,
             origin: "Kenya",
             process: "Washed",
             roastLevel: .light,
@@ -44,7 +45,8 @@ final class SwiftDataRepositoriesTests: XCTestCase {
 
         let bean = Bean(
             name: "Ethiopia",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "Guji",
             process: "Natural",
             roastLevel: .light

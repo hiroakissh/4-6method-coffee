@@ -10,7 +10,8 @@ final class AppStoreTests: XCTestCase {
 
         firstStore.addBean(
             name: "Colombia",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "Huila",
             process: "Washed",
             roastLevel: .medium
@@ -37,7 +38,8 @@ final class AppStoreTests: XCTestCase {
 
         store.addBean(
             name: "Brazil",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "Cerrado",
             process: "Natural",
             roastLevel: .dark
@@ -62,14 +64,16 @@ final class AppStoreTests: XCTestCase {
 
         store.addBean(
             name: "Light Bean",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .light
         )
         store.addBean(
             name: "Dark Bean",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .dark
@@ -89,14 +93,16 @@ final class AppStoreTests: XCTestCase {
 
         store.addBean(
             name: "A",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .light
         )
         store.addBean(
             name: "B",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .dark
@@ -128,7 +134,8 @@ final class AppStoreTests: XCTestCase {
 
         store.addBean(
             name: "Kenya",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .medium
@@ -176,7 +183,8 @@ final class AppStoreTests: XCTestCase {
 
         store.addBean(
             name: "X",
-            roaster: "R",
+            shopName: "R",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .medium

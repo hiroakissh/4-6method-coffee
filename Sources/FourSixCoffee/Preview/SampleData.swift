@@ -4,7 +4,7 @@ enum SampleData {
     static let beans: [Bean] = [
         Bean(
             name: "Ethiopia Guji",
-            roaster: "Sample Roasters",
+            shopName: "Sample Roasters",
             origin: "Ethiopia",
             process: "Washed",
             roastLevel: .light,
@@ -12,7 +12,7 @@ enum SampleData {
         ),
         Bean(
             name: "Colombia Huila",
-            roaster: "City Roast",
+            shopName: "City Roast",
             origin: "Colombia",
             process: "Honey",
             roastLevel: .medium,
@@ -20,7 +20,7 @@ enum SampleData {
         ),
         Bean(
             name: "Brazil Cerrado",
-            roaster: "Daily Beans",
+            shopName: "Daily Beans",
             origin: "Brazil",
             process: "Natural",
             roastLevel: .dark,
