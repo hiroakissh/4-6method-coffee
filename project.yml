@@ -25,8 +25,12 @@ targets:
     deploymentTarget: "26.0"
     sources:
       - path: Sources/FourSixCoffee
+      - path: Sources/Shared
     resources:
       - path: Resources/Assets.xcassets
+    dependencies:
+      - target: FourSixCoffeeLiveActivityExtension
+        embed: true
     info:
       path: Sources/FourSixCoffee/Info.plist
       properties:
@@ -45,6 +49,7 @@ targets:
         NSCameraUsageDescription: カメラを使用して抽出や豆の写真を追加します。
         NSPhotoLibraryAddUsageDescription: 写真を保存するためにフォトライブラリを使用します。
         NSPhotoLibraryUsageDescription: 写真を読み込むためにフォトライブラリへアクセスします。
+        NSSupportsLiveActivities: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.hiroaki.foursixcoffee
@@ -75,3 +80,24 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+  FourSixCoffeeLiveActivityExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Sources/FourSixCoffeeLiveActivity
+      - path: Sources/Shared
+    info:
+      path: Sources/FourSixCoffeeLiveActivity/Info.plist
+      properties:
+        CFBundleDisplayName: 4:6 Live Activity
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hiroaki.foursixcoffee.liveactivity
+        PRODUCT_NAME: FourSixCoffeeLiveActivityExtension
+        INFOPLIST_FILE: Sources/FourSixCoffeeLiveActivity/Info.plist
