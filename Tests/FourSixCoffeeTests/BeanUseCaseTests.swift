@@ -70,18 +70,44 @@ final class BeanUseCaseTests: XCTestCase {
         XCTAssertEqual(beans.first?.referenceURL, "https://example.com")
     }
 
-    func testCreateBeanThrowsWhenReferenceURLIsInvalid() {
+    func testCreateBeanTrimsReferenceURLBeforePersisting() throws {
         let repository = InMemoryBeanRepository()
         let useCase = BeanUseCase(repository: repository)
 
-        XCTAssertThrowsError(
-            try useCase.createBean(
-                name: "Initial",
-                shopName: "S",
-                purchasedAt: .now,
-                roastLevel: .medium,
-                referenceURL: "invalid-url"
-            )
+        _ = try useCase.createBean(
+            name: "Initial",
+            shopName: "S",
+            purchasedAt: .now,
+            roastLevel: .medium,
+            referenceURL: "  https://example.com/beans  "
         )
+
+        let beans = try useCase.fetchBeans()
+        XCTAssertEqual(beans.first?.referenceURL, "https://example.com/beans")
+    }
+
+    func testCreateBeanThrowsWhenReferenceURLIsNotAbsoluteHTTPOrHTTPS() {
+        let repository = InMemoryBeanRepository()
+        let useCase = BeanUseCase(repository: repository)
+
+        let invalidURLs = [
+            "invalid-url",
+            "ftp://example.com",
+            "https://",
+            "/relative/path"
+        ]
+
+        for invalidURL in invalidURLs {
+            XCTAssertThrowsError(
+                try useCase.createBean(
+                    name: "Initial",
+                    shopName: "S",
+                    purchasedAt: .now,
+                    roastLevel: .medium,
+                    referenceURL: invalidURL
+                ),
+                "Expected invalid reference URL to throw: \(invalidURL)"
+            )
+        }
     }
 }

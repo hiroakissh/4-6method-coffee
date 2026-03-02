@@ -66,7 +66,7 @@ Preview/
 - Bean と BrewLog を SwiftData に保存する。
 - `BrewLog` は `beanID` を保持し、豆削除時はログを残して参照のみ `nil` 扱いにする。
 - `BrewLog` の複合構造（`BrewInput`, `BrewPlan`, `TasteRatings`）は JSON エンコードで保存する。
-- Bean の購入店名と購入日は必須として扱い、URLは保存前に妥当性（URL形式）を検証する。
+- Bean の購入店名と購入日は必須として扱い、URLは保存前に `http/https` の絶対URLとして妥当性を検証する。
 
 ## Testing policy
 - Domain service（`BrewPlanner`）は純粋関数としてテストする。

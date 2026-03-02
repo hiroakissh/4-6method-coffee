@@ -34,7 +34,7 @@ struct BeanUseCase {
         roastDate: Date? = nil,
         referenceURL: String = ""
     ) throws -> Bean {
-        try validate(referenceURL: referenceURL)
+        let normalizedReferenceURL = try normalize(referenceURL: referenceURL)
 
         let bean = Bean(
             name: name,
@@ -45,15 +45,16 @@ struct BeanUseCase {
             roastLevel: roastLevel,
             notes: notes,
             roastDate: roastDate,
-            referenceURL: referenceURL
+            referenceURL: normalizedReferenceURL
         )
         try repository.save(bean: bean)
         return bean
     }
 
     func save(bean: Bean) throws {
-        try validate(referenceURL: bean.referenceURL)
-        try repository.save(bean: bean)
+        var validatedBean = bean
+        validatedBean.referenceURL = try normalize(referenceURL: bean.referenceURL)
+        try repository.save(bean: validatedBean)
     }
 
     func deleteBeans(ids: [UUID]) throws {
@@ -62,10 +63,17 @@ struct BeanUseCase {
         }
     }
 
-    private func validate(referenceURL: String) throws {
-        guard !referenceURL.isEmpty else { return }
-        guard URL(string: referenceURL) != nil else {
+    private func normalize(referenceURL: String) throws -> String {
+        let trimmedURL = referenceURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedURL.isEmpty else { return "" }
+        guard let components = URLComponents(string: trimmedURL),
+              let scheme = components.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              let host = components.host,
+              !host.isEmpty
+        else {
             throw BeanUseCaseError.invalidReferenceURL
         }
+        return trimmedURL
     }
 }
