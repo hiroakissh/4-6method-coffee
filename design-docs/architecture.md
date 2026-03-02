@@ -20,6 +20,10 @@
 App/
   FourSixCoffeeApp.swift
   AppDependencies.swift
+LiveActivity/
+  BrewSessionLiveActivityAttributes.swift
+  BrewSessionLiveActivityPayloadBuilder.swift
+  BrewSessionLiveActivityManager.swift
 Features/
   ... SwiftUI views + @Observable feature models
 Application/
@@ -47,6 +51,8 @@ Infrastructure/
       PersistenceStack.swift
 Preview/
   SampleData.swift
+WidgetExtension/
+  BrewSessionLiveActivityWidget.swift
 ```
 
 ## Dependency rules
@@ -62,6 +68,13 @@ Preview/
 4. SwiftData Repository が Entity と Domain model を相互変換する。
 5. Store が state を更新し、View が再描画される。
 
+## Live Activity flow
+1. `BrewSessionModel` がタイマー状態（経過秒、現在ステップ、稼働中フラグ）を保持する。
+2. `BrewSessionLiveActivityPayloadBuilder` が `BrewPlan + タイマー状態` から表示用 state を構築する（純粋関数）。
+3. `BrewSessionLiveActivityManager` が `ActivityKit` へ start/update/end を委譲する。
+4. Widget Extension（`ActivityConfiguration`）がロック画面/ダイナミックアイランドに
+   「何投目 / 注湯g / 累積g / 次まで秒数」を表示する。
+
 ## Persistence policy
 - Bean と BrewLog を SwiftData に保存する。
 - `BrewLog` は `beanID` を保持し、豆削除時はログを残して参照のみ `nil` 扱いにする。
@@ -72,4 +85,6 @@ Preview/
 - Domain service（`BrewPlanner`）は純粋関数としてテストする。
 - UseCase は in-memory repository で分岐をテストする。
 - SwiftData repository は in-memory `ModelContainer` で永続化挙動をテストする。
+- Live Activity は `ActivityKit` 呼び出し自体を直接テストせず、payload 構築ロジックと
+  `BrewSessionModel` からの連携（開始/更新/終了）をユニットテストする。
 - 目標は高カバレッジ（90%）だが、実効性を損なう過剰なテストは避ける。

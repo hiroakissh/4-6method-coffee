@@ -26,6 +26,8 @@
 	<string>写真を保存するためにフォトライブラリを使用します。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>写真を読み込むためにフォトライブラリへアクセスします。</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

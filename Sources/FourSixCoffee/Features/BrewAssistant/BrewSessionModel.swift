@@ -22,10 +22,38 @@ final class BrewSessionModel {
     private var stepStartSeconds: [Int] = []
     @ObservationIgnored
     private var estimatedTotalSeconds: Int = 0
+    @ObservationIgnored
+    private let liveActivityManager: BrewSessionLiveActivityManaging
+    @ObservationIgnored
+    private var loadedPlan: BrewPlan?
+
+    init(
+        liveActivityManager: BrewSessionLiveActivityManaging = BrewSessionLiveActivityManager()
+    ) {
+        self.liveActivityManager = liveActivityManager
+    }
 
     func load(plan: BrewPlan) {
-        guard loadedPlanID != plan.id else { return }
+        guard loadedPlanID != plan.id else {
+            loadedPlan = plan
+            return
+        }
+
+        let previousPlan = loadedPlan
+        let previousElapsed = elapsedSeconds
+        let previousStepIndex = currentStepIndex
+        pause()
+
+        if let previousPlan {
+            liveActivityManager.end(
+                plan: previousPlan,
+                elapsedSeconds: previousElapsed,
+                currentStepIndex: previousStepIndex
+            )
+        }
+
         resetRuntime()
+        loadedPlan = plan
         loadedPlanID = plan.id
         stepStartSeconds = plan.steps.map(\.startSecond)
         estimatedTotalSeconds = plan.estimatedTotalSeconds
@@ -33,20 +61,27 @@ final class BrewSessionModel {
 
     func start() {
         guard !isRunning else { return }
+        guard loadedPlan != nil else { return }
         isRunning = true
         runTicker()
+        syncLiveActivityIfPossible()
     }
 
     func pause() {
+        let wasRunning = isRunning
         isRunning = false
         tickerTask?.cancel()
         tickerTask = nil
+        if wasRunning {
+            syncLiveActivityIfPossible()
+        }
     }
 
     func resetAll() {
         pause()
         resetRuntime()
         resetFeedback()
+        endLiveActivityIfPossible()
     }
 
     func resetRuntime() {
@@ -57,6 +92,7 @@ final class BrewSessionModel {
     func resetTimer() {
         pause()
         resetRuntime()
+        endLiveActivityIfPossible()
     }
 
     func saveLogIfPossible(plan: BrewPlan, store: AppStore) {
@@ -71,6 +107,11 @@ final class BrewSessionModel {
             memo: note,
             ratings: ratings,
             actualBrewSeconds: elapsedSeconds
+        )
+        liveActivityManager.end(
+            plan: plan,
+            elapsedSeconds: elapsedSeconds,
+            currentStepIndex: currentStepIndex
         )
     }
 
@@ -113,10 +154,12 @@ final class BrewSessionModel {
         guard isRunning else { return }
         if estimatedTotalSeconds > 0, elapsedSeconds >= estimatedTotalSeconds {
             pause()
+            endLiveActivityIfPossible()
             return
         }
         elapsedSeconds += 1
         currentStepIndex = latestStepIndex(for: elapsedSeconds)
+        syncLiveActivityIfPossible()
     }
 
     private func resetFeedback() {
@@ -136,6 +179,25 @@ final class BrewSessionModel {
             resolved = index
         }
         return resolved
+    }
+
+    private func syncLiveActivityIfPossible() {
+        guard let plan = loadedPlan else { return }
+        liveActivityManager.sync(
+            plan: plan,
+            elapsedSeconds: elapsedSeconds,
+            currentStepIndex: currentStepIndex,
+            isRunning: isRunning
+        )
+    }
+
+    private func endLiveActivityIfPossible() {
+        guard let plan = loadedPlan else { return }
+        liveActivityManager.end(
+            plan: plan,
+            elapsedSeconds: elapsedSeconds,
+            currentStepIndex: currentStepIndex
+        )
     }
 }
 
