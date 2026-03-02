@@ -84,14 +84,18 @@ final class AppStore {
         currentInput.grindSize = grind
     }
 
-    func addBean(name: String, roaster: String, origin: String, process: String, roastLevel: RoastLevel) {
+    func addBean(name: String, shopName: String, purchasedAt: Date, origin: String, process: String, roastLevel: RoastLevel, notes: String = "", roastDate: Date? = nil, referenceURL: String = "") {
         do {
             let bean = try beanUseCase.createBean(
                 name: name,
-                roaster: roaster,
+                shopName: shopName,
+                purchasedAt: purchasedAt,
                 origin: origin,
                 process: process,
-                roastLevel: roastLevel
+                roastLevel: roastLevel,
+                notes: notes,
+                roastDate: roastDate,
+                referenceURL: referenceURL
             )
             beans.insert(bean, at: 0)
             selectedBeanID = bean.id
@@ -100,6 +104,11 @@ final class AppStore {
         } catch {
             store(error: error)
         }
+    }
+
+
+    func logs(for beanID: UUID) -> [BrewLog] {
+        brewLogs.filter { $0.bean?.id == beanID }
     }
 
     func addBrewLog(

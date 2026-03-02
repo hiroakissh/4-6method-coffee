@@ -9,7 +9,8 @@ final class BeanUseCaseTests: XCTestCase {
 
         let created = try useCase.createBean(
             name: "Ethiopia",
-            roaster: "Roastery",
+            shopName: "PHILO COFFEA",
+            purchasedAt: .now,
             origin: "Guji",
             process: "Washed",
             roastLevel: .light
@@ -18,7 +19,7 @@ final class BeanUseCaseTests: XCTestCase {
         let beans = try useCase.fetchBeans()
         XCTAssertEqual(beans.count, 1)
         XCTAssertEqual(beans.first?.id, created.id)
-        XCTAssertEqual(beans.first?.name, "Ethiopia")
+        XCTAssertEqual(beans.first?.shopName, "PHILO COFFEA")
     }
 
     func testDeleteBeansRemovesAllMatchingIDs() throws {
@@ -27,14 +28,16 @@ final class BeanUseCaseTests: XCTestCase {
 
         let first = try useCase.createBean(
             name: "A",
-            roaster: "R",
+            shopName: "S",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .medium
         )
         _ = try useCase.createBean(
             name: "B",
-            roaster: "R",
+            shopName: "S",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .dark
@@ -53,18 +56,32 @@ final class BeanUseCaseTests: XCTestCase {
 
         var bean = try useCase.createBean(
             name: "Initial",
-            roaster: "R",
+            shopName: "S",
+            purchasedAt: .now,
             origin: "O",
             process: "P",
             roastLevel: .medium
         )
-        bean.name = "Updated"
-        bean.notes = "Changed"
+        bean.referenceURL = "https://example.com"
 
         try useCase.save(bean: bean)
 
         let beans = try useCase.fetchBeans()
-        XCTAssertEqual(beans.first?.name, "Updated")
-        XCTAssertEqual(beans.first?.notes, "Changed")
+        XCTAssertEqual(beans.first?.referenceURL, "https://example.com")
+    }
+
+    func testCreateBeanThrowsWhenReferenceURLIsInvalid() {
+        let repository = InMemoryBeanRepository()
+        let useCase = BeanUseCase(repository: repository)
+
+        XCTAssertThrowsError(
+            try useCase.createBean(
+                name: "Initial",
+                shopName: "S",
+                purchasedAt: .now,
+                roastLevel: .medium,
+                referenceURL: "invalid-url"
+            )
+        )
     }
 }

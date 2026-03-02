@@ -18,12 +18,14 @@ struct SwiftDataBeanRepository: BeanRepository {
             Bean(
                 id: entity.id,
                 name: entity.name,
-                roaster: entity.roaster,
+                shopName: entity.shopName,
+                purchasedAt: entity.purchasedAt,
                 origin: entity.origin,
                 process: entity.process,
                 roastLevel: RoastLevel(rawValue: entity.roastLevelRawValue) ?? .medium,
                 notes: entity.notes,
-                roastDate: entity.roastDate
+                roastDate: entity.roastDate,
+                referenceURL: entity.referenceURL
             )
         }
     }
@@ -31,24 +33,28 @@ struct SwiftDataBeanRepository: BeanRepository {
     func save(bean: Bean) throws {
         if let existing = try fetchEntity(id: bean.id) {
             existing.name = bean.name
-            existing.roaster = bean.roaster
+            existing.shopName = bean.shopName
+            existing.purchasedAt = bean.purchasedAt
             existing.origin = bean.origin
             existing.process = bean.process
             existing.roastLevelRawValue = bean.roastLevel.rawValue
             existing.notes = bean.notes
             existing.roastDate = bean.roastDate
+            existing.referenceURL = bean.referenceURL
             existing.updatedAt = .now
         } else {
             let now = Date.now
             let entity = BeanEntity(
                 id: bean.id,
                 name: bean.name,
-                roaster: bean.roaster,
+                shopName: bean.shopName,
+                purchasedAt: bean.purchasedAt,
                 origin: bean.origin,
                 process: bean.process,
                 roastLevelRawValue: bean.roastLevel.rawValue,
                 notes: bean.notes,
                 roastDate: bean.roastDate,
+                referenceURL: bean.referenceURL,
                 createdAt: now,
                 updatedAt: now
             )

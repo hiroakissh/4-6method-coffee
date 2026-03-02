@@ -7,7 +7,7 @@
 
 ## Core domain models
 - **Bean**
-  - 豆メタデータ（名前 / ロースター / 産地 / プロセス / 焙煎度 / メモ）
+  - 豆プロファイル（豆名 / 購入店名 / 購入日 / 産地・銘柄(任意) / 焙煎日(任意) / URL(任意) / メモ(任意) / 焙煎度）
 - **BrewInput**
   - `coffeeDose`, `tasteProfile`, `roastLevel`, `grindSize`
 - **BrewPlan / PourStep**
@@ -66,6 +66,7 @@ Preview/
 - Bean と BrewLog を SwiftData に保存する。
 - `BrewLog` は `beanID` を保持し、豆削除時はログを残して参照のみ `nil` 扱いにする。
 - `BrewLog` の複合構造（`BrewInput`, `BrewPlan`, `TasteRatings`）は JSON エンコードで保存する。
+- Bean の購入店名と購入日は必須として扱い、URLは保存前に妥当性（URL形式）を検証する。
 
 ## Testing policy
 - Domain service（`BrewPlanner`）は純粋関数としてテストする。

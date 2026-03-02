@@ -44,7 +44,8 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
                     bean = Bean(
                         id: beanID,
                         name: entity.beanSnapshotName ?? "Bean",
-                        roaster: "",
+                        shopName: "",
+                        purchasedAt: .distantPast,
                         origin: "",
                         process: "",
                         roastLevel: input.roastLevel

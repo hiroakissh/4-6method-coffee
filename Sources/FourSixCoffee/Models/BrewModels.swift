@@ -67,31 +67,37 @@ enum GrindSize: String, CaseIterable, Identifiable, Hashable, Codable {
 struct Bean: Identifiable, Hashable, Codable {
     let id: UUID
     var name: String
-    var roaster: String
+    var shopName: String
+    var purchasedAt: Date
     var origin: String
     var process: String
     var roastLevel: RoastLevel
     var notes: String
     var roastDate: Date?
+    var referenceURL: String
 
     init(
         id: UUID = UUID(),
         name: String,
-        roaster: String,
-        origin: String,
-        process: String,
+        shopName: String,
+        purchasedAt: Date = .now,
+        origin: String = "",
+        process: String = "",
         roastLevel: RoastLevel,
         notes: String = "",
-        roastDate: Date? = nil
+        roastDate: Date? = nil,
+        referenceURL: String = ""
     ) {
         self.id = id
         self.name = name
-        self.roaster = roaster
+        self.shopName = shopName
+        self.purchasedAt = purchasedAt
         self.origin = origin
         self.process = process
         self.roastLevel = roastLevel
         self.notes = notes
         self.roastDate = roastDate
+        self.referenceURL = referenceURL
     }
 }
 
