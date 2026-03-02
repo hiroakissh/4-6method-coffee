@@ -8,6 +8,8 @@
 
 ## Persistence
 - Bean と BrewLog は SwiftData に保存する。
+- Bean は「店名」「購入日」を必須項目として保持し、URL は任意入力だが保存時に妥当な形式を検証する。
+- 抽出ログ（BrewLog）は Bean プロファイルに紐づけて参照できる状態を維持する。
 - 永続化エラーは握りつぶさず、呼び出し元へ伝播または UI で扱える形に変換する。
 - Domain model と SwiftData Entity の変換責務は Repository 実装に集約する。
 
