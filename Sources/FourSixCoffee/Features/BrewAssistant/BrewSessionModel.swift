@@ -171,6 +171,12 @@ final class BrewSessionModel {
 
     func syncElapsedTime() {
         refreshElapsedFromClock()
+        guard isRunning else { return }
+        if estimatedTotalSeconds > 0, elapsedSeconds >= estimatedTotalSeconds {
+            pause()
+            endLiveActivityIfPossible()
+            return
+        }
         syncLiveActivityIfPossible()
     }
 
