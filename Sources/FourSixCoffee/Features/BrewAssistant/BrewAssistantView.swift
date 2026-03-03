@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BrewAssistantView: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.scenePhase) private var scenePhase
     @State private var session = BrewSessionModel()
     @State private var didSaveLog = false
 
@@ -25,6 +26,11 @@ struct BrewAssistantView: View {
             }
             .onChange(of: plan.id) { _, _ in
                 session.load(plan: plan)
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    session.syncElapsedTime()
+                }
             }
             .alert("抽出ログを保存しました", isPresented: $didSaveLog) {
                 Button("OK", role: .cancel) {}

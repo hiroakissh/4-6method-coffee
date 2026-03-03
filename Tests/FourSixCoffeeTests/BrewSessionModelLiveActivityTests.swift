@@ -55,6 +55,52 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
         XCTAssertFalse(model.isRunning)
     }
 
+    func testSyncElapsedTimeCatchesUpAfterBackground() {
+        let manager = SpyBrewSessionLiveActivityManager()
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let model = BrewSessionModel(
+            liveActivityManager: manager,
+            now: { now }
+        )
+        let plan = makePlan(stepStartOffset: 0)
+
+        model.load(plan: plan)
+        model.start()
+
+        now = now.addingTimeInterval(46)
+        model.syncElapsedTime()
+
+        XCTAssertEqual(model.elapsedSeconds, 46)
+        XCTAssertEqual(model.currentStepIndex, 1)
+        XCTAssertEqual(manager.syncCalls.last?.elapsedSeconds, 46)
+        XCTAssertEqual(manager.syncCalls.last?.currentStepIndex, 1)
+    }
+
+    func testSyncElapsedTimeEndsSessionWhenCatchUpReachesTotalSeconds() {
+        let manager = SpyBrewSessionLiveActivityManager()
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let model = BrewSessionModel(
+            liveActivityManager: manager,
+            now: { now }
+        )
+        let plan = makePlan(stepStartOffset: 0)
+
+        model.load(plan: plan)
+        model.start()
+
+        now = now.addingTimeInterval(TimeInterval(plan.estimatedTotalSeconds))
+        model.syncElapsedTime()
+
+        XCTAssertFalse(model.isRunning)
+        XCTAssertEqual(model.elapsedSeconds, plan.estimatedTotalSeconds)
+        XCTAssertEqual(model.currentStepIndex, plan.steps.count - 1)
+        XCTAssertEqual(manager.syncCalls.count, 2)
+        XCTAssertFalse(manager.syncCalls.last?.isRunning ?? true)
+        XCTAssertEqual(manager.endCalls.count, 1)
+        XCTAssertEqual(manager.endCalls[0].elapsedSeconds, plan.estimatedTotalSeconds)
+        XCTAssertEqual(manager.endCalls[0].currentStepIndex, plan.steps.count - 1)
+    }
+
     private func makePlan(stepStartOffset: Int) -> BrewPlan {
         BrewPlan(
             input: .default,
