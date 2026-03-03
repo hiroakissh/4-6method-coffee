@@ -55,6 +55,28 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
         XCTAssertFalse(model.isRunning)
     }
 
+
+
+    func testSyncElapsedTimeCatchesUpAfterBackground() {
+        let manager = SpyBrewSessionLiveActivityManager()
+        var now = Date(timeIntervalSince1970: 1_700_000_000)
+        let model = BrewSessionModel(
+            liveActivityManager: manager,
+            now: { now }
+        )
+        let plan = makePlan(stepStartOffset: 0)
+
+        model.load(plan: plan)
+        model.start()
+
+        now = now.addingTimeInterval(46)
+        model.syncElapsedTime()
+
+        XCTAssertEqual(model.elapsedSeconds, 46)
+        XCTAssertEqual(model.currentStepIndex, 1)
+        XCTAssertEqual(manager.syncCalls.last?.elapsedSeconds, 46)
+        XCTAssertEqual(manager.syncCalls.last?.currentStepIndex, 1)
+    }
     private func makePlan(stepStartOffset: Int) -> BrewPlan {
         BrewPlan(
             input: .default,

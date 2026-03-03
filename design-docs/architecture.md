@@ -70,6 +70,7 @@ WidgetExtension/
 
 ## Live Activity flow
 1. `BrewSessionModel` がタイマー状態（経過秒、現在ステップ、稼働中フラグ）を保持する。
+   - 稼働中は開始基準時刻を保持し、`Date` 差分から経過秒を再計算してバックグラウンド復帰後も追従する。
 2. `BrewSessionLiveActivityPayloadBuilder` が `BrewPlan + タイマー状態` から表示用 state を構築する（純粋関数）。
 3. `BrewSessionLiveActivityManager` が `ActivityKit` へ start/update/end を委譲する。
 4. Widget Extension（`ActivityConfiguration`）がロック画面/ダイナミックアイランドに

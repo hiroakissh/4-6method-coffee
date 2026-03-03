@@ -26,11 +26,17 @@ final class BrewSessionModel {
     private let liveActivityManager: BrewSessionLiveActivityManaging
     @ObservationIgnored
     private var loadedPlan: BrewPlan?
+    @ObservationIgnored
+    private var timerReferenceDate: Date?
+    @ObservationIgnored
+    private let now: () -> Date
 
     init(
-        liveActivityManager: BrewSessionLiveActivityManaging = BrewSessionLiveActivityManager()
+        liveActivityManager: BrewSessionLiveActivityManaging = BrewSessionLiveActivityManager(),
+        now: @escaping () -> Date = Date.init
     ) {
         self.liveActivityManager = liveActivityManager
+        self.now = now
     }
 
     func load(plan: BrewPlan) {
@@ -62,6 +68,7 @@ final class BrewSessionModel {
     func start() {
         guard !isRunning else { return }
         guard loadedPlan != nil else { return }
+        timerReferenceDate = now().addingTimeInterval(TimeInterval(-elapsedSeconds))
         isRunning = true
         runTicker()
         syncLiveActivityIfPossible()
@@ -87,6 +94,7 @@ final class BrewSessionModel {
     func resetRuntime() {
         elapsedSeconds = 0
         currentStepIndex = 0
+        timerReferenceDate = nil
     }
 
     func resetTimer() {
@@ -151,14 +159,18 @@ final class BrewSessionModel {
     }
 
     private func tick() {
+        refreshElapsedFromClock()
         guard isRunning else { return }
         if estimatedTotalSeconds > 0, elapsedSeconds >= estimatedTotalSeconds {
             pause()
             endLiveActivityIfPossible()
             return
         }
-        elapsedSeconds += 1
-        currentStepIndex = latestStepIndex(for: elapsedSeconds)
+        syncLiveActivityIfPossible()
+    }
+
+    func syncElapsedTime() {
+        refreshElapsedFromClock()
         syncLiveActivityIfPossible()
     }
 
@@ -179,6 +191,21 @@ final class BrewSessionModel {
             resolved = index
         }
         return resolved
+    }
+
+    private func refreshElapsedFromClock() {
+        guard isRunning, let timerReferenceDate else { return }
+
+        let resolvedElapsed = max(Int(now().timeIntervalSince(timerReferenceDate)), 0)
+        let clampedElapsed: Int
+        if estimatedTotalSeconds > 0 {
+            clampedElapsed = min(resolvedElapsed, estimatedTotalSeconds)
+        } else {
+            clampedElapsed = resolvedElapsed
+        }
+
+        elapsedSeconds = clampedElapsed
+        currentStepIndex = latestStepIndex(for: clampedElapsed)
     }
 
     private func syncLiveActivityIfPossible() {
