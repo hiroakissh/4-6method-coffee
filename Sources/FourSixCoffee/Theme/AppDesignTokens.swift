@@ -27,6 +27,17 @@ enum AppDesignTokens {
         static let totalWaterBorder = coffee1.opacity(0.55)
         static let ctaBackground = coffee5
         static let ctaText = Color.white.opacity(0.95)
+        static let timerRingTrack = Color.white.opacity(0.16)
+        static let timerRingProgress = coffee5
+        static let timerRingKnob = coffee1
+        static let timerMainValue = Color.white.opacity(0.96)
+        static let timerStepBadgeBackground = coffee4.opacity(0.2)
+        static let timerStepBadgeBorder = coffee5.opacity(0.45)
+        static let timerAmountAccent = coffee3
+        static let meterTrack = coffee2.opacity(0.72)
+        static let meterFill = coffee1.opacity(0.8)
+        static let secondaryButtonBackground = Color.white.opacity(0.12)
+        static let memoFieldBackground = Color.black.opacity(0.24)
     }
 
     enum Typography {

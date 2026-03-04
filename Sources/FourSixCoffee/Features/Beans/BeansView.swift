@@ -6,43 +6,187 @@ struct BeansView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(store.beans) { bean in
-                    NavigationLink {
-                        BeanProfileView(beanID: bean.id)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(bean.name)
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text("購入店: \(bean.shopName)")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                            Text("購入日: \(bean.purchasedAt.formatted(date: .abbreviated, time: .omitted))")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
+            ZStack {
+                beansBackground
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 18) {
+                        header
+
+                        if store.beans.isEmpty {
+                            emptyCard
+                        } else {
+                            ForEach(store.beans) { bean in
+                                NavigationLink {
+                                    BeanProfileView(beanID: bean.id)
+                                } label: {
+                                    beanCard(bean)
+                                }
+                                .buttonStyle(.plain)
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        delete(beanID: bean.id)
+                                    } label: {
+                                        Label("削除", systemImage: "trash")
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-                .onDelete(perform: store.deleteBeans)
-            }
-            .navigationTitle("豆")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    EditButton()
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingAddSheet = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 28)
                 }
             }
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingAddSheet) {
                 AddBeanSheet()
             }
         }
+    }
+
+    private var beansBackground: some View {
+        LinearGradient(
+            colors: [
+                AppDesignTokens.Colors.backgroundTop,
+                AppDesignTokens.Colors.backgroundBottom
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .overlay {
+            RadialGradient(
+                colors: [
+                    AppDesignTokens.Colors.coffee1.opacity(0.18),
+                    .clear
+                ],
+                center: .bottomLeading,
+                startRadius: 30,
+                endRadius: 360
+            )
+        }
+        .overlay {
+            RadialGradient(
+                colors: [
+                    AppDesignTokens.Colors.coffee4.opacity(0.2),
+                    .clear
+                ],
+                center: .topTrailing,
+                startRadius: 20,
+                endRadius: 320
+            )
+        }
+        .ignoresSafeArea()
+    }
+
+    private var header: some View {
+        HStack {
+            Button {
+                store.selectedTab = .planner
+            } label: {
+                Image(systemName: "arrow.left")
+                    .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                    .frame(width: 60, height: 60)
+                    .background(AppDesignTokens.Colors.secondaryButtonBackground)
+                    .overlay {
+                        Circle()
+                            .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                    }
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+            Text("コーヒー豆")
+                .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+            Spacer()
+
+            Button {
+                showingAddSheet = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.headingAccent)
+                    .frame(width: 60, height: 60)
+                    .background(AppDesignTokens.Colors.timerStepBadgeBackground)
+                    .overlay {
+                        Circle()
+                            .stroke(AppDesignTokens.Colors.timerStepBadgeBorder, lineWidth: 1)
+                    }
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func beanCard(_ bean: Bean) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(bean.name)
+                .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Divider()
+                .overlay(AppDesignTokens.Colors.controlBorder)
+                .padding(.vertical, 2)
+
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("購入店")
+                        .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                    Text(bean.shopName)
+                        .font(AppDesignTokens.Typography.font(.title2, weight: .semibold))
+                        .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("購入日")
+                        .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                    Text(bean.purchasedAt.formatted(date: .abbreviated, time: .omitted))
+                        .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                        .foregroundStyle(AppDesignTokens.Colors.headingAccent)
+                }
+            }
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppDesignTokens.Colors.cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: AppDesignTokens.Radius.card, style: .continuous)
+                .stroke(AppDesignTokens.Colors.cardBorder, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: AppDesignTokens.Radius.card, style: .continuous))
+        .shadow(color: AppDesignTokens.Colors.cardShadow, radius: 22, x: 0, y: 12)
+    }
+
+    private var emptyCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("豆がまだ登録されていません")
+                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+            Text("右上の + から豆を追加できます")
+                .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppDesignTokens.Colors.cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: AppDesignTokens.Radius.card, style: .continuous)
+                .stroke(AppDesignTokens.Colors.cardBorder, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: AppDesignTokens.Radius.card, style: .continuous))
+    }
+
+    private func delete(beanID: UUID) {
+        guard let index = store.beans.firstIndex(where: { $0.id == beanID }) else { return }
+        store.deleteBeans(at: IndexSet(integer: index))
     }
 }
 
@@ -90,6 +234,7 @@ private struct BeanProfileView: View {
                 }
             }
             .navigationTitle("豆プロファイル")
+            .fontDesign(AppDesignTokens.Typography.design)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(store.selectedBeanID == bean.id ? "選択中" : "この豆を使う") {
@@ -140,6 +285,7 @@ private struct AddBeanSheet: View {
                 }
             }
             .navigationTitle("豆を追加")
+            .fontDesign(AppDesignTokens.Typography.design)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }

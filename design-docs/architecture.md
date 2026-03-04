@@ -78,6 +78,28 @@ WidgetExtension/
   - 味わい調整（前半40%）: `tasteProfile`, `steps[0...1]`
   - 濃さ調整（後半60%）: `grindSize`, `steps[2...]`
 
+### Brew assistant UI mapping
+- 既存 `BrewPlan` / `BrewSessionModel` の状態をそのまま使い、ロジック変更なしで視覚表現を更新する。
+- 画面セクションとデータ対応:
+  - リング進捗: `elapsedSeconds`, `estimatedTotalSeconds`, `currentStep(in:)`
+  - サマリーカード: `secondsToNextStep(in:)`, `totalWater`, 進捗率
+  - スケジュール: `steps`, `stepStatus(for:)`
+  - メモ/評価: `note`, `sweetness`, `acidity`, `bitterness`, `body`, `aftertaste`
+
+### Beans UI mapping
+- `Bean` モデルの既存項目（`name`, `shopName`, `purchasedAt`）を一覧カードに投影し、表示内容は維持する。
+- 追加フローは既存 `AddBeanSheet` を利用し、保存ロジック（`AppStore.addBean`）は変更しない。
+- 詳細遷移は既存 `BeanProfileView` を利用し、一覧側のレイアウトのみ更新する。
+
+### Brew logs UI mapping
+- `BrewLog` の既存項目（`bean`, `date`, `input`, `plan`, `memo`, `ratings`, `actualBrewSeconds`）をカード表示へ投影する。
+- 再利用操作（`store.apply(log:)`）と削除操作（`store.deleteLogs`）は既存ロジックを維持する。
+- 空状態表示のみUI変更し、状態判定は `store.brewLogs.isEmpty` を継続利用する。
+
+### Settings UI mapping
+- 設定値は既存 `AppStore` の `preferredUnit` と `enableStepHaptics` を直接バインドする。
+- 情報カードは固定表示（バージョン、プラン計算）で、既存表示内容を維持する。
+
 ## Live Activity flow
 1. `BrewSessionModel` がタイマー状態（経過秒、現在ステップ、稼働中フラグ）を保持する。
    - 稼働中は開始基準時刻を保持し、`Date` 差分から経過秒を再計算してバックグラウンド復帰後も追従する。
