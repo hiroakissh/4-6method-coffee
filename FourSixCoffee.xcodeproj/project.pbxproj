@@ -31,6 +31,7 @@
 		97282535B9435CF346488501 /* BrewLogsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39706010236FC957564111EE /* BrewLogsView.swift */; };
 		98133757954F5BE28B67F5FA /* BrewSessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3148B6E00BB7E9F110FC24 /* BrewSessionActivityAttributes.swift */; };
 		A92DD6A1A1A3CE439B71AA9D /* SwiftDataBrewLogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F7F03E78818132C9EF51BE /* SwiftDataBrewLogRepository.swift */; };
+		AA5193AC91EB03B9D2E446D1 /* AppDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FE55CE8E55609231A4C601 /* AppDesignTokens.swift */; };
 		BABC739BA5939366D8D4B6C2 /* PersistenceStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B1E2D586D0989DBB2083BC /* PersistenceStack.swift */; };
 		BB81760E5226084661A6C872 /* BeansView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEEF6AFC5A982AE323662ADA /* BeansView.swift */; };
 		C62773AEC5C02E8D8969FD4F /* FourSixCoffeeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A351F116823D94C84DF92B /* FourSixCoffeeApp.swift */; };
@@ -117,6 +118,7 @@
 		CEEF6AFC5A982AE323662ADA /* BeansView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeansView.swift; sourceTree = "<group>"; };
 		D3B1E2D586D0989DBB2083BC /* PersistenceStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceStack.swift; sourceTree = "<group>"; };
 		E095BE452C75266B2BD04889 /* BrewSessionModelLiveActivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionModelLiveActivityTests.swift; sourceTree = "<group>"; };
+		E1FE55CE8E55609231A4C601 /* AppDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDesignTokens.swift; sourceTree = "<group>"; };
 		EB38EBE9450E89CFB6481499 /* SwiftDataBeanRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataBeanRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -196,6 +198,14 @@
 				AF3148B6E00BB7E9F110FC24 /* BrewSessionActivityAttributes.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		80F4136D39A198E169812273 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				E1FE55CE8E55609231A4C601 /* AppDesignTokens.swift */,
+			);
+			path = Theme;
 			sourceTree = "<group>";
 		};
 		81A106A1867B93D482492390 /* Features */ = {
@@ -352,6 +362,7 @@
 				9D95EBF4CA4A61ABE29CC9CC /* LiveActivity */,
 				14CDCF4CF3121D47B550EA1F /* Models */,
 				C09A0B2BCE27544E97A67439 /* Preview */,
+				80F4136D39A198E169812273 /* Theme */,
 			);
 			path = FourSixCoffee;
 			sourceTree = "<group>";
@@ -470,6 +481,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0AE30A67C5D3FF800732AC0F /* AppDependencies.swift in Sources */,
+				AA5193AC91EB03B9D2E446D1 /* AppDesignTokens.swift in Sources */,
 				3C7D9FB08A79E639DBF058BA /* AppStore.swift in Sources */,
 				D710A40C5F50838028253449 /* BeanEntity.swift in Sources */,
 				0C9E9BC6DED66E5DA4C944E5 /* BeanRepository.swift in Sources */,

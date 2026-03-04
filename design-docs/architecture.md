@@ -26,6 +26,8 @@ LiveActivity/
   BrewSessionLiveActivityManager.swift
 Features/
   ... SwiftUI views + @Observable feature models
+Theme/
+  AppDesignTokens.swift
 Application/
   AppStore.swift
   UseCases/
@@ -60,6 +62,7 @@ WidgetExtension/
 2. `Application` は `Domain` の protocol（Repository）に依存する。
 3. `Infrastructure` が `Domain` protocol を実装する。
 4. `Domain` は SwiftUI / SwiftData へ依存しない。
+5. UI の色・フォントは `Theme` のデザイントークン経由で参照する。
 
 ## Data flow
 1. View から Store（`@Observable`）にイベントを渡す。
@@ -67,6 +70,13 @@ WidgetExtension/
 3. UseCase が Repository protocol 経由で読み書きする。
 4. SwiftData Repository が Entity と Domain model を相互変換する。
 5. Store が state を更新し、View が再描画される。
+
+### Home planner UI mapping
+- 既存 `BrewInput` / `BrewPlan` をそのまま使い、データ構造は変更しない。
+- 画面のカードごとの責務:
+  - 基本設定: `coffeeDose`, `ratio`, `totalWater`
+  - 味わい調整（前半40%）: `tasteProfile`, `steps[0...1]`
+  - 濃さ調整（後半60%）: `grindSize`, `steps[2...]`
 
 ## Live Activity flow
 1. `BrewSessionModel` がタイマー状態（経過秒、現在ステップ、稼働中フラグ）を保持する。

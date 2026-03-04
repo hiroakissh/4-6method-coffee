@@ -1,177 +1,423 @@
+import Foundation
 import SwiftUI
 
 struct HomeView: View {
     @Environment(AppStore.self) private var store
 
+    private let minDose = 10.0
+    private let maxDose = 40.0
+    private let doseStep = 0.5
+
     var body: some View {
-        @Bindable var bindableStore = store
-
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    beanSection
+            ZStack {
+                plannerBackground
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("入力")
-                            .font(.headline)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("豆量")
-                                Spacer()
-                                Text("\(bindableStore.currentInput.coffeeDose, specifier: "%.1f") g")
-                                    .font(.title3.bold())
-                            }
-                            Slider(
-                                value: $bindableStore.currentInput.coffeeDose,
-                                in: 10...40,
-                                step: 0.5
-                            )
-                        }
-
-                        Picker("味方向", selection: $bindableStore.currentInput.tasteProfile) {
-                            ForEach(TasteProfile.allCases) { profile in
-                                Text(profile.displayName).tag(profile)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-
-                        Picker("焙煎度", selection: $bindableStore.currentInput.roastLevel) {
-                            ForEach(RoastLevel.allCases) { roast in
-                                Text(roast.displayName).tag(roast)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-
-                        Picker("挽き目", selection: $bindableStore.currentInput.grindSize) {
-                            ForEach(GrindSize.allCases) { grind in
-                                Text(grind.displayName).tag(grind)
-                            }
-                        }
-                        .pickerStyle(.segmented)
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        header
+                        basicSettingsCard
+                        tasteAdjustmentCard
+                        strengthAdjustmentCard
+                        timerCTA
                     }
-                    .padding()
-                    .background(.thinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 28)
+                }
+            }
+            .toolbar(.hidden, for: .navigationBar)
+        }
+    }
 
-                    planSummary(plan: bindableStore.currentPlan)
-                    stepsSection(plan: bindableStore.currentPlan)
+    private var plannerBackground: some View {
+        LinearGradient(
+            colors: [
+                AppDesignTokens.Colors.backgroundTop,
+                AppDesignTokens.Colors.backgroundBottom
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .overlay {
+            RadialGradient(
+                colors: [
+                    AppDesignTokens.Colors.coffee1.opacity(0.2),
+                    .clear
+                ],
+                center: .bottomLeading,
+                startRadius: 30,
+                endRadius: 360
+            )
+        }
+        .overlay {
+            RadialGradient(
+                colors: [
+                    AppDesignTokens.Colors.coffee4.opacity(0.22),
+                    .clear
+                ],
+                center: .bottomTrailing,
+                startRadius: 20,
+                endRadius: 300
+            )
+        }
+        .ignoresSafeArea()
+    }
 
+    private var header: some View {
+        HStack {
+            Text("プランナー")
+                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+            Spacer()
+            Menu {
+                if store.beans.isEmpty {
+                    Text("保存済みの豆がありません")
+                } else {
+                    ForEach(store.beans) { bean in
+                        Button {
+                            store.selectedBean = bean
+                        } label: {
+                            if store.selectedBeanID == bean.id {
+                                Label(bean.name, systemImage: "checkmark")
+                            } else {
+                                Text(bean.name)
+                            }
+                        }
+                    }
+                }
+                Divider()
+                Button("豆一覧を開く") {
+                    store.selectedTab = .beans
+                }
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(AppDesignTokens.Colors.controlBackground)
+                    Image(systemName: "ellipsis")
+                        .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                        .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                }
+                .frame(width: 56, height: 56)
+            }
+        }
+    }
+
+    private var basicSettingsCard: some View {
+        cardContainer {
+            cardHeader(systemImage: "scalemass.fill", title: "基本設定")
+
+            capsuleStepper(
+                title: "豆の量 (G)",
+                valueText: coffeeDoseLabel(store.currentInput.coffeeDose),
+                isMinusEnabled: store.currentInput.coffeeDose > minDose,
+                isPlusEnabled: store.currentInput.coffeeDose < maxDose,
+                onMinusTap: { store.updateCoffeeDose(store.currentInput.coffeeDose - doseStep) },
+                onPlusTap: { store.updateCoffeeDose(store.currentInput.coffeeDose + doseStep) }
+            )
+
+            capsuleStepper(
+                title: "比率 (豆 : 湯) · 焙煎 \(store.currentInput.roastLevel.displayName)",
+                valueText: ratioLabel(store.currentPlan.ratio),
+                isMinusEnabled: store.currentInput.roastLevel != .dark,
+                isPlusEnabled: store.currentInput.roastLevel != .light,
+                onMinusTap: { adjustRoastLevel(towardLighterRoast: false) },
+                onPlusTap: { adjustRoastLevel(towardLighterRoast: true) }
+            )
+
+            HStack(alignment: .lastTextBaseline, spacing: 8) {
+                Text("総湯量")
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                    .foregroundStyle(AppDesignTokens.Colors.coffee1)
+                Spacer()
+                Text("\(store.currentPlan.totalWater)")
+                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                Text("g")
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            }
+            .padding(.horizontal, 22)
+            .padding(.vertical, 18)
+            .background(AppDesignTokens.Colors.totalWaterBackground)
+            .overlay {
+                Capsule()
+                    .stroke(AppDesignTokens.Colors.totalWaterBorder, lineWidth: 1)
+            }
+            .clipShape(Capsule())
+        }
+    }
+
+    private var tasteAdjustmentCard: some View {
+        cardContainer {
+            cardHeader(systemImage: "slider.horizontal.3", title: "味わいの調整 (最初の40%)")
+
+            HStack {
+                Text("甘み")
+                Spacer()
+                Text(tasteLabel(for: store.currentInput.tasteProfile))
+                    .foregroundStyle(AppDesignTokens.Colors.tasteAccent)
+                Spacer()
+                Text("酸味")
+            }
+            .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+            .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+            Slider(value: tasteProfileSliderBinding, in: 0...2, step: 1)
+                .tint(AppDesignTokens.Colors.sliderAccent)
+
+            HStack {
+                pourAmountColumn(title: "第1投", amount: stepAmount(at: 0), alignment: .leading)
+                Spacer()
+                pourAmountColumn(title: "第2投", amount: stepAmount(at: 1), alignment: .trailing)
+            }
+        }
+    }
+
+    private var strengthAdjustmentCard: some View {
+        cardContainer {
+            cardHeader(systemImage: "drop.fill", title: "濃さの調整 (残りの60%)")
+
+            HStack(spacing: 6) {
+                ForEach(StrengthOption.options) { option in
+                    let isSelected = store.currentInput.grindSize == option.grind
                     Button {
-                        bindableStore.selectedTab = .assistant
+                        store.updateGrindSize(option.grind)
                     } label: {
-                        Label("このプランでタイマーを開く", systemImage: "timer")
-                            .font(.headline)
+                        Text(option.title)
+                            .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                            .foregroundStyle(
+                                isSelected
+                                ? AppDesignTokens.Colors.textPrimary
+                                : AppDesignTokens.Colors.textSecondary
+                            )
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Color.accentColor.opacity(0.15))
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .background(
+                                Capsule().fill(
+                                    isSelected
+                                    ? AppDesignTokens.Colors.activeSegment
+                                    : .clear
+                                )
+                            )
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding()
             }
-            .navigationTitle("4:6 プランナー")
+            .padding(5)
+            .background(AppDesignTokens.Colors.controlBackground)
+            .overlay {
+                Capsule()
+                    .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+            }
+            .clipShape(Capsule())
+
+            HStack(spacing: 0) {
+                strengthPourColumn(title: "第3投", amount: stepAmount(at: 2))
+                Divider().overlay(AppDesignTokens.Colors.controlBorder)
+                strengthPourColumn(title: "第4投", amount: stepAmount(at: 3))
+                Divider().overlay(AppDesignTokens.Colors.controlBorder)
+                strengthPourColumn(title: "第5投", amount: stepAmount(at: 4))
+            }
+            .frame(maxWidth: .infinity)
         }
     }
 
-    private var beanSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("豆")
-                    .font(.headline)
-                Spacer()
-                Menu {
-                    ForEach(store.beans) { bean in
-                        Button(bean.name) {
-                            store.selectedBean = bean
-                        }
-                    }
-                } label: {
-                    Label("選択", systemImage: "line.3.horizontal.decrease.circle")
-                }
+    private var timerCTA: some View {
+        Button {
+            store.selectedTab = .assistant
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "timer")
+                Text("タイマーを開く")
             }
-
-            if let bean = store.selectedBean {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(bean.name)
-                        .font(.title3.bold())
-                    Text("\(bean.shopName) · \(bean.origin) · \(bean.process)")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    Text("焙煎: \(bean.roastLevel.displayName)")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                Text("豆が未選択です")
-                    .foregroundStyle(.secondary)
-            }
+            .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+            .foregroundStyle(AppDesignTokens.Colors.ctaText)
+            .frame(maxWidth: .infinity)
+            .frame(height: 82)
+            .background(AppDesignTokens.Colors.ctaBackground)
+            .clipShape(Capsule())
+            .shadow(color: AppDesignTokens.Colors.coffee5.opacity(0.35), radius: 18, x: 0, y: 10)
         }
-        .padding()
-        .background(.thinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .buttonStyle(.plain)
     }
 
-    private func planSummary(plan: BrewPlan) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("算出結果")
-                .font(.headline)
-            HStack(spacing: 10) {
-                summaryChip(title: "総湯量", value: "\(plan.totalWater) g")
-                summaryChip(title: "比率", value: "1:\(String(format: "%.1f", plan.ratio))")
-                summaryChip(title: "湯温", value: "\(plan.recommendedTemperature)℃")
-            }
-            Text("目安時間: \(PourStep.timeLabel(from: plan.estimatedTotalSeconds))")
-                .font(.subheadline.monospacedDigit())
-            Text(plan.plannerMemo)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+    private func cardContainer<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            content()
         }
-        .padding()
+        .padding(22)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.secondary.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private func stepsSection(plan: BrewPlan) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("6投スケジュール")
-                .font(.headline)
-            ForEach(plan.steps) { step in
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("第\(step.id)投 (\(step.phase.displayName))")
-                            .font(.subheadline.bold())
-                        Text("\(step.amountGrams)g · 開始 \(step.startLabel) · 累計 \(step.cumulativeGrams)g")
-                            .font(.footnote.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                }
-                .padding(.vertical, 6)
-                if step.id != plan.steps.count {
-                    Divider()
-                }
-            }
+        .background(AppDesignTokens.Colors.cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: AppDesignTokens.Radius.card, style: .continuous)
+                .stroke(AppDesignTokens.Colors.cardBorder, lineWidth: 1)
         }
-        .padding()
-        .background(Color.secondary.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: AppDesignTokens.Radius.card, style: .continuous))
+        .shadow(color: AppDesignTokens.Colors.cardShadow, radius: 22, x: 0, y: 14)
     }
 
-    private func summaryChip(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+    private func cardHeader(systemImage: String, title: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.headingAccent)
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.body.bold())
+                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
         }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.accentColor.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
+
+    private func capsuleStepper(
+        title: String,
+        valueText: String,
+        isMinusEnabled: Bool,
+        isPlusEnabled: Bool,
+        onMinusTap: @escaping () -> Void,
+        onPlusTap: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+            HStack {
+                stepperButton(symbol: "minus", isEnabled: isMinusEnabled, action: onMinusTap)
+                Spacer()
+                Text(valueText)
+                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                Spacer()
+                stepperButton(symbol: "plus", isEnabled: isPlusEnabled, action: onPlusTap)
+            }
+            .padding(.horizontal, 22)
+            .frame(height: 66)
+            .background(AppDesignTokens.Colors.controlBackground)
+            .overlay {
+                Capsule()
+                    .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+            }
+            .clipShape(Capsule())
+        }
+    }
+
+    private func stepperButton(symbol: String, isEnabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(AppDesignTokens.Typography.font(.title2, weight: .medium))
+                .foregroundStyle(
+                    isEnabled
+                    ? AppDesignTokens.Colors.textPrimary
+                    : AppDesignTokens.Colors.textSecondary
+                )
+                .frame(width: 34, height: 34)
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+    }
+
+    private func pourAmountColumn(title: String, amount: Int, alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: 6) {
+            Text(title)
+                .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                Text("\(amount)")
+                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                Text("g")
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            }
+        }
+    }
+
+    private func strengthPourColumn(title: String, amount: Int) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                Text("\(amount)")
+                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                Text("g")
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var tasteProfileSliderBinding: Binding<Double> {
+        Binding {
+            Double(TasteProfile.allCases.firstIndex(of: store.currentInput.tasteProfile) ?? 1)
+        } set: { newValue in
+            let index = Int(newValue.rounded())
+            guard TasteProfile.allCases.indices.contains(index) else { return }
+            store.updateTasteProfile(TasteProfile.allCases[index])
+        }
+    }
+
+    private func adjustRoastLevel(towardLighterRoast: Bool) {
+        let levels = RoastLevel.allCases
+        guard let currentIndex = levels.firstIndex(of: store.currentInput.roastLevel) else { return }
+
+        let nextIndex: Int
+        if towardLighterRoast {
+            nextIndex = max(0, currentIndex - 1)
+        } else {
+            nextIndex = min(levels.count - 1, currentIndex + 1)
+        }
+
+        guard nextIndex != currentIndex else { return }
+        store.updateRoastLevel(levels[nextIndex])
+    }
+
+    private func stepAmount(at index: Int) -> Int {
+        guard store.currentPlan.steps.indices.contains(index) else { return 0 }
+        return store.currentPlan.steps[index].amountGrams
+    }
+
+    private func coffeeDoseLabel(_ dose: Double) -> String {
+        let rounded = (dose * 2).rounded() / 2
+        if abs(rounded.rounded() - rounded) < 0.001 {
+            return String(Int(rounded))
+        }
+        return String(format: "%.1f", rounded)
+    }
+
+    private func ratioLabel(_ ratio: Double) -> String {
+        let rounded = (ratio * 10).rounded() / 10
+        if abs(rounded.rounded() - rounded) < 0.001 {
+            return "1 : \(Int(rounded))"
+        }
+        return String(format: "1 : %.1f", rounded)
+    }
+
+    private func tasteLabel(for profile: TasteProfile) -> String {
+        switch profile {
+        case .sweet:
+            return "甘め"
+        case .balanced:
+            return "標準"
+        case .light:
+            return "酸味寄り"
+        }
+    }
+}
+
+private struct StrengthOption: Identifiable {
+    let grind: GrindSize
+    let title: String
+
+    var id: GrindSize { grind }
+
+    static let options: [StrengthOption] = [
+        StrengthOption(grind: .coarse, title: "軽め (2回)"),
+        StrengthOption(grind: .medium, title: "標準 (3回)"),
+        StrengthOption(grind: .fine, title: "濃いめ (4回)")
+    ]
 }
 
 #Preview {
