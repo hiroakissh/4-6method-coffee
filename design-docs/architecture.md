@@ -74,13 +74,13 @@ WidgetExtension/
 ### Home planner UI mapping
 - 既存 `BrewInput` / `BrewPlan` をそのまま使い、データ構造は変更しない。
 - 画面のカードごとの責務:
-  - 基本設定: `coffeeDose`, `ratio`, `totalWater`
-  - 味わい調整（前半40%）: `tasteProfile`, `steps[0...1]`
-  - 濃さ調整（後半60%）: `grindSize`, `steps[2...]`
-- 豆量と比率の増減操作は View から値を直接組み立てず、`AppStore` の更新メソッド経由で行う。
+- 入力カード: `coffeeDose`, `tasteProfile`, `grindSize(=濃度プリセット)`, `roastLevel`
+- 算出結果カード: `ratio`, `totalWater`, `recommendedTemperature`, `estimatedTotalSeconds`, 推奨 `grindSize`
+- レシピカード: `steps[0...]`
+- 豆量の増減操作は View から値を直接組み立てず、`AppStore` の更新メソッド経由で行う。
 - プランナー内の増減ボタンは最小 44pt 四方のタップ領域を確保し、押下直後に数値再計算が UI へ反映されることを前提とする。
-- 比率は自動推薦ではなく `BrewInput.brewRatio` をそのまま使う。
-- 初期値は `1:15`、操作可能範囲は `1:10` から `1:20`、刻み幅は `1` とする。
+- 比率は入力UIとして直接編集せず、`coffeeDose / tasteProfile / grindSize / roastLevel` から導出した結果を表示する。
+- 濃度プリセットは UI 上は `薄め / 普通 / 濃い` として見せ、内部では `grindSize` に対応づける。
 
 ### Brew assistant UI mapping
 - 既存 `BrewPlan` / `BrewSessionModel` の状態をそのまま使い、ロジック変更なしで視覚表現を更新する。

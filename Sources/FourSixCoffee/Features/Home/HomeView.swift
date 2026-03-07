@@ -4,6 +4,12 @@ import SwiftUI
 struct HomeView: View {
     @Environment(AppStore.self) private var store
 
+    private let tasteOptions: [TasteProfile] = [.light, .balanced, .sweet]
+    private let concentrationOptions: [ConcentrationOption] = ConcentrationOption.options
+    private let roastOptions: [RoastLevel] = RoastLevel.allCases
+
+    private var currentPlan: BrewPlan { store.currentPlan }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -12,9 +18,11 @@ struct HomeView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
                         header
-                        basicSettingsCard
-                        tasteAdjustmentCard
-                        strengthAdjustmentCard
+                        beanCard
+                        plannerInputCard
+                        calculatedPlanCard
+                        scheduleCard
+                        recommendationPlaceholderCard
                         timerCTA
                     }
                     .padding(.horizontal, 20)
@@ -62,9 +70,14 @@ struct HomeView: View {
 
     private var header: some View {
         HStack {
-            Text("プランナー")
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
-                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("プランナー")
+                    .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                Text("入力を先に決めて、すぐ下で結果を確認")
+                    .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            }
             Spacer()
             Menu {
                 if store.beans.isEmpty {
@@ -99,123 +112,205 @@ struct HomeView: View {
         }
     }
 
-    private var basicSettingsCard: some View {
+    private var beanCard: some View {
         cardContainer {
-            cardHeader(systemImage: "scalemass.fill", title: "基本設定")
+            cardHeader(systemImage: "leaf.fill", title: "豆")
+
+            if let bean = store.selectedBean {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text(bean.name)
+                            .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                            .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                        Spacer()
+                        beanBadge(text: bean.roastLevel.displayName)
+                    }
+                    Text(bean.shopName)
+                        .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                    if !bean.origin.isEmpty || !bean.process.isEmpty {
+                        Text([bean.origin, bean.process].filter { !$0.isEmpty }.joined(separator: " · "))
+                            .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                            .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                    }
+                }
+            } else {
+                Text("未選択でもプランは作れます。豆を選ぶと焙煎度の初期値に反映されます。")
+                    .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            }
+        }
+    }
+
+    private var plannerInputCard: some View {
+        cardContainer {
+            cardHeader(systemImage: "slider.horizontal.below.rectangle", title: "入力")
 
             capsuleStepper(
-                title: "豆の量 (G)",
-                valueText: coffeeDoseLabel(store.currentInput.coffeeDose),
+                title: "豆量",
+                valueText: "\(coffeeDoseLabel(store.currentInput.coffeeDose)) g",
                 isMinusEnabled: store.canDecreaseCoffeeDose,
                 isPlusEnabled: store.canIncreaseCoffeeDose,
                 onMinusTap: { store.decrementCoffeeDose() },
                 onPlusTap: { store.incrementCoffeeDose() }
             )
 
-            capsuleStepper(
-                title: "比率 (豆 : 湯)",
-                valueText: ratioLabel(store.currentInput.brewRatio),
-                isMinusEnabled: store.canDecreaseRatio,
-                isPlusEnabled: store.canIncreaseRatio,
-                onMinusTap: { store.decreaseRatio() },
-                onPlusTap: { store.increaseRatio() }
-            )
-
-            HStack(alignment: .lastTextBaseline, spacing: 8) {
-                Text("総湯量")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
-                    .foregroundStyle(AppDesignTokens.Colors.coffee1)
-                Spacer()
-                Text("\(store.currentPlan.totalWater)")
-                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
-                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                Text("g")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
-                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            plannerChoiceGroup(
+                title: "味わい",
+                note: "前半40%の注ぎ方を調整"
+            ) {
+                ForEach(tasteOptions, id: \.self) { profile in
+                    choiceButton(
+                        title: profile.displayName,
+                        caption: profile.shortNote,
+                        isSelected: store.currentInput.tasteProfile == profile
+                    ) {
+                        store.updateTasteProfile(profile)
+                    }
+                }
             }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 18)
+
+            plannerChoiceGroup(
+                title: "濃度",
+                note: "比率と推奨挽き目をまとめて調整"
+            ) {
+                ForEach(concentrationOptions) { option in
+                    choiceButton(
+                        title: option.title,
+                        caption: option.caption,
+                        isSelected: store.currentInput.grindSize == option.grind
+                    ) {
+                        store.updateGrindSize(option.grind)
+                    }
+                }
+            }
+
+            plannerChoiceGroup(
+                title: "焙煎度",
+                note: "湯温と時間目安の基準に使用"
+            ) {
+                ForEach(roastOptions, id: \.self) { roast in
+                    choiceButton(
+                        title: roast.displayName,
+                        isSelected: store.currentInput.roastLevel == roast
+                    ) {
+                        store.updateRoastLevel(roast)
+                    }
+                }
+            }
+        }
+    }
+
+    private var calculatedPlanCard: some View {
+        cardContainer {
+            cardHeader(systemImage: "wand.and.stars.inverse", title: "算出結果")
+
+            Text("入力を変えると総湯量・比率・挽き目・時間目安が即時更新されます。")
+                .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: 12),
+                    GridItem(.flexible(), spacing: 12)
+                ],
+                alignment: .leading,
+                spacing: 12
+            ) {
+                resultMetric(title: "総湯量", value: "\(currentPlan.totalWater) g")
+                resultMetric(title: "比率", value: ratioLabel(currentPlan.ratio))
+                resultMetric(title: "推奨挽き目", value: store.currentInput.grindSize.displayName)
+                resultMetric(title: "時間目安", value: PourStep.timeLabel(from: currentPlan.estimatedTotalSeconds))
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("湯温")
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                    .foregroundStyle(AppDesignTokens.Colors.headingAccent)
+                Text("\(currentPlan.recommendedTemperature)℃")
+                    .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                Spacer()
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
             .background(AppDesignTokens.Colors.totalWaterBackground)
             .overlay {
                 Capsule()
                     .stroke(AppDesignTokens.Colors.totalWaterBorder, lineWidth: 1)
             }
             .clipShape(Capsule())
+
+            Text(currentPlan.plannerMemo)
+                .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
         }
     }
 
-    private var tasteAdjustmentCard: some View {
+    private var scheduleCard: some View {
         cardContainer {
-            cardHeader(systemImage: "slider.horizontal.3", title: "味わいの調整 (最初の40%)")
+            cardHeader(systemImage: "drop.circle.fill", title: "6投レシピ")
 
-            HStack {
-                Text("甘み")
-                Spacer()
-                Text(tasteLabel(for: store.currentInput.tasteProfile))
-                    .foregroundStyle(AppDesignTokens.Colors.tasteAccent)
-                Spacer()
-                Text("酸味")
-            }
-            .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
-            .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-
-            Slider(value: tasteProfileSliderBinding, in: 0...2, step: 1)
-                .tint(AppDesignTokens.Colors.sliderAccent)
-
-            HStack {
-                pourAmountColumn(title: "第1投", amount: stepAmount(at: 0), alignment: .leading)
-                Spacer()
-                pourAmountColumn(title: "第2投", amount: stepAmount(at: 1), alignment: .trailing)
-            }
-        }
-    }
-
-    private var strengthAdjustmentCard: some View {
-        cardContainer {
-            cardHeader(systemImage: "drop.fill", title: "濃さの調整 (残りの60%)")
-
-            HStack(spacing: 6) {
-                ForEach(StrengthOption.options) { option in
-                    let isSelected = store.currentInput.grindSize == option.grind
-                    Button {
-                        store.updateGrindSize(option.grind)
-                    } label: {
-                        Text(option.title)
+            ForEach(currentPlan.steps) { step in
+                HStack(alignment: .top, spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(AppDesignTokens.Colors.timerStepBadgeBackground)
+                        Circle()
+                            .stroke(AppDesignTokens.Colors.timerStepBadgeBorder, lineWidth: 1)
+                        Text("\(step.id)")
                             .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
-                            .foregroundStyle(
-                                isSelected
-                                ? AppDesignTokens.Colors.textPrimary
-                                : AppDesignTokens.Colors.textSecondary
-                            )
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                Capsule().fill(
-                                    isSelected
-                                    ? AppDesignTokens.Colors.activeSegment
-                                    : .clear
-                                )
-                            )
+                            .foregroundStyle(AppDesignTokens.Colors.headingAccent)
                     }
-                    .buttonStyle(.plain)
+                    .frame(width: 42, height: 42)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(step.phase.displayName) · \(step.amountGrams)g")
+                            .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                            .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                        Text("開始 \(step.startLabel) / 待ち \(step.waitSeconds)s / 累計 \(step.cumulativeGrams)g")
+                            .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                            .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                    }
+
+                    Spacer()
+                }
+
+                if step.id != currentPlan.steps.count {
+                    Divider().overlay(AppDesignTokens.Colors.controlBorder)
                 }
             }
-            .padding(5)
+        }
+    }
+
+    private var recommendationPlaceholderCard: some View {
+        cardContainer {
+            HStack {
+                cardHeader(systemImage: "sparkles", title: "おすすめ")
+                Spacer()
+                beanBadge(text: "Coming Soon")
+            }
+
+            Text("抽出ログが蓄積したら、この豆に合う比率・挽き目・時間を後続フェーズで提案します。")
+                .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("将来の提案例")
+                    .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                Text("甘さ寄り / 1:16 / 粗挽き / 3:00")
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(AppDesignTokens.Colors.controlBackground)
             .overlay {
-                Capsule()
-                    .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppDesignTokens.Colors.controlBorder, style: StrokeStyle(lineWidth: 1, dash: [6, 6]))
             }
-            .clipShape(Capsule())
-
-            HStack(spacing: 0) {
-                strengthPourColumn(title: "第3投", amount: stepAmount(at: 2))
-                Divider().overlay(AppDesignTokens.Colors.controlBorder)
-                strengthPourColumn(title: "第4投", amount: stepAmount(at: 3))
-                Divider().overlay(AppDesignTokens.Colors.controlBorder)
-                strengthPourColumn(title: "第5投", amount: stepAmount(at: 4))
-            }
-            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
     }
 
@@ -225,7 +320,7 @@ struct HomeView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: "timer")
-                Text("タイマーを開く")
+                Text("このレシピでタイマーを開く")
             }
             .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
             .foregroundStyle(AppDesignTokens.Colors.ctaText)
@@ -320,52 +415,97 @@ struct HomeView: View {
         .opacity(isEnabled ? 1 : 0.55)
     }
 
-    private func pourAmountColumn(title: String, amount: Int, alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: 6) {
-            Text(title)
-                .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
-                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text("\(amount)")
-                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+    private func plannerChoiceGroup<Content: View>(
+        title: String,
+        note: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                Text("g")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                Text(note)
+                    .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            }
+
+            HStack(spacing: 8) {
+                content()
             }
         }
     }
 
-    private func strengthPourColumn(title: String, amount: Int) -> some View {
+    private func choiceButton(
+        title: String,
+        caption: String? = nil,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Text(title)
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                if let caption {
+                    Text(caption)
+                        .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                }
+            }
+            .foregroundStyle(
+                isSelected
+                ? AppDesignTokens.Colors.textPrimary
+                : AppDesignTokens.Colors.textSecondary
+            )
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 66)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(
+                        isSelected
+                        ? AppDesignTokens.Colors.activeSegment
+                        : AppDesignTokens.Colors.controlBackground
+                    )
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func resultMetric(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text("\(amount)")
-                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
-                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                Text("g")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
-                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-            }
+            Text(value)
+                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
         }
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var tasteProfileSliderBinding: Binding<Double> {
-        Binding {
-            Double(TasteProfile.allCases.firstIndex(of: store.currentInput.tasteProfile) ?? 1)
-        } set: { newValue in
-            let index = Int(newValue.rounded())
-            guard TasteProfile.allCases.indices.contains(index) else { return }
-            store.updateTasteProfile(TasteProfile.allCases[index])
+        .background(AppDesignTokens.Colors.controlBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
         }
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
-    private func stepAmount(at index: Int) -> Int {
-        guard store.currentPlan.steps.indices.contains(index) else { return 0 }
-        return store.currentPlan.steps[index].amountGrams
+    private func beanBadge(text: String) -> some View {
+        Text(text)
+            .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+            .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(AppDesignTokens.Colors.controlBackground)
+            .overlay {
+                Capsule()
+                    .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+            }
+            .clipShape(Capsule())
     }
 
     private func coffeeDoseLabel(_ dose: Double) -> String {
@@ -382,29 +522,19 @@ struct HomeView: View {
         }
         return String(format: "1 : %.1f", ratio)
     }
-
-    private func tasteLabel(for profile: TasteProfile) -> String {
-        switch profile {
-        case .sweet:
-            return "甘め"
-        case .balanced:
-            return "標準"
-        case .light:
-            return "酸味寄り"
-        }
-    }
 }
 
-private struct StrengthOption: Identifiable {
+private struct ConcentrationOption: Identifiable {
     let grind: GrindSize
     let title: String
+    let caption: String
 
     var id: GrindSize { grind }
 
-    static let options: [StrengthOption] = [
-        StrengthOption(grind: .coarse, title: "軽め (2回)"),
-        StrengthOption(grind: .medium, title: "標準 (3回)"),
-        StrengthOption(grind: .fine, title: "濃いめ (4回)")
+    static let options: [ConcentrationOption] = [
+        ConcentrationOption(grind: .coarse, title: "薄め", caption: "さらっと軽い"),
+        ConcentrationOption(grind: .medium, title: "普通", caption: "基準のバランス"),
+        ConcentrationOption(grind: .fine, title: "濃い", caption: "厚みを出す")
     ]
 }
 

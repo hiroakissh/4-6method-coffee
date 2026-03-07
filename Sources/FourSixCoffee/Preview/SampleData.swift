@@ -29,12 +29,13 @@ enum SampleData {
     ]
 
     static let brewLogs: [BrewLog] = {
-        let input = BrewInput(
+        var input = BrewInput(
             coffeeDose: 20,
             tasteProfile: .sweet,
             roastLevel: .light,
             grindSize: .medium
         )
+        input.brewRatio = BrewPlanner.recommendedRatio(for: input)
         let plan = BrewPlanner.makePlan(from: input)
 
         let log = BrewLog(

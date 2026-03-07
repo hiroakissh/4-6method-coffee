@@ -17,9 +17,9 @@ enum TasteProfile: String, CaseIterable, Identifiable, Hashable, Codable {
 
     var displayName: String {
         switch self {
-        case .sweet: return "甘め"
-        case .balanced: return "普通"
-        case .light: return "薄め"
+        case .sweet: return "甘い"
+        case .balanced: return "バランス"
+        case .light: return "酸味"
         }
     }
 
@@ -27,7 +27,7 @@ enum TasteProfile: String, CaseIterable, Identifiable, Hashable, Codable {
         switch self {
         case .sweet: return "甘さ寄り"
         case .balanced: return "バランス"
-        case .light: return "軽め"
+        case .light: return "酸味寄り"
         }
     }
 }
