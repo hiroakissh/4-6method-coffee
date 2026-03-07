@@ -79,11 +79,11 @@ final class AppStore {
     }
 
     var canDecreaseRatio: Bool {
-        currentInput.roastLevel != .dark
+        currentInput.brewRatio > BrewInput.minimumBrewRatio + 0.0001
     }
 
     var canIncreaseRatio: Bool {
-        currentInput.roastLevel != .light
+        currentInput.brewRatio < BrewInput.maximumBrewRatio - 0.0001
     }
 
     func recalculatePlan() {
@@ -116,12 +116,20 @@ final class AppStore {
         }
     }
 
+    func updateBrewRatio(_ value: Double) {
+        updateCurrentInput { input in
+            input.brewRatio = BrewInput.normalizedBrewRatio(value)
+        }
+    }
+
     func increaseRatio() {
-        shiftRoastLevel(towardLighterRoast: true)
+        let nextRatio = currentInput.brewRatio.rounded(.down) + 1
+        updateBrewRatio(nextRatio)
     }
 
     func decreaseRatio() {
-        shiftRoastLevel(towardLighterRoast: false)
+        let nextRatio = currentInput.brewRatio.rounded(.up) - 1
+        updateBrewRatio(nextRatio)
     }
 
     func updateGrindSize(_ grind: GrindSize) {
@@ -284,20 +292,5 @@ final class AppStore {
         )
         let steps = (clampedValue / PlannerInputConfig.coffeeDoseStep).rounded()
         return steps * PlannerInputConfig.coffeeDoseStep
-    }
-
-    private func shiftRoastLevel(towardLighterRoast: Bool) {
-        let levels = RoastLevel.allCases
-        guard let currentIndex = levels.firstIndex(of: currentInput.roastLevel) else { return }
-
-        let nextIndex: Int
-        if towardLighterRoast {
-            nextIndex = max(0, currentIndex - 1)
-        } else {
-            nextIndex = min(levels.count - 1, currentIndex + 1)
-        }
-
-        guard nextIndex != currentIndex else { return }
-        updateRoastLevel(levels[nextIndex])
     }
 }

@@ -102,17 +102,69 @@ struct Bean: Identifiable, Hashable, Codable {
 }
 
 struct BrewInput: Hashable, Codable {
+    static let minimumBrewRatio = 10.0
+    static let maximumBrewRatio = 20.0
+    static let defaultBrewRatio = 15.0
+
     var coffeeDose: Double
+    var brewRatio: Double
     var tasteProfile: TasteProfile
     var roastLevel: RoastLevel
     var grindSize: GrindSize
 
+    init(
+        coffeeDose: Double,
+        brewRatio: Double = BrewInput.defaultBrewRatio,
+        tasteProfile: TasteProfile,
+        roastLevel: RoastLevel,
+        grindSize: GrindSize
+    ) {
+        self.coffeeDose = coffeeDose
+        self.brewRatio = Self.normalizedBrewRatio(brewRatio)
+        self.tasteProfile = tasteProfile
+        self.roastLevel = roastLevel
+        self.grindSize = grindSize
+    }
+
     static let `default` = BrewInput(
         coffeeDose: 20,
+        brewRatio: defaultBrewRatio,
         tasteProfile: .balanced,
         roastLevel: .medium,
         grindSize: .medium
     )
+
+    enum CodingKeys: String, CodingKey {
+        case coffeeDose
+        case brewRatio
+        case tasteProfile
+        case roastLevel
+        case grindSize
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.coffeeDose = try container.decode(Double.self, forKey: .coffeeDose)
+        self.brewRatio = Self.normalizedBrewRatio(
+            try container.decodeIfPresent(Double.self, forKey: .brewRatio) ?? Self.defaultBrewRatio
+        )
+        self.tasteProfile = try container.decode(TasteProfile.self, forKey: .tasteProfile)
+        self.roastLevel = try container.decode(RoastLevel.self, forKey: .roastLevel)
+        self.grindSize = try container.decode(GrindSize.self, forKey: .grindSize)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(coffeeDose, forKey: .coffeeDose)
+        try container.encode(Self.normalizedBrewRatio(brewRatio), forKey: .brewRatio)
+        try container.encode(tasteProfile, forKey: .tasteProfile)
+        try container.encode(roastLevel, forKey: .roastLevel)
+        try container.encode(grindSize, forKey: .grindSize)
+    }
+
+    static func normalizedBrewRatio(_ value: Double) -> Double {
+        min(max(value, minimumBrewRatio), maximumBrewRatio)
+    }
 }
 
 struct PourStep: Identifiable, Hashable, Codable {

@@ -113,8 +113,8 @@ struct HomeView: View {
             )
 
             capsuleStepper(
-                title: "比率 (豆 : 湯) · 焙煎 \(store.currentInput.roastLevel.displayName)",
-                valueText: ratioLabel(store.currentPlan.ratio),
+                title: "比率 (豆 : 湯)",
+                valueText: ratioLabel(store.currentInput.brewRatio),
                 isMinusEnabled: store.canDecreaseRatio,
                 isPlusEnabled: store.canIncreaseRatio,
                 onMinusTap: { store.decreaseRatio() },
@@ -377,11 +377,10 @@ struct HomeView: View {
     }
 
     private func ratioLabel(_ ratio: Double) -> String {
-        let rounded = (ratio * 10).rounded() / 10
-        if abs(rounded.rounded() - rounded) < 0.001 {
-            return "1 : \(Int(rounded))"
+        if abs(ratio.rounded() - ratio) < 0.001 {
+            return "1 : \(Int(ratio.rounded()))"
         }
-        return String(format: "1 : %.1f", rounded)
+        return String(format: "1 : %.1f", ratio)
     }
 
     private func tasteLabel(for profile: TasteProfile) -> String {

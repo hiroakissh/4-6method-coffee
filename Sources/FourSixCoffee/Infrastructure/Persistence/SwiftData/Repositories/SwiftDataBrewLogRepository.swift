@@ -35,8 +35,11 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
 
         return try context.fetch(descriptor).map { entity in
             do {
-                let input = try decoder.decode(BrewInput.self, from: entity.inputData)
                 let plan = try decoder.decode(BrewPlan.self, from: entity.planData)
+                let input = try decodeInput(
+                    from: entity.inputData,
+                    legacyRatioFallback: plan.ratio
+                )
                 let ratings = try decoder.decode(TasteRatings.self, from: entity.ratingsData)
 
                 let bean: Bean?
@@ -116,5 +119,26 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
         )
         descriptor.fetchLimit = 1
         return try context.fetch(descriptor).first
+    }
+
+    private func decodeInput(from data: Data, legacyRatioFallback: Double) throws -> BrewInput {
+        var input = try decoder.decode(BrewInput.self, from: data)
+
+        if payloadIsMissingBrewRatio(in: data) {
+            input.brewRatio = BrewInput.normalizedBrewRatio(legacyRatioFallback)
+        }
+
+        return input
+    }
+
+    private func payloadIsMissingBrewRatio(in data: Data) -> Bool {
+        guard
+            let jsonObject = try? JSONSerialization.jsonObject(with: data),
+            let dictionary = jsonObject as? [String: Any]
+        else {
+            return false
+        }
+
+        return dictionary["brewRatio"] == nil
     }
 }

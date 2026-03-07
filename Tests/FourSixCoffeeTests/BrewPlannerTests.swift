@@ -5,6 +5,7 @@ final class BrewPlannerTests: XCTestCase {
     func testMakePlanHasSixStepsAndTotalWaterMatchesSum() {
         let input = BrewInput(
             coffeeDose: 20,
+            brewRatio: 15,
             tasteProfile: .balanced,
             roastLevel: .medium,
             grindSize: .medium
@@ -17,37 +18,42 @@ final class BrewPlannerTests: XCTestCase {
         XCTAssertGreaterThan(plan.estimatedTotalSeconds, 0)
     }
 
-    func testRecommendedRatioMovesByTasteRoastAndGrind() {
-        let sweetInput = BrewInput(
+    func testMakePlanUsesSelectedRatioForTotalWater() {
+        let lowRatioInput = BrewInput(
             coffeeDose: 20,
-            tasteProfile: .sweet,
-            roastLevel: .dark,
-            grindSize: .fine
+            brewRatio: 10,
+            tasteProfile: .balanced,
+            roastLevel: .medium,
+            grindSize: .medium
         )
-        let lightInput = BrewInput(
+        let highRatioInput = BrewInput(
             coffeeDose: 20,
-            tasteProfile: .light,
-            roastLevel: .light,
-            grindSize: .coarse
+            brewRatio: 20,
+            tasteProfile: .balanced,
+            roastLevel: .medium,
+            grindSize: .medium
         )
 
-        let sweetRatio = BrewPlanner.recommendedRatio(for: sweetInput)
-        let lightRatio = BrewPlanner.recommendedRatio(for: lightInput)
+        let lowRatioPlan = BrewPlanner.makePlan(from: lowRatioInput)
+        let highRatioPlan = BrewPlanner.makePlan(from: highRatioInput)
 
-        XCTAssertLessThan(sweetRatio, lightRatio)
-        XCTAssertGreaterThanOrEqual(sweetRatio, 13.5)
-        XCTAssertLessThanOrEqual(lightRatio, 17.5)
+        XCTAssertEqual(lowRatioPlan.ratio, 10, accuracy: 0.0001)
+        XCTAssertEqual(lowRatioPlan.totalWater, 200)
+        XCTAssertEqual(highRatioPlan.ratio, 20, accuracy: 0.0001)
+        XCTAssertEqual(highRatioPlan.totalWater, 400)
     }
 
     func testRecommendedTemperatureRespectsRoastAndGrindBounds() {
         let highInput = BrewInput(
             coffeeDose: 20,
+            brewRatio: 15,
             tasteProfile: .light,
             roastLevel: .light,
             grindSize: .coarse
         )
         let lowInput = BrewInput(
             coffeeDose: 20,
+            brewRatio: 15,
             tasteProfile: .sweet,
             roastLevel: .dark,
             grindSize: .fine
