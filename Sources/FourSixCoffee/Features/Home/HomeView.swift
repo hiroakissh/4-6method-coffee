@@ -4,10 +4,6 @@ import SwiftUI
 struct HomeView: View {
     @Environment(AppStore.self) private var store
 
-    private let minDose = 10.0
-    private let maxDose = 40.0
-    private let doseStep = 0.5
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -110,19 +106,19 @@ struct HomeView: View {
             capsuleStepper(
                 title: "豆の量 (G)",
                 valueText: coffeeDoseLabel(store.currentInput.coffeeDose),
-                isMinusEnabled: store.currentInput.coffeeDose > minDose,
-                isPlusEnabled: store.currentInput.coffeeDose < maxDose,
-                onMinusTap: { store.updateCoffeeDose(store.currentInput.coffeeDose - doseStep) },
-                onPlusTap: { store.updateCoffeeDose(store.currentInput.coffeeDose + doseStep) }
+                isMinusEnabled: store.canDecreaseCoffeeDose,
+                isPlusEnabled: store.canIncreaseCoffeeDose,
+                onMinusTap: { store.decrementCoffeeDose() },
+                onPlusTap: { store.incrementCoffeeDose() }
             )
 
             capsuleStepper(
                 title: "比率 (豆 : 湯) · 焙煎 \(store.currentInput.roastLevel.displayName)",
                 valueText: ratioLabel(store.currentPlan.ratio),
-                isMinusEnabled: store.currentInput.roastLevel != .dark,
-                isPlusEnabled: store.currentInput.roastLevel != .light,
-                onMinusTap: { adjustRoastLevel(towardLighterRoast: false) },
-                onPlusTap: { adjustRoastLevel(towardLighterRoast: true) }
+                isMinusEnabled: store.canDecreaseRatio,
+                isPlusEnabled: store.canIncreaseRatio,
+                onMinusTap: { store.decreaseRatio() },
+                onPlusTap: { store.increaseRatio() }
             )
 
             HStack(alignment: .lastTextBaseline, spacing: 8) {
@@ -290,8 +286,8 @@ struct HomeView: View {
                 Spacer()
                 stepperButton(symbol: "plus", isEnabled: isPlusEnabled, action: onPlusTap)
             }
-            .padding(.horizontal, 22)
-            .frame(height: 66)
+            .padding(.horizontal, 16)
+            .frame(height: 76)
             .background(AppDesignTokens.Colors.controlBackground)
             .overlay {
                 Capsule()
@@ -303,17 +299,25 @@ struct HomeView: View {
 
     private func stepperButton(symbol: String, isEnabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
-                .font(AppDesignTokens.Typography.font(.title2, weight: .medium))
-                .foregroundStyle(
-                    isEnabled
-                    ? AppDesignTokens.Colors.textPrimary
-                    : AppDesignTokens.Colors.textSecondary
-                )
-                .frame(width: 34, height: 34)
+            ZStack {
+                Circle()
+                    .fill(AppDesignTokens.Colors.secondaryButtonBackground)
+                Circle()
+                    .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                Image(systemName: symbol)
+                    .font(AppDesignTokens.Typography.font(.title2, weight: .medium))
+                    .foregroundStyle(
+                        isEnabled
+                        ? AppDesignTokens.Colors.textPrimary
+                        : AppDesignTokens.Colors.textSecondary
+                    )
+            }
+            .frame(width: 52, height: 52)
+            .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
+        .opacity(isEnabled ? 1 : 0.55)
     }
 
     private func pourAmountColumn(title: String, amount: Int, alignment: HorizontalAlignment) -> some View {
@@ -357,21 +361,6 @@ struct HomeView: View {
             guard TasteProfile.allCases.indices.contains(index) else { return }
             store.updateTasteProfile(TasteProfile.allCases[index])
         }
-    }
-
-    private func adjustRoastLevel(towardLighterRoast: Bool) {
-        let levels = RoastLevel.allCases
-        guard let currentIndex = levels.firstIndex(of: store.currentInput.roastLevel) else { return }
-
-        let nextIndex: Int
-        if towardLighterRoast {
-            nextIndex = max(0, currentIndex - 1)
-        } else {
-            nextIndex = min(levels.count - 1, currentIndex + 1)
-        }
-
-        guard nextIndex != currentIndex else { return }
-        store.updateRoastLevel(levels[nextIndex])
     }
 
     private func stepAmount(at index: Int) -> Int {

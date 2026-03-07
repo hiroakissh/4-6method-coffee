@@ -77,6 +77,8 @@ WidgetExtension/
   - 基本設定: `coffeeDose`, `ratio`, `totalWater`
   - 味わい調整（前半40%）: `tasteProfile`, `steps[0...1]`
   - 濃さ調整（後半60%）: `grindSize`, `steps[2...]`
+- 豆量と比率の増減操作は View から値を直接組み立てず、`AppStore` の更新メソッド経由で行う。
+- プランナー内の増減ボタンは最小 44pt 四方のタップ領域を確保し、押下直後に数値再計算が UI へ反映されることを前提とする。
 
 ### Brew assistant UI mapping
 - 既存 `BrewPlan` / `BrewSessionModel` の状態をそのまま使い、ロジック変更なしで視覚表現を更新する。
