@@ -7,7 +7,7 @@
 
 ## Core domain models
 - **Bean**
-  - 豆プロファイル（豆名 / 購入店名 / 購入日 / 産地・銘柄(任意) / 焙煎日(任意) / URL(任意) / メモ(任意) / 焙煎度）
+  - 豆プロファイル（豆名 / 焙煎度 / 購入店名(任意) / 購入日(既定値あり) / 産地(任意) / プロセス(任意) / 焙煎日(任意) / URL(任意) / メモ(任意)）
 - **BrewInput**
   - `coffeeDose`, `brewRatio`, `tasteProfile`, `roastLevel`, `grindSize`
 - **BrewPlan / PourStep**
@@ -88,15 +88,17 @@ WidgetExtension/
   - リング進捗: `elapsedSeconds`, `estimatedTotalSeconds`, `currentStep(in:)`
   - サマリーカード: `secondsToNextStep(in:)`, `totalWater`, 進捗率
   - スケジュール: `steps`, `stepStatus(for:)`
-  - メモ/評価: `note`, `sweetness`, `acidity`, `bitterness`, `body`, `aftertaste`
+  - 保存レビュー: `tasteFeedback`, `strengthFeedback`, `overallFeedback`, `note`
+  - 簡易レビューの 3 項目は保存時に既存 `TasteRatings` へマッピングして後方互換を保つ
 
 ### Beans UI mapping
-- `Bean` モデルの既存項目（`name`, `shopName`, `purchasedAt`）を一覧カードに投影し、表示内容は維持する。
-- 追加フローは既存 `AddBeanSheet` を利用し、保存ロジック（`AppStore.addBean`）は変更しない。
+- 一覧カードは `name`, `roastLevel` を主表示にし、`shopName` は未入力なら省略可能とする。
+- 追加フローは `name`, `roastLevel` を主入力とし、`shopName`, `purchasedAt`, `origin`, `process`, `roastDate`, `referenceURL`, `notes` はオプションセクションへ移す。
 - 詳細遷移は既存 `BeanProfileView` を利用し、一覧側のレイアウトのみ更新する。
 
 ### Brew logs UI mapping
 - `BrewLog` の既存項目（`bean`, `date`, `input`, `plan`, `memo`, `ratings`, `actualBrewSeconds`）をカード表示へ投影する。
+- 履歴カードでは `ratings` の生値よりも、簡易レビュー由来の要約を先に見せる。
 - 再利用操作（`store.apply(log:)`）と削除操作（`store.deleteLogs`）は既存ロジックを維持する。
 - 空状態表示のみUI変更し、状態判定は `store.brewLogs.isEmpty` を継続利用する。
 
@@ -117,7 +119,7 @@ WidgetExtension/
 - Bean と BrewLog を SwiftData に保存する。
 - `BrewLog` は `beanID` を保持し、豆削除時はログを残して参照のみ `nil` 扱いにする。
 - `BrewLog` の複合構造（`BrewInput`, `BrewPlan`, `TasteRatings`）は JSON エンコードで保存する。
-- Bean の購入店名と購入日は必須として扱い、URLは保存前に `http/https` の絶対URLとして妥当性を検証する。
+- Bean の購入日は既定値を持ち、購入店名は空文字を許容する。URL は保存前に `http/https` の絶対URLとして妥当性を検証する。
 
 ## Testing policy
 - Domain service（`BrewPlanner`）は純粋関数としてテストする。

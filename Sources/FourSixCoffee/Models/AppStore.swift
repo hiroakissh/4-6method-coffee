@@ -114,7 +114,17 @@ final class AppStore {
         }
     }
 
-    func addBean(name: String, shopName: String, purchasedAt: Date, origin: String, process: String, roastLevel: RoastLevel, notes: String = "", roastDate: Date? = nil, referenceURL: String = "") {
+    func addBean(
+        name: String,
+        shopName: String = "",
+        purchasedAt: Date = .now,
+        origin: String = "",
+        process: String = "",
+        roastLevel: RoastLevel,
+        notes: String = "",
+        roastDate: Date? = nil,
+        referenceURL: String = ""
+    ) {
         do {
             let bean = try beanUseCase.createBean(
                 name: name,

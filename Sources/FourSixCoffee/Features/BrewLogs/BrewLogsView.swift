@@ -139,7 +139,7 @@ struct BrewLogsView: View {
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             }
 
-            ratingRow(log.ratings)
+            feedbackSummaryRow(log.ratings)
 
             HStack(spacing: 10) {
                 Button {
@@ -189,20 +189,17 @@ struct BrewLogsView: View {
         store.deleteLogs(at: IndexSet(integer: index))
     }
 
-    private func ratingRow(_ ratings: TasteRatings) -> some View {
+    private func feedbackSummaryRow(_ ratings: TasteRatings) -> some View {
         HStack(spacing: 8) {
-            metric(label: "甘", value: ratings.sweetness)
-            metric(label: "酸", value: ratings.acidity)
-            metric(label: "苦", value: ratings.bitterness)
-            metric(label: "コク", value: ratings.body)
-            metric(label: "余韻", value: ratings.aftertaste)
+            metric(label: "味", value: ratings.tasteFeedbackSummary.displayName)
+            metric(label: "濃度", value: ratings.strengthFeedbackSummary.displayName)
+            metric(label: "評価", value: ratings.overallFeedbackSummary.displayName)
         }
     }
 
-    private func metric(label: String, value: Int) -> some View {
+    private func metric(label: String, value: String) -> some View {
         Text("\(label) \(value)")
             .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
-            .monospacedDigit()
             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             .padding(.vertical, 5)
             .padding(.horizontal, 10)

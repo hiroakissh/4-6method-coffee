@@ -123,35 +123,31 @@ struct BeansView: View {
 
     private func beanCard(_ bean: Bean) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(bean.name)
-                .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
-                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(alignment: .top) {
+                Text(bean.name)
+                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                beanBadge(text: bean.roastLevel.displayName)
+            }
 
             Divider()
                 .overlay(AppDesignTokens.Colors.controlBorder)
                 .padding(.vertical, 2)
 
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("購入店")
-                        .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
-                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-                    Text(bean.shopName)
-                        .font(AppDesignTokens.Typography.font(.title2, weight: .semibold))
-                        .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                }
+            if !beanMetadata(for: bean).isEmpty {
+                Text(beanMetadata(for: bean))
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            }
 
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("購入日")
-                        .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
-                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-                    Text(bean.purchasedAt.formatted(date: .abbreviated, time: .omitted))
-                        .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
-                        .foregroundStyle(AppDesignTokens.Colors.headingAccent)
-                }
+            HStack(spacing: 8) {
+                Text("登録日")
+                    .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                Text(bean.purchasedAt.formatted(date: .abbreviated, time: .omitted))
+                    .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                    .foregroundStyle(AppDesignTokens.Colors.headingAccent)
             }
         }
         .padding(22)
@@ -188,6 +184,27 @@ struct BeansView: View {
         guard let index = store.beans.firstIndex(where: { $0.id == beanID }) else { return }
         store.deleteBeans(at: IndexSet(integer: index))
     }
+
+    private func beanMetadata(for bean: Bean) -> String {
+        [bean.shopName, bean.origin, bean.process]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+    }
+
+    private func beanBadge(text: String) -> some View {
+        Text(text)
+            .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+            .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(AppDesignTokens.Colors.controlBackground)
+            .overlay {
+                Capsule()
+                    .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+            }
+            .clipShape(Capsule())
+    }
 }
 
 private struct BeanProfileView: View {
@@ -200,9 +217,9 @@ private struct BeanProfileView: View {
             List {
                 Section("豆情報") {
                     LabeledContent("豆名", value: bean.name)
-                    LabeledContent("店名", value: bean.shopName)
+                    LabeledContent("店名", value: bean.shopName.isEmpty ? "未設定" : bean.shopName)
                     LabeledContent("購入日", value: bean.purchasedAt.formatted(date: .abbreviated, time: .omitted))
-                    LabeledContent("産地/銘柄", value: bean.origin.isEmpty ? "未設定" : bean.origin)
+                    LabeledContent("産地", value: bean.origin.isEmpty ? "未設定" : bean.origin)
                     LabeledContent("プロセス", value: bean.process.isEmpty ? "未設定" : bean.process)
                     LabeledContent("焙煎度", value: bean.roastLevel.displayName)
                     LabeledContent("焙煎日", value: bean.roastDate?.formatted(date: .abbreviated, time: .omitted) ?? "未設定")
@@ -223,6 +240,11 @@ private struct BeanProfileView: View {
                                     .foregroundStyle(.secondary)
                                 Text("豆量 \(log.input.coffeeDose, specifier: "%.1f")g · \(log.input.tasteProfile.displayName)")
                                     .font(.subheadline)
+                                Text(
+                                    "\(log.ratings.tasteFeedbackSummary.displayName) / \(log.ratings.strengthFeedbackSummary.displayName) / \(log.ratings.overallFeedbackSummary.displayName)"
+                                )
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                                 if !log.memo.isEmpty {
                                     Text(log.memo)
                                         .font(.footnote)
@@ -254,10 +276,11 @@ private struct AddBeanSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var name = ""
+    @State private var showingOptionalDetails = false
     @State private var shopName = ""
     @State private var purchasedAt = Date.now
     @State private var origin = ""
-    @State private var process = "Washed"
+    @State private var process = ""
     @State private var roastLevel: RoastLevel = .medium
     @State private var roastDate: Date?
     @State private var referenceURL = ""
@@ -266,21 +289,31 @@ private struct AddBeanSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("豆名", text: $name)
-                TextField("店名", text: $shopName)
-                DatePicker("購入日", selection: $purchasedAt, displayedComponents: .date)
+                Section {
+                    Text("まずは豆名と焙煎度だけで追加できます。")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    TextField("豆名", text: $name)
 
-                TextField("産地/銘柄（任意）", text: $origin)
-                TextField("プロセス（任意）", text: $process)
-                DatePicker("焙煎日（任意）", selection: roastDateBinding, displayedComponents: .date)
-                TextField("URL（任意）", text: $referenceURL)
-                    .keyboardType(.URL)
-                    .textInputAutocapitalization(.never)
-                TextField("メモ（任意）", text: $notes, axis: .vertical)
+                    Picker("焙煎度", selection: $roastLevel) {
+                        ForEach(RoastLevel.allCases) { roast in
+                            Text(roast.displayName).tag(roast)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
 
-                Picker("焙煎度", selection: $roastLevel) {
-                    ForEach(RoastLevel.allCases) { roast in
-                        Text(roast.displayName).tag(roast)
+                Section {
+                    DisclosureGroup("詳細も記録する", isExpanded: $showingOptionalDetails) {
+                        TextField("店名（任意）", text: $shopName)
+                        DatePicker("購入日（任意）", selection: $purchasedAt, displayedComponents: .date)
+                        TextField("産地（任意）", text: $origin)
+                        TextField("プロセス（任意）", text: $process)
+                        DatePicker("焙煎日（任意）", selection: roastDateBinding, displayedComponents: .date)
+                        TextField("URL（任意）", text: $referenceURL)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                        TextField("メモ（任意）", text: $notes, axis: .vertical)
                     }
                 }
             }
@@ -293,8 +326,8 @@ private struct AddBeanSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
                         store.addBean(
-                            name: name.isEmpty ? "New Bean" : name,
-                            shopName: shopName.isEmpty ? "Unknown Shop" : shopName,
+                            name: trimmedName,
+                            shopName: shopName,
                             purchasedAt: purchasedAt,
                             origin: origin,
                             process: process,
@@ -305,9 +338,14 @@ private struct AddBeanSheet: View {
                         )
                         dismiss()
                     }
+                    .disabled(trimmedName.isEmpty)
                 }
             }
         }
+    }
+
+    private var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var roastDateBinding: Binding<Date> {

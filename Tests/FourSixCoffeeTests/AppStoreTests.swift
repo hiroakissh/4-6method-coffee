@@ -58,6 +58,21 @@ final class AppStoreTests: XCTestCase {
         XCTAssertNil(reloaded.brewLogs[0].bean)
     }
 
+    func testAddBeanAllowsQuickEntryDefaults() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+
+        store.addBean(
+            name: "Quick Bean",
+            roastLevel: .medium
+        )
+
+        XCTAssertEqual(store.beans.count, 1)
+        XCTAssertEqual(store.beans[0].name, "Quick Bean")
+        XCTAssertEqual(store.beans[0].shopName, "")
+        XCTAssertEqual(store.selectedBean?.id, store.beans[0].id)
+    }
+
     func testDeleteSelectedBeanUpdatesRoastLevelToRemainingBean() {
         let dependencies = makeInMemoryDependencies()
         let store = AppStore(dependencies: dependencies)

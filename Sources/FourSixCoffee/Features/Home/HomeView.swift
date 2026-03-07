@@ -125,9 +125,11 @@ struct HomeView: View {
                         Spacer()
                         beanBadge(text: bean.roastLevel.displayName)
                     }
-                    Text(bean.shopName)
-                        .font(AppDesignTokens.Typography.font(.body, weight: .medium))
-                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                    if !bean.shopName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(bean.shopName)
+                            .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                            .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                    }
                     if !bean.origin.isEmpty || !bean.process.isEmpty {
                         Text([bean.origin, bean.process].filter { !$0.isEmpty }.joined(separator: " · "))
                             .font(AppDesignTokens.Typography.font(.caption, weight: .medium))

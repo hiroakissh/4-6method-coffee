@@ -10,11 +10,9 @@ final class BrewSessionModel {
     var isRunning: Bool = false
     var note: String = ""
 
-    var sweetness: Int = 3
-    var acidity: Int = 3
-    var bitterness: Int = 3
-    var body: Int = 3
-    var aftertaste: Int = 3
+    var tasteFeedback: TasteProfile = .balanced
+    var strengthFeedback: BrewStrengthFeedback = .balanced
+    var overallFeedback: BrewOverallFeedback = .good
 
     @ObservationIgnored
     private var tickerTask: Task<Void, Never>?
@@ -105,11 +103,9 @@ final class BrewSessionModel {
 
     func saveLogIfPossible(plan: BrewPlan, store: AppStore) {
         let ratings = TasteRatings(
-            sweetness: sweetness,
-            acidity: acidity,
-            bitterness: bitterness,
-            body: body,
-            aftertaste: aftertaste
+            tasteFeedback: tasteFeedback,
+            strengthFeedback: strengthFeedback,
+            overallFeedback: overallFeedback
         )
         store.addBrewLog(
             memo: note,
@@ -182,11 +178,9 @@ final class BrewSessionModel {
 
     private func resetFeedback() {
         note = ""
-        sweetness = 3
-        acidity = 3
-        bitterness = 3
-        body = 3
-        aftertaste = 3
+        tasteFeedback = .balanced
+        strengthFeedback = .balanced
+        overallFeedback = .good
     }
 
     private func latestStepIndex(for seconds: Int) -> Int {

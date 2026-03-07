@@ -50,6 +50,24 @@ final class BeanUseCaseTests: XCTestCase {
         XCTAssertEqual(beans.first?.name, "B")
     }
 
+    func testCreateBeanAllowsQuickEntryWithDefaults() throws {
+        let repository = InMemoryBeanRepository()
+        let useCase = BeanUseCase(repository: repository)
+
+        let created = try useCase.createBean(
+            name: "Quick Bean",
+            roastLevel: .medium
+        )
+
+        XCTAssertEqual(created.name, "Quick Bean")
+        XCTAssertEqual(created.shopName, "")
+        XCTAssertEqual(created.roastLevel, .medium)
+
+        let beans = try useCase.fetchBeans()
+        XCTAssertEqual(beans.count, 1)
+        XCTAssertEqual(beans.first?.name, "Quick Bean")
+    }
+
     func testSaveUpdatesExistingBean() throws {
         let repository = InMemoryBeanRepository()
         let useCase = BeanUseCase(repository: repository)

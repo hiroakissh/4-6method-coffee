@@ -5,6 +5,11 @@ struct BrewAssistantView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var session = BrewSessionModel()
     @State private var didSaveLog = false
+    @State private var showingNoteField = false
+
+    private let tasteFeedbackOptions: [TasteProfile] = [.light, .balanced, .sweet]
+    private let strengthFeedbackOptions = BrewStrengthFeedback.allCases
+    private let overallFeedbackOptions = BrewOverallFeedback.allCases
 
     var body: some View {
         let plan = store.currentPlan
@@ -300,28 +305,48 @@ struct BrewAssistantView: View {
 
     private func logComposer(plan: BrewPlan) -> some View {
         cardContainer(spacing: 14) {
-            Text("抽出メモ")
+            Text("抽出レビュー")
                 .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
 
-            TextEditor(text: $session.note)
-                .font(AppDesignTokens.Typography.font(.body))
-                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                .scrollContentBackground(.hidden)
-                .frame(minHeight: 92)
-                .padding(8)
-                .background(AppDesignTokens.Colors.memoFieldBackground)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            Text("抽出が終わったら、3つだけ選んで保存できます。")
+                .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
-            ratingControl(title: "甘み", value: $session.sweetness)
-            ratingControl(title: "酸味", value: $session.acidity)
-            ratingControl(title: "苦味", value: $session.bitterness)
-            ratingControl(title: "ボディ", value: $session.body)
-            ratingControl(title: "余韻", value: $session.aftertaste)
+            feedbackChoiceGroup(title: "味の印象") {
+                ForEach(tasteFeedbackOptions, id: \.self) { option in
+                    feedbackButton(
+                        title: option.displayName,
+                        isSelected: session.tasteFeedback == option
+                    ) {
+                        session.tasteFeedback = option
+                    }
+                }
+            }
+
+            feedbackChoiceGroup(title: "濃度感") {
+                ForEach(strengthFeedbackOptions) { option in
+                    feedbackButton(
+                        title: option.displayName,
+                        isSelected: session.strengthFeedback == option
+                    ) {
+                        session.strengthFeedback = option
+                    }
+                }
+            }
+
+            feedbackChoiceGroup(title: "総合評価") {
+                ForEach(overallFeedbackOptions) { option in
+                    feedbackButton(
+                        title: option.displayName,
+                        isSelected: session.overallFeedback == option
+                    ) {
+                        session.overallFeedback = option
+                    }
+                }
+            }
+
+            optionalNoteSection
 
             Button {
                 session.pause()
@@ -341,41 +366,91 @@ struct BrewAssistantView: View {
         }
     }
 
-    private func ratingControl(title: String, value: Binding<Int>) -> some View {
-        HStack {
-            Text(title)
-                .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
-                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-            Spacer()
-            HStack(spacing: 14) {
-                ratingStepperButton(symbol: "minus") {
-                    value.wrappedValue = max(1, value.wrappedValue - 1)
+    private var optionalNoteSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showingNoteField.toggle()
                 }
-                Text("\(value.wrappedValue)")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+            } label: {
+                HStack {
+                    Text(showingNoteField || !session.note.isEmpty ? "詳細メモを閉じる" : "詳細メモを追加")
+                        .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                        .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                    Spacer()
+                    Image(systemName: showingNoteField || !session.note.isEmpty ? "chevron.up" : "chevron.down")
+                        .font(AppDesignTokens.Typography.font(.body, weight: .bold))
+                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                }
+                .padding(.horizontal, 18)
+                .frame(height: 52)
+                .background(AppDesignTokens.Colors.controlBackground)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            if showingNoteField || !session.note.isEmpty {
+                TextEditor(text: $session.note)
+                    .font(AppDesignTokens.Typography.font(.body))
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                    .frame(minWidth: 16)
-                ratingStepperButton(symbol: "plus") {
-                    value.wrappedValue = min(5, value.wrappedValue + 1)
-                }
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 92)
+                    .padding(8)
+                    .background(AppDesignTokens.Colors.memoFieldBackground)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
-            .padding(.horizontal, 10)
-            .frame(height: 34)
-            .background(AppDesignTokens.Colors.controlBackground)
-            .overlay {
-                Capsule()
-                    .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
-            }
-            .clipShape(Capsule())
         }
     }
 
-    private func ratingStepperButton(symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
+    private func feedbackChoiceGroup<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
                 .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                .frame(width: 14)
+            HStack(spacing: 8) {
+                content()
+            }
+        }
+    }
+
+    private func feedbackButton(
+        title: String,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                .foregroundStyle(
+                    isSelected
+                    ? AppDesignTokens.Colors.textPrimary
+                    : AppDesignTokens.Colors.textSecondary
+                )
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 52)
+                .background(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(
+                            isSelected
+                            ? AppDesignTokens.Colors.activeSegment
+                            : AppDesignTokens.Colors.controlBackground
+                        )
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                }
         }
         .buttonStyle(.plain)
     }

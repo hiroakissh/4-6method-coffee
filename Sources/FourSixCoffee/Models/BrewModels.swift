@@ -64,6 +64,38 @@ enum GrindSize: String, CaseIterable, Identifiable, Hashable, Codable {
     }
 }
 
+enum BrewStrengthFeedback: String, CaseIterable, Identifiable, Hashable, Codable {
+    case light
+    case balanced
+    case rich
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .light: return "薄い"
+        case .balanced: return "ちょうどいい"
+        case .rich: return "濃い"
+        }
+    }
+}
+
+enum BrewOverallFeedback: String, CaseIterable, Identifiable, Hashable, Codable {
+    case needsAdjustment
+    case good
+    case excellent
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .needsAdjustment: return "微調整必要"
+        case .good: return "良い"
+        case .excellent: return "かなり良い"
+        }
+    }
+}
+
 struct Bean: Identifiable, Hashable, Codable {
     let id: UUID
     var name: String
@@ -79,7 +111,7 @@ struct Bean: Identifiable, Hashable, Codable {
     init(
         id: UUID = UUID(),
         name: String,
-        shopName: String,
+        shopName: String = "",
         purchasedAt: Date = .now,
         origin: String = "",
         process: String = "",
@@ -236,6 +268,75 @@ struct TasteRatings: Hashable, Codable {
     var body: Int
     var aftertaste: Int
 
+    init(
+        sweetness: Int,
+        acidity: Int,
+        bitterness: Int,
+        body: Int,
+        aftertaste: Int
+    ) {
+        self.sweetness = sweetness
+        self.acidity = acidity
+        self.bitterness = bitterness
+        self.body = body
+        self.aftertaste = aftertaste
+    }
+
+    init(
+        tasteFeedback: TasteProfile,
+        strengthFeedback: BrewStrengthFeedback,
+        overallFeedback: BrewOverallFeedback
+    ) {
+        let sweetness: Int
+        let acidity: Int
+
+        switch tasteFeedback {
+        case .sweet:
+            sweetness = 5
+            acidity = 2
+        case .balanced:
+            sweetness = 3
+            acidity = 3
+        case .light:
+            sweetness = 2
+            acidity = 5
+        }
+
+        let bitterness: Int
+        let body: Int
+
+        switch strengthFeedback {
+        case .light:
+            bitterness = 2
+            body = 2
+        case .balanced:
+            bitterness = 3
+            body = 3
+        case .rich:
+            bitterness = 4
+            body = 5
+        }
+
+        let aftertaste: Int
+
+        switch overallFeedback {
+        case .needsAdjustment:
+            aftertaste = 2
+        case .good:
+            aftertaste = 4
+        case .excellent:
+            aftertaste = 5
+        }
+
+        self.init(
+            sweetness: sweetness,
+            acidity: acidity,
+            bitterness: bitterness,
+            body: body,
+            aftertaste: aftertaste
+        )
+    }
+
     static let neutral = TasteRatings(
         sweetness: 3,
         acidity: 3,
@@ -243,6 +344,43 @@ struct TasteRatings: Hashable, Codable {
         body: 3,
         aftertaste: 3
     )
+
+    var tasteFeedbackSummary: TasteProfile {
+        let gap = sweetness - acidity
+
+        if gap >= 2 {
+            return .sweet
+        }
+
+        if gap <= -2 {
+            return .light
+        }
+
+        return .balanced
+    }
+
+    var strengthFeedbackSummary: BrewStrengthFeedback {
+        if body >= 5 || bitterness >= 4 {
+            return .rich
+        }
+
+        if body <= 2 && bitterness <= 2 {
+            return .light
+        }
+
+        return .balanced
+    }
+
+    var overallFeedbackSummary: BrewOverallFeedback {
+        switch aftertaste {
+        case ...2:
+            return .needsAdjustment
+        case 5...:
+            return .excellent
+        default:
+            return .good
+        }
+    }
 }
 
 struct BrewLog: Identifiable, Hashable, Codable {
