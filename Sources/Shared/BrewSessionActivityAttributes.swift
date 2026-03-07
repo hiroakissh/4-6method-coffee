@@ -6,6 +6,8 @@ struct BrewSessionActivityAttributes: ActivityAttributes {
         var stepNumber: Int
         var stepGrams: Int
         var cumulativeGrams: Int
+        var nextStepNumber: Int
+        var nextStepGrams: Int
         var remainingToNextStep: Int
         var remainingTotalSeconds: Int
         var nextStepDate: Date?
