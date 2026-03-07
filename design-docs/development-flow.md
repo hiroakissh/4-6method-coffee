@@ -25,3 +25,8 @@
 - `design-docs/` と `rules/` の更新が反映されている
 - 影響範囲の説明がある
 - 有効なテストが追加され、結果が共有されている
+
+## Live Activity Preview
+- Live Activity の UI 確認は Widget Extension 側の `#Preview` マクロで行う。
+- `Preview(_:as:using:widget:contentStates:)` を使い、Lock Screen (`.content`) と Dynamic Island (`.dynamicIsland`) を両方用意する。
+- `contentStates` に複数の状態を並べて遷移を Canvas で確認する。
