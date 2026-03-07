@@ -58,6 +58,21 @@ final class AppStoreTests: XCTestCase {
         XCTAssertNil(reloaded.brewLogs[0].bean)
     }
 
+    func testAddBeanAllowsQuickEntryDefaults() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+
+        store.addBean(
+            name: "Quick Bean",
+            roastLevel: .medium
+        )
+
+        XCTAssertEqual(store.beans.count, 1)
+        XCTAssertEqual(store.beans[0].name, "Quick Bean")
+        XCTAssertEqual(store.beans[0].shopName, "")
+        XCTAssertEqual(store.selectedBean?.id, store.beans[0].id)
+    }
+
     func testDeleteSelectedBeanUpdatesRoastLevelToRemainingBean() {
         let dependencies = makeInMemoryDependencies()
         let store = AppStore(dependencies: dependencies)
@@ -112,6 +127,7 @@ final class AppStoreTests: XCTestCase {
         store.selectedBean = target
         XCTAssertEqual(store.selectedBeanID, target.id)
         XCTAssertEqual(store.currentInput.roastLevel, .light)
+        XCTAssertEqual(store.currentInput.brewRatio, 15.5, accuracy: 0.0001)
 
         store.updateCoffeeDose(100)
         XCTAssertEqual(store.currentInput.coffeeDose, 40)
@@ -120,12 +136,71 @@ final class AppStoreTests: XCTestCase {
 
         store.updateTasteProfile(.sweet)
         XCTAssertEqual(store.currentInput.tasteProfile, .sweet)
+        XCTAssertEqual(store.currentInput.brewRatio, 15.5, accuracy: 0.0001)
 
         store.updateRoastLevel(.dark)
         XCTAssertEqual(store.currentInput.roastLevel, .dark)
+        XCTAssertEqual(store.currentInput.brewRatio, 14.5, accuracy: 0.0001)
 
         store.updateGrindSize(.fine)
         XCTAssertEqual(store.currentInput.grindSize, .fine)
+        XCTAssertEqual(store.currentInput.brewRatio, 13.5, accuracy: 0.0001)
+    }
+
+    func testCoffeeDoseStepperHelpersClampNormalizeAndRefreshPlan() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+
+        store.updateTasteProfile(.balanced)
+        store.updateRoastLevel(.medium)
+        store.updateGrindSize(.medium)
+        store.updateCoffeeDose(20.25)
+
+        XCTAssertEqual(store.currentInput.coffeeDose, 20.5, accuracy: 0.0001)
+
+        let initialTotalWater = store.currentPlan.totalWater
+
+        store.incrementCoffeeDose()
+
+        XCTAssertEqual(store.currentInput.coffeeDose, 21.0, accuracy: 0.0001)
+        XCTAssertGreaterThan(store.currentPlan.totalWater, initialTotalWater)
+
+        for _ in 0..<100 {
+            store.incrementCoffeeDose()
+        }
+
+        XCTAssertEqual(store.currentInput.coffeeDose, 40.0, accuracy: 0.0001)
+        XCTAssertFalse(store.canIncreaseCoffeeDose)
+
+        for _ in 0..<100 {
+            store.decrementCoffeeDose()
+        }
+
+        XCTAssertEqual(store.currentInput.coffeeDose, 10.0, accuracy: 0.0001)
+        XCTAssertFalse(store.canDecreaseCoffeeDose)
+    }
+
+    func testDerivedRatioUpdatesFromRoastAndConcentration() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+
+        store.updateTasteProfile(.balanced)
+        store.updateRoastLevel(.light)
+        store.updateGrindSize(.coarse)
+
+        XCTAssertEqual(store.currentInput.brewRatio, 16.5, accuracy: 0.0001)
+        XCTAssertEqual(store.currentPlan.ratio, 16.5, accuracy: 0.0001)
+        XCTAssertEqual(store.currentPlan.totalWater, Int((store.currentInput.coffeeDose * 16.5).rounded()))
+
+        store.updateGrindSize(.medium)
+        XCTAssertEqual(store.currentInput.brewRatio, 15.5, accuracy: 0.0001)
+
+        store.updateRoastLevel(.medium)
+        XCTAssertEqual(store.currentInput.brewRatio, 15, accuracy: 0.0001)
+
+        store.updateGrindSize(.fine)
+        store.updateRoastLevel(.dark)
+        XCTAssertEqual(store.currentInput.brewRatio, 13.5, accuracy: 0.0001)
     }
 
     func testApplyAndDeleteLogsFlows() {
@@ -140,7 +215,7 @@ final class AppStoreTests: XCTestCase {
             process: "P",
             roastLevel: .medium
         )
-        store.currentInput.tasteProfile = .light
+        store.updateTasteProfile(.light)
         store.addBrewLog(
             memo: "one",
             ratings: .neutral,

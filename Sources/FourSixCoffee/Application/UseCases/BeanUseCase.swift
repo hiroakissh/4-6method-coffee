@@ -25,8 +25,8 @@ struct BeanUseCase {
 
     func createBean(
         name: String,
-        shopName: String,
-        purchasedAt: Date,
+        shopName: String = "",
+        purchasedAt: Date = .now,
         origin: String = "",
         process: String = "",
         roastLevel: RoastLevel,
@@ -37,13 +37,13 @@ struct BeanUseCase {
         let normalizedReferenceURL = try normalize(referenceURL: referenceURL)
 
         let bean = Bean(
-            name: name,
-            shopName: shopName,
+            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            shopName: shopName.trimmingCharacters(in: .whitespacesAndNewlines),
             purchasedAt: purchasedAt,
-            origin: origin,
-            process: process,
+            origin: origin.trimmingCharacters(in: .whitespacesAndNewlines),
+            process: process.trimmingCharacters(in: .whitespacesAndNewlines),
             roastLevel: roastLevel,
-            notes: notes,
+            notes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
             roastDate: roastDate,
             referenceURL: normalizedReferenceURL
         )

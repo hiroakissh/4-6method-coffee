@@ -104,4 +104,51 @@ final class SwiftDataRepositoriesTests: XCTestCase {
 
         XCTAssertThrowsError(try repository.fetchBrewLogs())
     }
+
+    func testBrewLogRepositoryBackfillsLegacyInputRatioFromPlan() throws {
+        let container = PersistenceStack.makeModelContainer(inMemory: true)
+        let context = container.mainContext
+
+        let input = BrewInput(
+            coffeeDose: 20,
+            brewRatio: 15.5,
+            tasteProfile: .balanced,
+            roastLevel: .medium,
+            grindSize: .medium
+        )
+        let plan = BrewPlanner.makePlan(from: input)
+        let ratings = TasteRatings.neutral
+
+        let legacyInputData = try XCTUnwrap(
+            """
+            {
+              "coffeeDose": 20,
+              "tasteProfile": "balanced",
+              "roastLevel": "medium",
+              "grindSize": "medium"
+            }
+            """.data(using: .utf8)
+        )
+
+        let entity = BrewLogEntity(
+            id: UUID(),
+            date: .now,
+            beanID: nil,
+            beanSnapshotName: nil,
+            inputData: legacyInputData,
+            planData: try JSONEncoder().encode(plan),
+            ratingsData: try JSONEncoder().encode(ratings),
+            memo: "legacy",
+            actualBrewSeconds: 180
+        )
+        context.insert(entity)
+        try context.save()
+
+        let repository = SwiftDataBrewLogRepository(context: context)
+        let fetched = try repository.fetchBrewLogs()
+
+        XCTAssertEqual(fetched.count, 1)
+        XCTAssertEqual(fetched[0].input.brewRatio, 15.5, accuracy: 0.0001)
+        XCTAssertEqual(fetched[0].plan.ratio, 15.5, accuracy: 0.0001)
+    }
 }

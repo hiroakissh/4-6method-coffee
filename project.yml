@@ -18,6 +18,19 @@ settings:
     Release:
       SWIFT_OPTIMIZATION_LEVEL: -O
       SWIFT_COMPILATION_MODE: wholemodule
+schemes:
+  FourSixCoffee:
+    build:
+      targets:
+        FourSixCoffee: all
+    test:
+      config: Debug
+      targets:
+        - FourSixCoffeeTests
+    run:
+      config: Debug
+    archive:
+      config: Release
 targets:
   FourSixCoffee:
     type: application
@@ -56,19 +69,6 @@ targets:
         PRODUCT_NAME: FourSixCoffee
         INFOPLIST_FILE: Sources/FourSixCoffee/Info.plist
         ENABLE_PREVIEWS: YES
-    schemes:
-      - name: FourSixCoffee
-        build:
-          targets:
-            FourSixCoffee: all
-        test:
-          config: Debug
-          targets:
-            - FourSixCoffeeTests
-        run:
-          config: Debug
-        archive:
-          config: Release
   FourSixCoffeeTests:
     type: bundle.unit-test
     platform: iOS

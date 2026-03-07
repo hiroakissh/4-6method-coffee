@@ -27,6 +27,7 @@ struct MainTabView: View {
                 .tabItem { Label("設定", systemImage: "gearshape") }
                 .tag(AppTab.settings)
         }
+        .fontDesign(AppDesignTokens.Typography.design)
     }
 }
 

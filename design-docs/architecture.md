@@ -7,9 +7,9 @@
 
 ## Core domain models
 - **Bean**
-  - 豆プロファイル（豆名 / 購入店名 / 購入日 / 産地・銘柄(任意) / 焙煎日(任意) / URL(任意) / メモ(任意) / 焙煎度）
+  - 豆プロファイル（豆名 / 焙煎度 / 購入店名(任意) / 購入日(既定値あり) / 産地(任意) / プロセス(任意) / 焙煎日(任意) / URL(任意) / メモ(任意)）
 - **BrewInput**
-  - `coffeeDose`, `tasteProfile`, `roastLevel`, `grindSize`
+  - `coffeeDose`, `brewRatio`, `tasteProfile`, `roastLevel`, `grindSize`
 - **BrewPlan / PourStep**
   - 6投分の注湯量、開始時刻、待機秒数、推奨湯温、総湯量
 - **BrewLog**
@@ -26,6 +26,8 @@ LiveActivity/
   BrewSessionLiveActivityManager.swift
 Features/
   ... SwiftUI views + @Observable feature models
+Theme/
+  AppDesignTokens.swift
 Application/
   AppStore.swift
   UseCases/
@@ -60,6 +62,7 @@ WidgetExtension/
 2. `Application` は `Domain` の protocol（Repository）に依存する。
 3. `Infrastructure` が `Domain` protocol を実装する。
 4. `Domain` は SwiftUI / SwiftData へ依存しない。
+5. UI の色・フォントは `Theme` のデザイントークン経由で参照する。
 
 ## Data flow
 1. View から Store（`@Observable`）にイベントを渡す。
@@ -67,6 +70,41 @@ WidgetExtension/
 3. UseCase が Repository protocol 経由で読み書きする。
 4. SwiftData Repository が Entity と Domain model を相互変換する。
 5. Store が state を更新し、View が再描画される。
+
+### Home planner UI mapping
+- 既存 `BrewInput` / `BrewPlan` をそのまま使い、データ構造は変更しない。
+- 画面のカードごとの責務:
+- 入力カード: `coffeeDose`, `tasteProfile`, `grindSize(=濃度プリセット)`, `roastLevel`
+- 算出結果カード: `ratio`, `totalWater`, `recommendedTemperature`, `estimatedTotalSeconds`, 推奨 `grindSize`
+- レシピカード: `steps[0...]`
+- 豆量の増減操作は View から値を直接組み立てず、`AppStore` の更新メソッド経由で行う。
+- プランナー内の増減ボタンは最小 44pt 四方のタップ領域を確保し、押下直後に数値再計算が UI へ反映されることを前提とする。
+- 比率は入力UIとして直接編集せず、`coffeeDose / tasteProfile / grindSize / roastLevel` から導出した結果を表示する。
+- 濃度プリセットは UI 上は `薄め / 普通 / 濃い` として見せ、内部では `grindSize` に対応づける。
+
+### Brew assistant UI mapping
+- 既存 `BrewPlan` / `BrewSessionModel` の状態をそのまま使い、ロジック変更なしで視覚表現を更新する。
+- 画面セクションとデータ対応:
+  - リング進捗: `elapsedSeconds`, `estimatedTotalSeconds`, `currentStep(in:)`
+  - サマリーカード: `secondsToNextStep(in:)`, `totalWater`, 進捗率
+  - スケジュール: `steps`, `stepStatus(for:)`
+  - 保存レビュー: `tasteFeedback`, `strengthFeedback`, `overallFeedback`, `note`
+  - 簡易レビューの 3 項目は保存時に既存 `TasteRatings` へマッピングして後方互換を保つ
+
+### Beans UI mapping
+- 一覧カードは `name`, `roastLevel` を主表示にし、`shopName` は未入力なら省略可能とする。
+- 追加フローは `name`, `roastLevel` を主入力とし、`shopName`, `purchasedAt`, `origin`, `process`, `roastDate`, `referenceURL`, `notes` はオプションセクションへ移す。
+- 詳細遷移は既存 `BeanProfileView` を利用し、一覧側のレイアウトのみ更新する。
+
+### Brew logs UI mapping
+- `BrewLog` の既存項目（`bean`, `date`, `input`, `plan`, `memo`, `ratings`, `actualBrewSeconds`）をカード表示へ投影する。
+- 履歴カードでは `ratings` の生値よりも、簡易レビュー由来の要約を先に見せる。
+- 再利用操作（`store.apply(log:)`）と削除操作（`store.deleteLogs`）は既存ロジックを維持する。
+- 空状態表示のみUI変更し、状態判定は `store.brewLogs.isEmpty` を継続利用する。
+
+### Settings UI mapping
+- 設定値は既存 `AppStore` の `preferredUnit` と `enableStepHaptics` を直接バインドする。
+- 情報カードは固定表示（バージョン、プラン計算）で、既存表示内容を維持する。
 
 ## Live Activity flow
 1. `BrewSessionModel` がタイマー状態（経過秒、現在ステップ、稼働中フラグ）を保持する。
@@ -81,7 +119,7 @@ WidgetExtension/
 - Bean と BrewLog を SwiftData に保存する。
 - `BrewLog` は `beanID` を保持し、豆削除時はログを残して参照のみ `nil` 扱いにする。
 - `BrewLog` の複合構造（`BrewInput`, `BrewPlan`, `TasteRatings`）は JSON エンコードで保存する。
-- Bean の購入店名と購入日は必須として扱い、URLは保存前に `http/https` の絶対URLとして妥当性を検証する。
+- Bean の購入日は既定値を持ち、購入店名は空文字を許容する。URL は保存前に `http/https` の絶対URLとして妥当性を検証する。
 
 ## Testing policy
 - Domain service（`BrewPlanner`）は純粋関数としてテストする。
