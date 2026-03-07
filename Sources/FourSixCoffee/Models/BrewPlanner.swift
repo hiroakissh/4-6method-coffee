@@ -2,7 +2,7 @@ import Foundation
 
 enum BrewPlanner {
     static func makePlan(from input: BrewInput) -> BrewPlan {
-        let ratio = Double(input.brewRatio)
+        let ratio = input.brewRatio
         let totalWater = Int((input.coffeeDose * ratio).rounded())
         let temperature = recommendedTemperature(for: input)
         let percentages = pourPercentages(for: input.tasteProfile)
@@ -48,6 +48,30 @@ enum BrewPlanner {
             estimatedTotalSeconds: estimated,
             plannerMemo: memo(for: input, temperature: temperature)
         )
+    }
+
+    static func recommendedRatio(for input: BrewInput) -> Double {
+        var ratio = 15.0
+
+        switch input.grindSize {
+        case .coarse:
+            ratio += 1.0
+        case .medium:
+            break
+        case .fine:
+            ratio -= 1.0
+        }
+
+        switch input.roastLevel {
+        case .light:
+            ratio += 0.5
+        case .medium:
+            break
+        case .dark:
+            ratio -= 0.5
+        }
+
+        return BrewInput.normalizedBrewRatio(ratio)
     }
 
     static func recommendedTemperature(for input: BrewInput) -> Int {

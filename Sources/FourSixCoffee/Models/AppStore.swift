@@ -78,14 +78,6 @@ final class AppStore {
         currentInput.coffeeDose < PlannerInputConfig.maximumCoffeeDose
     }
 
-    var canDecreaseRatio: Bool {
-        currentInput.brewRatio > BrewInput.minimumBrewRatio + 0.0001
-    }
-
-    var canIncreaseRatio: Bool {
-        currentInput.brewRatio < BrewInput.maximumBrewRatio - 0.0001
-    }
-
     func recalculatePlan() {
         currentPlan = BrewPlanner.makePlan(from: currentInput)
     }
@@ -114,22 +106,6 @@ final class AppStore {
         updateCurrentInput { input in
             input.roastLevel = roast
         }
-    }
-
-    func updateBrewRatio(_ value: Double) {
-        updateCurrentInput { input in
-            input.brewRatio = BrewInput.normalizedBrewRatio(value)
-        }
-    }
-
-    func increaseRatio() {
-        let nextRatio = currentInput.brewRatio.rounded(.down) + 1
-        updateBrewRatio(nextRatio)
-    }
-
-    func decreaseRatio() {
-        let nextRatio = currentInput.brewRatio.rounded(.up) - 1
-        updateBrewRatio(nextRatio)
     }
 
     func updateGrindSize(_ grind: GrindSize) {
@@ -282,6 +258,7 @@ final class AppStore {
     private func updateCurrentInput(_ update: (inout BrewInput) -> Void) {
         var updatedInput = currentInput
         update(&updatedInput)
+        updatedInput.brewRatio = BrewPlanner.recommendedRatio(for: updatedInput)
         currentInput = updatedInput
     }
 
