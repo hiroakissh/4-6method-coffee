@@ -124,8 +124,108 @@ final class AppStoreTests: XCTestCase {
         store.updateRoastLevel(.dark)
         XCTAssertEqual(store.currentInput.roastLevel, .dark)
 
+        store.updateBrewRatio(100)
+        XCTAssertEqual(store.currentInput.brewRatio, BrewInput.maximumBrewRatio, accuracy: 0.0001)
+        store.updateBrewRatio(1)
+        XCTAssertEqual(store.currentInput.brewRatio, BrewInput.minimumBrewRatio, accuracy: 0.0001)
+
         store.updateGrindSize(.fine)
         XCTAssertEqual(store.currentInput.grindSize, .fine)
+    }
+
+    func testCoffeeDoseStepperHelpersClampNormalizeAndRefreshPlan() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+
+        store.updateTasteProfile(.balanced)
+        store.updateRoastLevel(.medium)
+        store.updateGrindSize(.medium)
+        store.updateCoffeeDose(20.25)
+
+        XCTAssertEqual(store.currentInput.coffeeDose, 20.5, accuracy: 0.0001)
+
+        let initialTotalWater = store.currentPlan.totalWater
+
+        store.incrementCoffeeDose()
+
+        XCTAssertEqual(store.currentInput.coffeeDose, 21.0, accuracy: 0.0001)
+        XCTAssertGreaterThan(store.currentPlan.totalWater, initialTotalWater)
+
+        for _ in 0..<100 {
+            store.incrementCoffeeDose()
+        }
+
+        XCTAssertEqual(store.currentInput.coffeeDose, 40.0, accuracy: 0.0001)
+        XCTAssertFalse(store.canIncreaseCoffeeDose)
+
+        for _ in 0..<100 {
+            store.decrementCoffeeDose()
+        }
+
+        XCTAssertEqual(store.currentInput.coffeeDose, 10.0, accuracy: 0.0001)
+        XCTAssertFalse(store.canDecreaseCoffeeDose)
+    }
+
+    func testRatioStepperHelpersClampAndRecalculatePlan() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+
+        store.updateTasteProfile(.balanced)
+        store.updateGrindSize(.medium)
+        store.updateRoastLevel(.medium)
+        store.updateBrewRatio(15)
+
+        store.increaseRatio()
+
+        XCTAssertEqual(store.currentInput.brewRatio, 16, accuracy: 0.0001)
+        XCTAssertEqual(store.currentPlan.ratio, 16, accuracy: 0.0001)
+        XCTAssertEqual(store.currentPlan.totalWater, Int((store.currentInput.coffeeDose * 16).rounded()))
+
+        for _ in 0..<20 {
+            store.increaseRatio()
+        }
+
+        XCTAssertEqual(store.currentInput.brewRatio, BrewInput.maximumBrewRatio, accuracy: 0.0001)
+        XCTAssertFalse(store.canIncreaseRatio)
+
+        for _ in 0..<20 {
+            store.decreaseRatio()
+        }
+
+        XCTAssertEqual(store.currentInput.brewRatio, BrewInput.minimumBrewRatio, accuracy: 0.0001)
+        XCTAssertFalse(store.canDecreaseRatio)
+        XCTAssertEqual(
+            store.currentPlan.ratio,
+            BrewInput.minimumBrewRatio,
+            accuracy: 0.0001
+        )
+    }
+
+    func testRatioStepperSnapsLegacyFractionalRatioTowardWholeSteps() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+
+        store.currentInput = BrewInput(
+            coffeeDose: 20,
+            brewRatio: 15.5,
+            tasteProfile: .balanced,
+            roastLevel: .medium,
+            grindSize: .medium
+        )
+
+        store.decreaseRatio()
+        XCTAssertEqual(store.currentInput.brewRatio, 15, accuracy: 0.0001)
+
+        store.currentInput = BrewInput(
+            coffeeDose: 20,
+            brewRatio: 15.5,
+            tasteProfile: .balanced,
+            roastLevel: .medium,
+            grindSize: .medium
+        )
+
+        store.increaseRatio()
+        XCTAssertEqual(store.currentInput.brewRatio, 16, accuracy: 0.0001)
     }
 
     func testApplyAndDeleteLogsFlows() {

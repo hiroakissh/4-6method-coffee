@@ -4,6 +4,12 @@ import Observation
 @MainActor
 @Observable
 final class AppStore {
+    private enum PlannerInputConfig {
+        static let minimumCoffeeDose = 10.0
+        static let maximumCoffeeDose = 40.0
+        static let coffeeDoseStep = 0.5
+    }
+
     @ObservationIgnored
     private let beanUseCase: BeanUseCase
     @ObservationIgnored
@@ -59,9 +65,25 @@ final class AppStore {
         set {
             selectedBeanID = newValue?.id
             if let roast = newValue?.roastLevel {
-                currentInput.roastLevel = roast
+                updateRoastLevel(roast)
             }
         }
+    }
+
+    var canDecreaseCoffeeDose: Bool {
+        currentInput.coffeeDose > PlannerInputConfig.minimumCoffeeDose
+    }
+
+    var canIncreaseCoffeeDose: Bool {
+        currentInput.coffeeDose < PlannerInputConfig.maximumCoffeeDose
+    }
+
+    var canDecreaseRatio: Bool {
+        currentInput.brewRatio > BrewInput.minimumBrewRatio + 0.0001
+    }
+
+    var canIncreaseRatio: Bool {
+        currentInput.brewRatio < BrewInput.maximumBrewRatio - 0.0001
     }
 
     func recalculatePlan() {
@@ -69,19 +91,51 @@ final class AppStore {
     }
 
     func updateCoffeeDose(_ value: Double) {
-        currentInput.coffeeDose = min(max(value, 10), 40)
+        updateCurrentInput { input in
+            input.coffeeDose = normalizedCoffeeDose(value)
+        }
+    }
+
+    func incrementCoffeeDose() {
+        updateCoffeeDose(currentInput.coffeeDose + PlannerInputConfig.coffeeDoseStep)
+    }
+
+    func decrementCoffeeDose() {
+        updateCoffeeDose(currentInput.coffeeDose - PlannerInputConfig.coffeeDoseStep)
     }
 
     func updateTasteProfile(_ profile: TasteProfile) {
-        currentInput.tasteProfile = profile
+        updateCurrentInput { input in
+            input.tasteProfile = profile
+        }
     }
 
     func updateRoastLevel(_ roast: RoastLevel) {
-        currentInput.roastLevel = roast
+        updateCurrentInput { input in
+            input.roastLevel = roast
+        }
+    }
+
+    func updateBrewRatio(_ value: Double) {
+        updateCurrentInput { input in
+            input.brewRatio = BrewInput.normalizedBrewRatio(value)
+        }
+    }
+
+    func increaseRatio() {
+        let nextRatio = currentInput.brewRatio.rounded(.down) + 1
+        updateBrewRatio(nextRatio)
+    }
+
+    func decreaseRatio() {
+        let nextRatio = currentInput.brewRatio.rounded(.up) - 1
+        updateBrewRatio(nextRatio)
     }
 
     func updateGrindSize(_ grind: GrindSize) {
-        currentInput.grindSize = grind
+        updateCurrentInput { input in
+            input.grindSize = grind
+        }
     }
 
     func addBean(name: String, shopName: String, purchasedAt: Date, origin: String, process: String, roastLevel: RoastLevel, notes: String = "", roastDate: Date? = nil, referenceURL: String = "") {
@@ -99,7 +153,7 @@ final class AppStore {
             )
             beans.insert(bean, at: 0)
             selectedBeanID = bean.id
-            currentInput.roastLevel = bean.roastLevel
+            updateRoastLevel(bean.roastLevel)
             lastErrorMessage = nil
         } catch {
             store(error: error)
@@ -196,9 +250,10 @@ final class AppStore {
 
             selectedBeanID = beans.first?.id
             if let selectedBean {
-                currentInput.roastLevel = selectedBean.roastLevel
+                updateRoastLevel(selectedBean.roastLevel)
+            } else {
+                recalculatePlan()
             }
-            recalculatePlan()
             lastErrorMessage = nil
         } catch {
             store(error: error)
@@ -222,5 +277,20 @@ final class AppStore {
             return
         }
         lastErrorMessage = error.localizedDescription
+    }
+
+    private func updateCurrentInput(_ update: (inout BrewInput) -> Void) {
+        var updatedInput = currentInput
+        update(&updatedInput)
+        currentInput = updatedInput
+    }
+
+    private func normalizedCoffeeDose(_ value: Double) -> Double {
+        let clampedValue = min(
+            max(value, PlannerInputConfig.minimumCoffeeDose),
+            PlannerInputConfig.maximumCoffeeDose
+        )
+        let steps = (clampedValue / PlannerInputConfig.coffeeDoseStep).rounded()
+        return steps * PlannerInputConfig.coffeeDoseStep
     }
 }
