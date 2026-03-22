@@ -2,6 +2,35 @@ import XCTest
 @testable import FourSixCoffee
 
 final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
+    func testContentStateDecodeDefaultsMissingNextStepFieldsForBackwardCompatibility() throws {
+        let legacyPayload = """
+        {
+          "stepNumber": 2,
+          "stepGrams": 40,
+          "cumulativeGrams": 80,
+          "remainingToNextStep": 40,
+          "remainingTotalSeconds": 130,
+          "nextStepDate": null,
+          "isRunning": true
+        }
+        """.data(using: .utf8)!
+
+        let state = try JSONDecoder().decode(
+            BrewSessionActivityAttributes.ContentState.self,
+            from: legacyPayload
+        )
+
+        XCTAssertEqual(state.stepNumber, 2)
+        XCTAssertEqual(state.stepGrams, 40)
+        XCTAssertEqual(state.cumulativeGrams, 80)
+        XCTAssertEqual(state.nextStepNumber, 0)
+        XCTAssertEqual(state.nextStepGrams, 0)
+        XCTAssertEqual(state.remainingToNextStep, 40)
+        XCTAssertEqual(state.remainingTotalSeconds, 130)
+        XCTAssertNil(state.nextStepDate)
+        XCTAssertTrue(state.isRunning)
+    }
+
     func testMakePayloadForRunningMiddleStepBuildsExpectedState() {
         let plan = makePlan()
         let now = Date(timeIntervalSince1970: 1_000)
@@ -19,6 +48,8 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
         XCTAssertEqual(payload.state.stepNumber, 2)
         XCTAssertEqual(payload.state.stepGrams, 40)
         XCTAssertEqual(payload.state.cumulativeGrams, 80)
+        XCTAssertEqual(payload.state.nextStepNumber, 3)
+        XCTAssertEqual(payload.state.nextStepGrams, 40)
         XCTAssertEqual(payload.state.remainingToNextStep, 40)
         XCTAssertEqual(payload.state.remainingTotalSeconds, 130)
         XCTAssertEqual(payload.state.nextStepDate, now.addingTimeInterval(40))
@@ -39,6 +70,7 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
         )
 
         XCTAssertEqual(payload.state.stepNumber, 3)
+        XCTAssertEqual(payload.state.nextStepNumber, 4)
         XCTAssertEqual(payload.state.remainingToNextStep, 40)
         XCTAssertNil(payload.state.nextStepDate)
         XCTAssertNil(payload.staleDate)
@@ -68,6 +100,8 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
         XCTAssertEqual(payload.state.stepNumber, 0)
         XCTAssertEqual(payload.state.stepGrams, 0)
         XCTAssertEqual(payload.state.cumulativeGrams, 0)
+        XCTAssertEqual(payload.state.nextStepNumber, 0)
+        XCTAssertEqual(payload.state.nextStepGrams, 0)
         XCTAssertEqual(payload.state.remainingToNextStep, 0)
         XCTAssertEqual(payload.state.remainingTotalSeconds, 0)
     }

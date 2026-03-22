@@ -111,9 +111,19 @@ WidgetExtension/
    - 稼働中は開始基準時刻を保持し、`Date` 差分から経過秒を再計算してバックグラウンド復帰後も追従する。
    - 復帰時の同期で完了秒数に達していた場合は、その場でセッション停止と Live Activity 終了を行う。
 2. `BrewSessionLiveActivityPayloadBuilder` が `BrewPlan + タイマー状態` から表示用 state を構築する（純粋関数）。
+   - `BrewSessionActivityAttributes.ContentState` は `ActivityKit` に永続化されるため、項目追加時も旧 payload を decode できる後方互換を維持する。
 3. `BrewSessionLiveActivityManager` が `ActivityKit` へ start/update/end を委譲する。
 4. Widget Extension（`ActivityConfiguration`）がロック画面/ダイナミックアイランドに
    「何投目 / 注湯g / 累積g / 次まで秒数」を表示する。
+
+### Live Activity UI mapping
+- Live Activity は `BrewAssistantView` の視覚言語を継承し、深いブラウン基調の背景、ティールの進捗アクセント、オレンジの注湯量アクセントを使う。
+- Live Activity の主情報は「次に注ぐまでの残り時間」で、次点として「現在の投数」と「次に注ぐ量」を置く。
+- 現在情報（`第N投`）と次情報（`次は第N投` / `次に注ぐ量`）は文言を分け、同一の塊に混在させない。
+- ロック画面では高さ 160pt 制約を前提に、大きいカウントダウンを主役にし、その周囲へ `現在の投数` と `次に注ぐ量` を短く配置する。
+- Dynamic Island Expanded は center にまとめて「残り時間」と「次の情報」を左右で配置する。
+- Dynamic Island Compact / Minimal は「現在の投数」と「次までの残り時間」を最優先にし、文字数を絞って視認性を優先する。
+- Live Activity 用の配色・角丸・タイポグラフィは Widget Extension と App の両 target から参照できる共有トークンに切り出し、重複定義を避ける。
 
 ## Persistence policy
 - Bean と BrewLog を SwiftData に保存する。
