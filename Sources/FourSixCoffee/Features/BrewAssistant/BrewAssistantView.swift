@@ -142,14 +142,6 @@ struct BrewAssistantView: View {
                     .rotationEffect(.degrees(-90))
             }
 
-            if clampedProgress > 0 {
-                Circle()
-                    .fill(AppDesignTokens.Colors.timerRingKnob)
-                    .frame(width: 10, height: 10)
-                    .offset(y: -(size / 2))
-                    .rotationEffect(.degrees(-90 + (clampedProgress * 360)))
-            }
-
             VStack(spacing: 12) {
                 Text("第\(summary.currentStep.id)投")
                     .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
