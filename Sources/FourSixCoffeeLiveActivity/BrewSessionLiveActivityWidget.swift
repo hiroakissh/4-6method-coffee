@@ -38,7 +38,7 @@ struct BrewSessionLiveActivityWidget: Widget {
 
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 4) {
-                        Text("次まで")
+                        Text(countdownLabel(for: presentation))
                             .font(CoffeeDesignPrimitives.Typography.font(.caption2, weight: .bold))
                             .foregroundStyle(LiveActivityDesignTokens.Colors.textSecondary)
 
@@ -64,16 +64,16 @@ struct BrewSessionLiveActivityWidget: Widget {
 
                 DynamicIslandExpandedRegion(.trailing, priority: 1) {
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text("次に注ぐ量")
+                        Text(presentation.targetCumulativeLabel)
                             .font(CoffeeDesignPrimitives.Typography.font(.caption2, weight: .bold))
                             .foregroundStyle(LiveActivityDesignTokens.Colors.textSecondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
 
-                        Text(presentation.nextAmountValue)
+                        Text(presentation.targetCumulativeValue)
                             .font(CoffeeDesignPrimitives.Typography.font(.caption, weight: .bold))
                             .monospacedDigit()
-                            .foregroundStyle(LiveActivityDesignTokens.Colors.timerAmountAccent)
+                            .foregroundStyle(LiveActivityDesignTokens.Colors.timerRingProgress)
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -91,7 +91,7 @@ struct BrewSessionLiveActivityWidget: Widget {
 
                         Spacer()
 
-                        Text(presentation.nextAmountCompactText)
+                        Text("\(presentation.additionalAmountLabel) \(presentation.additionalAmountValue)")
                             .font(CoffeeDesignPrimitives.Typography.font(.caption, weight: .bold))
                             .monospacedDigit()
                             .foregroundStyle(LiveActivityDesignTokens.Colors.timerAmountAccent)
@@ -100,10 +100,7 @@ struct BrewSessionLiveActivityWidget: Widget {
                     }
                 }
             } compactLeading: {
-                HStack(spacing: 4) {
-                    Image(systemName: "drop.fill")
-                    Text(presentation.currentStepCompactText)
-                }
+                Text(presentation.compactLeadingText)
                 .font(CoffeeDesignPrimitives.Typography.font(.caption, weight: .bold))
                 .foregroundStyle(LiveActivityDesignTokens.Colors.textPrimary)
             } compactTrailing: {
@@ -112,7 +109,7 @@ struct BrewSessionLiveActivityWidget: Widget {
                     .monospacedDigit()
                     .foregroundStyle(LiveActivityDesignTokens.Colors.textPrimary)
             } minimal: {
-                Text(presentation.currentStepCompactText)
+                Text(presentation.minimalText)
                     .font(CoffeeDesignPrimitives.Typography.font(.caption2, weight: .bold))
                     .foregroundStyle(LiveActivityDesignTokens.Colors.textPrimary)
             }
@@ -134,6 +131,10 @@ struct BrewSessionLiveActivityWidget: Widget {
         } else {
             Text(fallback)
         }
+    }
+
+    private func countdownLabel(for presentation: BrewSessionLiveActivityPresentation) -> String {
+        presentation.nextStepText == "抽出完了" ? "状態" : "次まで"
     }
 
 }
@@ -158,7 +159,7 @@ private struct BrewSessionLockScreenLiveActivityView: View {
                     Spacer(minLength: 20)
                 }
 
-                Text("あと")
+                Text(presentation.nextStepText == "抽出完了" ? "状態" : "次まで")
                     .font(CoffeeDesignPrimitives.Typography.font(.caption, weight: .bold))
                     .foregroundStyle(LiveActivityDesignTokens.Colors.textSecondary)
 
@@ -169,17 +170,21 @@ private struct BrewSessionLockScreenLiveActivityView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
 
-                HStack(spacing: 10) {
-                    Text(presentation.nextStepText)
-                        .font(CoffeeDesignPrimitives.Typography.font(.caption, weight: .semibold))
-                        .foregroundStyle(LiveActivityDesignTokens.Colors.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
+                Text(presentation.nextStepText)
+                    .font(CoffeeDesignPrimitives.Typography.font(.caption, weight: .semibold))
+                    .foregroundStyle(LiveActivityDesignTokens.Colors.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
 
-                    Spacer()
+                HStack(spacing: 10) {
                     LiveActivityMetricPill(
-                        title: presentation.nextAmountLabel,
-                        value: presentation.nextAmountValue,
+                        title: presentation.targetCumulativeLabel,
+                        value: presentation.targetCumulativeValue,
+                        accent: LiveActivityDesignTokens.Colors.timerRingProgress
+                    )
+                    LiveActivityMetricPill(
+                        title: presentation.additionalAmountLabel,
+                        value: presentation.additionalAmountValue,
                         accent: LiveActivityDesignTokens.Colors.timerAmountAccent
                     )
                 }
@@ -339,6 +344,7 @@ private enum LiveActivityPreviewData {
         cumulativeGrams: 40,
         nextStepNumber: 2,
         nextStepGrams: 60,
+        nextCumulativeGrams: 100,
         remainingToNextStep: 25,
         remainingTotalSeconds: 180
     )
@@ -348,6 +354,7 @@ private enum LiveActivityPreviewData {
         cumulativeGrams: 100,
         nextStepNumber: 3,
         nextStepGrams: 60,
+        nextCumulativeGrams: 160,
         remainingToNextStep: 30,
         remainingTotalSeconds: 150
     )
@@ -357,6 +364,7 @@ private enum LiveActivityPreviewData {
         cumulativeGrams: 100,
         nextStepNumber: 3,
         nextStepGrams: 60,
+        nextCumulativeGrams: 160,
         remainingToNextStep: 30,
         remainingTotalSeconds: 150
     )
@@ -367,6 +375,7 @@ private enum LiveActivityPreviewData {
         cumulativeGrams: Int,
         nextStepNumber: Int,
         nextStepGrams: Int,
+        nextCumulativeGrams: Int,
         remainingToNextStep: Int,
         remainingTotalSeconds: Int
     ) -> BrewSessionActivityAttributes.ContentState {
@@ -376,6 +385,7 @@ private enum LiveActivityPreviewData {
             cumulativeGrams: cumulativeGrams,
             nextStepNumber: nextStepNumber,
             nextStepGrams: nextStepGrams,
+            nextCumulativeGrams: nextCumulativeGrams,
             remainingToNextStep: remainingToNextStep,
             remainingTotalSeconds: remainingTotalSeconds,
             nextStepDate: Date.now.addingTimeInterval(TimeInterval(remainingToNextStep)),
@@ -389,6 +399,7 @@ private enum LiveActivityPreviewData {
         cumulativeGrams: Int,
         nextStepNumber: Int,
         nextStepGrams: Int,
+        nextCumulativeGrams: Int,
         remainingToNextStep: Int,
         remainingTotalSeconds: Int
     ) -> BrewSessionActivityAttributes.ContentState {
@@ -398,6 +409,7 @@ private enum LiveActivityPreviewData {
             cumulativeGrams: cumulativeGrams,
             nextStepNumber: nextStepNumber,
             nextStepGrams: nextStepGrams,
+            nextCumulativeGrams: nextCumulativeGrams,
             remainingToNextStep: remainingToNextStep,
             remainingTotalSeconds: remainingTotalSeconds,
             nextStepDate: nil,

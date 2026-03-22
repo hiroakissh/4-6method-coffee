@@ -85,11 +85,16 @@ WidgetExtension/
 ### Brew assistant UI mapping
 - 既存 `BrewPlan` / `BrewSessionModel` の状態をそのまま使い、ロジック変更なしで視覚表現を更新する。
 - 画面セクションとデータ対応:
-  - リング進捗: `elapsedSeconds`, `estimatedTotalSeconds`, `currentStep(in:)`
-  - サマリーカード: `secondsToNextStep(in:)`, `totalWater`, 進捗率
+  - メインタイマー: `secondsToNextStep(in:)`, `currentStep(in:)`, 現在区間の残り率
+  - 次アクションカード: `currentStep(in:)`, `secondsToNextStep(in:)`, `elapsedSeconds`
   - スケジュール: `steps`, `stepStatus(for:)`
   - 保存レビュー: `tasteFeedback`, `strengthFeedback`, `overallFeedback`, `note`
   - 簡易レビューの 3 項目は保存時に既存 `TasteRatings` へマッピングして後方互換を保つ
+- `BrewSessionModel` は View が複数値をその場で組み立てなくて済むよう、`次の累計目標g` と `今回足すg` を含む表示用 helper を提供する。
+- メインタイマー円の中は `第N投`、現在状態、残り時間だけを表示し、次情報は下段カードへ寄せる。
+- メインタイマー円の中の要素は中央配置を固定し、見出しや数値を上寄せしない。
+- リング進捗は `現在ステップ開始 -> 次ステップ開始` の区間で 1 周する経過率を使い、時計回りに満ちる表現とする。
+- 最終投では `次の累計目標g` を総湯量として扱い、追加注湯がない状態を明示する。
 
 ### Beans UI mapping
 - 一覧カードは `name`, `roastLevel` を主表示にし、`shopName` は未入力なら省略可能とする。
@@ -114,15 +119,16 @@ WidgetExtension/
    - `BrewSessionActivityAttributes.ContentState` は `ActivityKit` に永続化されるため、項目追加時も旧 payload を decode できる後方互換を維持する。
 3. `BrewSessionLiveActivityManager` が `ActivityKit` へ start/update/end を委譲する。
 4. Widget Extension（`ActivityConfiguration`）がロック画面/ダイナミックアイランドに
-   「何投目 / 注湯g / 累積g / 次まで秒数」を表示する。
+   「次まで秒数 / 次の累計g / 今回足すg / 何投目」を表示する。
 
 ### Live Activity UI mapping
 - Live Activity は `BrewAssistantView` の視覚言語を継承し、深いブラウン基調の背景、ティールの進捗アクセント、オレンジの注湯量アクセントを使う。
 - Live Activity の主情報は「次に注ぐまでの残り時間」で、次点として「現在の投数」と「次に注ぐ量」を置く。
-- 現在情報（`第N投`）と次情報（`次は第N投` / `次に注ぐ量`）は文言を分け、同一の塊に混在させない。
-- ロック画面では高さ 160pt 制約を前提に、大きいカウントダウンを主役にし、その周囲へ `現在の投数` と `次に注ぐ量` を短く配置する。
+- g情報は `次に足す量` よりも `次の累計目標g` を主表示とし、差分gは補助ラベルで併記する。
+- 現在情報（`第N投`）と次情報（`次は第N投` / `次の累計g` / `今回+g`）は文言を分け、同一の塊に混在させない。
+- ロック画面では高さ 160pt 制約を前提に、大きいカウントダウンを主役にし、その周囲へ `現在の投数`、`次の累計g`、`今回+g` を短く配置する。
 - Dynamic Island Expanded は center にまとめて「残り時間」と「次の情報」を左右で配置する。
-- Dynamic Island Compact / Minimal は「現在の投数」と「次までの残り時間」を最優先にし、文字数を絞って視認性を優先する。
+- Dynamic Island Compact / Minimal は「現在の投数」と「次までの残り時間」を最優先にし、g情報は短い累計表記を優先する。
 - Live Activity 用の配色・角丸・タイポグラフィは Widget Extension と App の両 target から参照できる共有トークンに切り出し、重複定義を避ける。
 
 ## Persistence policy

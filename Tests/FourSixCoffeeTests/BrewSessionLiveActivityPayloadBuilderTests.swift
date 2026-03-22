@@ -25,6 +25,7 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
         XCTAssertEqual(state.cumulativeGrams, 80)
         XCTAssertEqual(state.nextStepNumber, 0)
         XCTAssertEqual(state.nextStepGrams, 0)
+        XCTAssertEqual(state.nextCumulativeGrams, 80)
         XCTAssertEqual(state.remainingToNextStep, 40)
         XCTAssertEqual(state.remainingTotalSeconds, 130)
         XCTAssertNil(state.nextStepDate)
@@ -50,6 +51,7 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
         XCTAssertEqual(payload.state.cumulativeGrams, 80)
         XCTAssertEqual(payload.state.nextStepNumber, 3)
         XCTAssertEqual(payload.state.nextStepGrams, 40)
+        XCTAssertEqual(payload.state.nextCumulativeGrams, 120)
         XCTAssertEqual(payload.state.remainingToNextStep, 40)
         XCTAssertEqual(payload.state.remainingTotalSeconds, 130)
         XCTAssertEqual(payload.state.nextStepDate, now.addingTimeInterval(40))
@@ -71,6 +73,7 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
 
         XCTAssertEqual(payload.state.stepNumber, 3)
         XCTAssertEqual(payload.state.nextStepNumber, 4)
+        XCTAssertEqual(payload.state.nextCumulativeGrams, 160)
         XCTAssertEqual(payload.state.remainingToNextStep, 40)
         XCTAssertNil(payload.state.nextStepDate)
         XCTAssertNil(payload.staleDate)
@@ -102,6 +105,7 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
         XCTAssertEqual(payload.state.cumulativeGrams, 0)
         XCTAssertEqual(payload.state.nextStepNumber, 0)
         XCTAssertEqual(payload.state.nextStepGrams, 0)
+        XCTAssertEqual(payload.state.nextCumulativeGrams, 0)
         XCTAssertEqual(payload.state.remainingToNextStep, 0)
         XCTAssertEqual(payload.state.remainingTotalSeconds, 0)
     }

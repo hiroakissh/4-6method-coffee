@@ -14,8 +14,7 @@ struct BrewAssistantView: View {
     var body: some View {
         let plan = store.currentPlan
         let progress = progressRatio(for: plan)
-        let step = session.currentStep(in: plan)
-        let remaining = session.secondsToNextStep(in: plan)
+        let summary = session.nextActionSummary(in: plan)
 
         NavigationStack {
             ZStack {
@@ -24,8 +23,8 @@ struct BrewAssistantView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 22) {
                         header
-                        timerRing(step: step, progress: progress)
-                        statusCard(plan: plan, step: step, progress: progress, remaining: remaining)
+                        timerHero(summary: summary)
+                        nextActionCard(summary: summary, progress: progress)
                         controls
                         schedule(plan: plan)
                         logComposer(plan: plan)
@@ -125,30 +124,26 @@ struct BrewAssistantView: View {
         }
     }
 
-    private func timerRing(step: PourStep, progress: Double) -> some View {
-        let size: CGFloat = 286
-        let clampedProgress = min(max(progress, 0), 1)
+    private func timerHero(summary: BrewSessionModel.NextActionSummary) -> some View {
+        let size: CGFloat = 300
+        let clampedProgress = min(max(summary.segmentProgress, 0), 1)
 
         return ZStack {
             Circle()
                 .stroke(AppDesignTokens.Colors.timerRingTrack, lineWidth: 12)
 
-            Circle()
-                .trim(from: 0, to: max(clampedProgress, 0.015))
-                .stroke(
-                    AppDesignTokens.Colors.timerRingProgress,
-                    style: StrokeStyle(lineWidth: 12, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
+            if clampedProgress > 0 {
+                Circle()
+                    .trim(from: 0, to: clampedProgress)
+                    .stroke(
+                        AppDesignTokens.Colors.timerRingProgress,
+                        style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+            }
 
-            Circle()
-                .fill(AppDesignTokens.Colors.timerRingKnob)
-                .frame(width: 10, height: 10)
-                .offset(y: -(size / 2))
-                .rotationEffect(.degrees(-90 + (clampedProgress * 360)))
-
-            VStack(spacing: 8) {
-                Text("第\(step.id)投 (\(phaseRatioLabel(for: step.phase)))")
+            VStack(spacing: 12) {
+                Text("第\(summary.currentStep.id)投")
                     .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
                     .foregroundStyle(AppDesignTokens.Colors.timerRingProgress)
                     .padding(.horizontal, 18)
@@ -160,26 +155,18 @@ struct BrewAssistantView: View {
                     }
                     .clipShape(Capsule())
 
-                Text(PourStep.timeLabel(from: session.elapsedSeconds))
-                    .font(.system(size: 58, weight: .black, design: AppDesignTokens.Typography.design))
+                Text(currentStateText(for: summary))
+                    .font(AppDesignTokens.Typography.font(.headline, weight: .bold))
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+                Text(PourStep.timeLabel(from: summary.remainingSeconds))
+                    .font(.system(size: 54, weight: .black, design: AppDesignTokens.Typography.design))
                     .monospacedDigit()
                     .foregroundStyle(AppDesignTokens.Colors.timerMainValue)
                     .shadow(color: Color.black.opacity(0.28), radius: 1, x: 0, y: 2)
-
-                Text("注ぐ量")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
-                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(step.amountGrams)")
-                        .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
-                        .foregroundStyle(AppDesignTokens.Colors.timerAmountAccent)
-                    Text("g")
-                        .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
-                        .foregroundStyle(AppDesignTokens.Colors.timerAmountAccent)
-                }
             }
-            .padding(.top, 10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .multilineTextAlignment(.center)
         }
         .frame(width: size, height: size)
         .frame(maxWidth: .infinity)
@@ -230,32 +217,42 @@ struct BrewAssistantView: View {
         }
     }
 
-    private func statusCard(plan: BrewPlan, step: PourStep, progress: Double, remaining: Int) -> some View {
-        cardContainer(spacing: 14) {
+    private func nextActionCard(summary: BrewSessionModel.NextActionSummary, progress: Double) -> some View {
+        cardContainer(spacing: 16) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("NEXT STEP")
-                        .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
-                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-                    Text("\(PourStep.timeLabel(from: remaining)) 残り")
-                        .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                    Text(nextActionTitle(for: summary))
+                        .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
                         .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                    Text(currentActionDetailText(for: summary))
+                        .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 6) {
-                    Text("TOTAL WATER")
-                        .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
-                        .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-                    HStack(alignment: .lastTextBaseline, spacing: 4) {
-                        Text("\(min(step.cumulativeGrams, plan.totalWater))")
-                            .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
-                            .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                        Text("/ \(plan.totalWater)g")
-                            .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
-                            .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-                    }
+                infoChip(title: "総湯量", value: "\(summary.totalWaterGrams)g")
+            }
+
+            HStack(spacing: 12) {
+                timerMetricCard(
+                    title: targetCumulativeLabel(for: summary),
+                    value: "\(summary.targetCumulativeGrams)g",
+                    accent: AppDesignTokens.Colors.timerRingProgress
+                )
+
+                timerMetricCard(
+                    title: additionalAmountLabel(for: summary),
+                    value: additionalAmountValue(for: summary),
+                    accent: AppDesignTokens.Colors.timerAmountAccent
+                )
+            }
+
+            HStack(spacing: 10) {
+                infoChip(title: "経過", value: PourStep.timeLabel(from: summary.elapsedSeconds))
+                infoChip(title: "現在", value: "第\(summary.currentStep.id)投")
+                if let nextStep = summary.nextStep {
+                    infoChip(title: "次", value: "第\(nextStep.id)投")
                 }
             }
 
@@ -285,10 +282,10 @@ struct BrewAssistantView: View {
                         .padding(.top, 2)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("第\(step.id)投 · \(step.amountGrams)g")
+                        Text("第\(step.id)投 · 累計 \(step.cumulativeGrams)g")
                             .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
                             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                        Text("開始 \(step.startLabel) / 待ち \(step.waitSeconds)s / 累計 \(step.cumulativeGrams)g")
+                        Text("開始 \(step.startLabel) / 今回 +\(step.amountGrams)g / 待ち \(step.waitSeconds)s")
                             .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
                             .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                     }
@@ -465,6 +462,45 @@ struct BrewAssistantView: View {
             .frame(width: 16, height: 16)
     }
 
+    private func timerMetricCard(title: String, value: String, accent: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            Text(value)
+                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(accent)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppDesignTokens.Colors.controlBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func infoChip(title: String, value: String) -> some View {
+        HStack(spacing: 6) {
+            Text(title)
+                .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            Text(value)
+                .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(AppDesignTokens.Colors.secondaryButtonBackground)
+        .clipShape(Capsule())
+    }
+
     private func cardContainer<Content: View>(spacing: CGFloat, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: spacing) {
             content()
@@ -484,13 +520,50 @@ struct BrewAssistantView: View {
         min(Double(session.elapsedSeconds) / Double(max(plan.estimatedTotalSeconds, 1)), 1)
     }
 
-    private func phaseRatioLabel(for phase: PourStep.Phase) -> String {
-        switch phase {
-        case .balance:
-            return "40%"
-        case .strength:
-            return "60%"
+    private func nextActionTitle(for summary: BrewSessionModel.NextActionSummary) -> String {
+        if let nextStep = summary.nextStep {
+            return "次は第\(nextStep.id)投"
         }
+        if summary.isAwaitingFinish {
+            return "仕上がりまで"
+        }
+        return "抽出完了"
+    }
+
+    private func targetCumulativeLabel(for summary: BrewSessionModel.NextActionSummary) -> String {
+        if summary.isComplete {
+            return "仕上がり"
+        }
+        if summary.isAwaitingFinish {
+            return "仕上がり目標"
+        }
+        return "次の累計"
+    }
+
+    private func additionalAmountLabel(for summary: BrewSessionModel.NextActionSummary) -> String {
+        summary.isFinalPhase ? "追加注湯" : "今回足す量"
+    }
+
+    private func additionalAmountValue(for summary: BrewSessionModel.NextActionSummary) -> String {
+        summary.additionalGrams > 0 ? "+\(summary.additionalGrams)g" : "なし"
+    }
+
+    private func currentStateText(for summary: BrewSessionModel.NextActionSummary) -> String {
+        if summary.isComplete {
+            return "抽出完了"
+        }
+        if !summary.isRunning, summary.elapsedSeconds > 0 {
+            return "停止中"
+        }
+        return summary.currentStep.phase.displayName
+    }
+
+    private func currentActionDetailText(for summary: BrewSessionModel.NextActionSummary) -> String {
+        if summary.isComplete {
+            return "抽出は完了しています"
+        }
+
+        return "いまは +\(summary.currentStep.amountGrams)g / 累計 \(summary.currentStep.cumulativeGrams)g"
     }
 
     private func icon(for status: BrewSessionModel.StepStatus) -> String {

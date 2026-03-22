@@ -138,6 +138,44 @@ final class BrewSessionModel {
         return plan.steps[safeIndex]
     }
 
+    func nextActionSummary(in plan: BrewPlan) -> NextActionSummary {
+        let currentStep = currentStep(in: plan)
+        let nextIndex = currentStepIndex + 1
+        let nextStep = plan.steps.indices.contains(nextIndex) ? plan.steps[nextIndex] : nil
+        let remainingSeconds = secondsToNextStep(in: plan)
+        let safeTotalWater = max(plan.totalWater, 0)
+        let currentSegmentStart = max(currentStep.startSecond, 0)
+        let currentSegmentEnd = max(nextStep?.startSecond ?? plan.estimatedTotalSeconds, currentSegmentStart)
+        let segmentDurationSeconds = max(currentSegmentEnd - currentSegmentStart, 0)
+        let elapsedInSegment = min(max(elapsedSeconds - currentSegmentStart, 0), segmentDurationSeconds)
+
+        let targetCumulativeGrams: Int
+        let additionalGrams: Int
+
+        if let nextStep {
+            targetCumulativeGrams = min(max(nextStep.cumulativeGrams, 0), safeTotalWater)
+            additionalGrams = max(nextStep.amountGrams, 0)
+        } else {
+            targetCumulativeGrams = max(max(currentStep.cumulativeGrams, 0), safeTotalWater)
+            additionalGrams = 0
+        }
+
+        return NextActionSummary(
+            currentStep: currentStep,
+            nextStep: nextStep,
+            remainingSeconds: remainingSeconds,
+            elapsedSeconds: elapsedSeconds,
+            isRunning: isRunning,
+            targetCumulativeGrams: targetCumulativeGrams,
+            additionalGrams: additionalGrams,
+            totalWaterGrams: safeTotalWater,
+            segmentDurationSeconds: segmentDurationSeconds,
+            segmentProgress: segmentDurationSeconds > 0
+                ? Double(elapsedInSegment) / Double(segmentDurationSeconds)
+                : 0
+        )
+    }
+
     deinit {
         tickerTask?.cancel()
     }
@@ -229,6 +267,23 @@ final class BrewSessionModel {
 }
 
 extension BrewSessionModel {
+    struct NextActionSummary: Equatable {
+        let currentStep: PourStep
+        let nextStep: PourStep?
+        let remainingSeconds: Int
+        let elapsedSeconds: Int
+        let isRunning: Bool
+        let targetCumulativeGrams: Int
+        let additionalGrams: Int
+        let totalWaterGrams: Int
+        let segmentDurationSeconds: Int
+        let segmentProgress: Double
+
+        var isFinalPhase: Bool { nextStep == nil }
+        var isComplete: Bool { isFinalPhase && remainingSeconds == 0 }
+        var isAwaitingFinish: Bool { isFinalPhase && remainingSeconds > 0 }
+    }
+
     enum StepStatus {
         case done
         case active
