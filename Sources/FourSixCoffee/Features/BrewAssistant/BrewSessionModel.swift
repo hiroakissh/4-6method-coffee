@@ -144,6 +144,10 @@ final class BrewSessionModel {
         let nextStep = plan.steps.indices.contains(nextIndex) ? plan.steps[nextIndex] : nil
         let remainingSeconds = secondsToNextStep(in: plan)
         let safeTotalWater = max(plan.totalWater, 0)
+        let currentSegmentStart = max(currentStep.startSecond, 0)
+        let currentSegmentEnd = max(nextStep?.startSecond ?? plan.estimatedTotalSeconds, currentSegmentStart)
+        let segmentDurationSeconds = max(currentSegmentEnd - currentSegmentStart, 0)
+        let elapsedInSegment = min(max(elapsedSeconds - currentSegmentStart, 0), segmentDurationSeconds)
 
         let targetCumulativeGrams: Int
         let additionalGrams: Int
@@ -161,9 +165,14 @@ final class BrewSessionModel {
             nextStep: nextStep,
             remainingSeconds: remainingSeconds,
             elapsedSeconds: elapsedSeconds,
+            isRunning: isRunning,
             targetCumulativeGrams: targetCumulativeGrams,
             additionalGrams: additionalGrams,
-            totalWaterGrams: safeTotalWater
+            totalWaterGrams: safeTotalWater,
+            segmentDurationSeconds: segmentDurationSeconds,
+            countdownProgress: segmentDurationSeconds > 0
+                ? Double(max(segmentDurationSeconds - elapsedInSegment, 0)) / Double(segmentDurationSeconds)
+                : 0
         )
     }
 
@@ -263,9 +272,12 @@ extension BrewSessionModel {
         let nextStep: PourStep?
         let remainingSeconds: Int
         let elapsedSeconds: Int
+        let isRunning: Bool
         let targetCumulativeGrams: Int
         let additionalGrams: Int
         let totalWaterGrams: Int
+        let segmentDurationSeconds: Int
+        let countdownProgress: Double
 
         var isFinalPhase: Bool { nextStep == nil }
         var isComplete: Bool { isFinalPhase && remainingSeconds == 0 }

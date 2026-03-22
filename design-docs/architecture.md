@@ -85,12 +85,14 @@ WidgetExtension/
 ### Brew assistant UI mapping
 - 既存 `BrewPlan` / `BrewSessionModel` の状態をそのまま使い、ロジック変更なしで視覚表現を更新する。
 - 画面セクションとデータ対応:
-  - メインタイマー: `secondsToNextStep(in:)`, `currentStep(in:)`, `elapsedSeconds`
+  - メインタイマー: `secondsToNextStep(in:)`, `currentStep(in:)`, 現在区間の残り率
   - 次アクションカード: `currentStep(in:)`, `secondsToNextStep(in:)`, `elapsedSeconds`
   - スケジュール: `steps`, `stepStatus(for:)`
   - 保存レビュー: `tasteFeedback`, `strengthFeedback`, `overallFeedback`, `note`
   - 簡易レビューの 3 項目は保存時に既存 `TasteRatings` へマッピングして後方互換を保つ
 - `BrewSessionModel` は View が複数値をその場で組み立てなくて済むよう、`次の累計目標g` と `今回足すg` を含む表示用 helper を提供する。
+- メインタイマー円の中は `第N投`、現在状態、残り時間だけを表示し、次情報は下段カードへ寄せる。
+- リング進捗は `現在ステップ開始 -> 次ステップ開始` の区間で 1 周するカウントダウン比率を使う。
 - 最終投では `次の累計目標g` を総湯量として扱い、追加注湯がない状態を明示する。
 
 ### Beans UI mapping

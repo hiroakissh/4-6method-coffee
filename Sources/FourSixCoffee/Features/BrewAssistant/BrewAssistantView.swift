@@ -23,7 +23,7 @@ struct BrewAssistantView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 22) {
                         header
-                        timerHero(summary: summary, progress: progress)
+                        timerHero(summary: summary)
                         nextActionCard(summary: summary, progress: progress)
                         controls
                         schedule(plan: plan)
@@ -124,9 +124,9 @@ struct BrewAssistantView: View {
         }
     }
 
-    private func timerHero(summary: BrewSessionModel.NextActionSummary, progress: Double) -> some View {
+    private func timerHero(summary: BrewSessionModel.NextActionSummary) -> some View {
         let size: CGFloat = 300
-        let clampedProgress = min(max(progress, 0), 1)
+        let clampedProgress = min(max(summary.countdownProgress, 0), 1)
 
         return ZStack {
             Circle()
@@ -146,8 +146,8 @@ struct BrewAssistantView: View {
                 .offset(y: -(size / 2))
                 .rotationEffect(.degrees(-90 + (clampedProgress * 360)))
 
-            VStack(spacing: 8) {
-                Text("第\(summary.currentStep.id)投 (\(phaseRatioLabel(for: summary.currentStep.phase)))")
+            VStack(spacing: 12) {
+                Text("第\(summary.currentStep.id)投")
                     .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
                     .foregroundStyle(AppDesignTokens.Colors.timerRingProgress)
                     .padding(.horizontal, 18)
@@ -159,43 +159,15 @@ struct BrewAssistantView: View {
                     }
                     .clipShape(Capsule())
 
-                Text(nextActionTitle(for: summary))
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                Text(currentStateText(for: summary))
+                    .font(AppDesignTokens.Typography.font(.headline, weight: .bold))
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-
-                Text("次まで")
-                    .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
-                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-                    .textCase(.uppercase)
 
                 Text(PourStep.timeLabel(from: summary.remainingSeconds))
                     .font(.system(size: 54, weight: .black, design: AppDesignTokens.Typography.design))
                     .monospacedDigit()
                     .foregroundStyle(AppDesignTokens.Colors.timerMainValue)
                     .shadow(color: Color.black.opacity(0.28), radius: 1, x: 0, y: 2)
-
-                Text(targetCumulativeLabel(for: summary))
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
-                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
-
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(summary.targetCumulativeGrams)")
-                        .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
-                        .foregroundStyle(AppDesignTokens.Colors.timerRingProgress)
-                    Text("g")
-                        .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
-                        .foregroundStyle(AppDesignTokens.Colors.timerRingProgress)
-                }
-
-                Text(secondaryAmountText(for: summary))
-                    .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
-                    .foregroundStyle(AppDesignTokens.Colors.timerAmountAccent)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(AppDesignTokens.Colors.secondaryButtonBackground)
-                    .clipShape(Capsule())
-
-                infoChip(title: "経過", value: PourStep.timeLabel(from: summary.elapsedSeconds))
             }
             .padding(.top, 10)
         }
@@ -551,15 +523,6 @@ struct BrewAssistantView: View {
         min(Double(session.elapsedSeconds) / Double(max(plan.estimatedTotalSeconds, 1)), 1)
     }
 
-    private func phaseRatioLabel(for phase: PourStep.Phase) -> String {
-        switch phase {
-        case .balance:
-            return "40%"
-        case .strength:
-            return "60%"
-        }
-    }
-
     private func nextActionTitle(for summary: BrewSessionModel.NextActionSummary) -> String {
         if let nextStep = summary.nextStep {
             return "次は第\(nextStep.id)投"
@@ -588,14 +551,14 @@ struct BrewAssistantView: View {
         summary.additionalGrams > 0 ? "+\(summary.additionalGrams)g" : "なし"
     }
 
-    private func secondaryAmountText(for summary: BrewSessionModel.NextActionSummary) -> String {
-        if summary.additionalGrams > 0 {
-            return "今回 +\(summary.additionalGrams)g"
+    private func currentStateText(for summary: BrewSessionModel.NextActionSummary) -> String {
+        if summary.isComplete {
+            return "抽出完了"
         }
-        if summary.isAwaitingFinish {
-            return "注ぎ切りを待つ"
+        if !summary.isRunning, summary.elapsedSeconds > 0 {
+            return "停止中"
         }
-        return "注湯完了"
+        return summary.currentStep.phase.displayName
     }
 
     private func icon(for status: BrewSessionModel.StepStatus) -> String {

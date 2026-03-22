@@ -114,8 +114,27 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
         XCTAssertEqual(summary.remainingSeconds, 45)
         XCTAssertEqual(summary.targetCumulativeGrams, 80)
         XCTAssertEqual(summary.additionalGrams, 40)
+        XCTAssertEqual(summary.segmentDurationSeconds, 45)
+        XCTAssertEqual(summary.countdownProgress, 1, accuracy: 0.0001)
         XCTAssertFalse(summary.isFinalPhase)
         XCTAssertFalse(summary.isComplete)
+    }
+
+    func testNextActionSummaryBuildsCountdownProgressWithinCurrentSegment() {
+        let model = BrewSessionModel(liveActivityManager: SpyBrewSessionLiveActivityManager())
+        let plan = makePlan(stepStartOffset: 0)
+
+        model.load(plan: plan)
+        model.currentStepIndex = 1
+        model.elapsedSeconds = 50
+
+        let summary = model.nextActionSummary(in: plan)
+
+        XCTAssertEqual(summary.currentStep.id, 2)
+        XCTAssertEqual(summary.nextStep?.id, 3)
+        XCTAssertEqual(summary.remainingSeconds, 40)
+        XCTAssertEqual(summary.segmentDurationSeconds, 45)
+        XCTAssertEqual(summary.countdownProgress, 40.0 / 45.0, accuracy: 0.0001)
     }
 
     func testNextActionSummaryMarksCompletionAfterFinalPour() {
@@ -133,6 +152,8 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
         XCTAssertEqual(summary.remainingSeconds, 0)
         XCTAssertEqual(summary.targetCumulativeGrams, 240)
         XCTAssertEqual(summary.additionalGrams, 0)
+        XCTAssertEqual(summary.segmentDurationSeconds, 0)
+        XCTAssertEqual(summary.countdownProgress, 0, accuracy: 0.0001)
         XCTAssertTrue(summary.isFinalPhase)
         XCTAssertTrue(summary.isComplete)
     }
