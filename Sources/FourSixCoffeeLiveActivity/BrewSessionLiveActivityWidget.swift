@@ -100,10 +100,7 @@ struct BrewSessionLiveActivityWidget: Widget {
                     }
                 }
             } compactLeading: {
-                HStack(spacing: 4) {
-                    Image(systemName: "drop.fill")
-                    Text(presentation.currentStepCompactText)
-                }
+                Text(presentation.compactLeadingText)
                 .font(CoffeeDesignPrimitives.Typography.font(.caption, weight: .bold))
                 .foregroundStyle(LiveActivityDesignTokens.Colors.textPrimary)
             } compactTrailing: {
@@ -112,7 +109,7 @@ struct BrewSessionLiveActivityWidget: Widget {
                     .monospacedDigit()
                     .foregroundStyle(LiveActivityDesignTokens.Colors.textPrimary)
             } minimal: {
-                Text(presentation.currentStepCompactText)
+                Text(presentation.minimalText)
                     .font(CoffeeDesignPrimitives.Typography.font(.caption2, weight: .bold))
                     .foregroundStyle(LiveActivityDesignTokens.Colors.textPrimary)
             }

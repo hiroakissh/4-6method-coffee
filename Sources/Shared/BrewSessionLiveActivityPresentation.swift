@@ -3,6 +3,7 @@ import Foundation
 struct BrewSessionLiveActivityPresentation: Equatable {
     let currentStepTitle: String
     let currentStepCompactText: String
+    let compactLeadingText: String
     let nextStepText: String
     let targetCumulativeLabel: String
     let targetCumulativeValue: String
@@ -10,6 +11,7 @@ struct BrewSessionLiveActivityPresentation: Equatable {
     let additionalAmountLabel: String
     let additionalAmountValue: String
     let remainingClockText: String
+    let minimalText: String
     let statusLabel: String?
 
     init(
@@ -52,7 +54,14 @@ struct BrewSessionLiveActivityPresentation: Equatable {
             additionalAmountValue = "+\(safeNextStepGrams)g"
         }
 
+        if currentStepCompactText == "0" {
+            compactLeadingText = targetCumulativeCompactText
+        } else {
+            compactLeadingText = "\(currentStepCompactText)·\(targetCumulativeCompactText)"
+        }
+
         remainingClockText = Self.clockText(from: safeRemainingNext)
+        minimalText = targetCumulativeCompactText
         statusLabel = state.isRunning ? nil : "停止中"
     }
 

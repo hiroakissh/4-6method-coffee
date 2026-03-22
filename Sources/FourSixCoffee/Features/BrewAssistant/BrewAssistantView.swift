@@ -224,7 +224,7 @@ struct BrewAssistantView: View {
                     Text(nextActionTitle(for: summary))
                         .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
                         .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                    Text("現在は第\(summary.currentStep.id)投")
+                    Text(currentActionDetailText(for: summary))
                         .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
                         .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                 }
@@ -556,6 +556,14 @@ struct BrewAssistantView: View {
             return "停止中"
         }
         return summary.currentStep.phase.displayName
+    }
+
+    private func currentActionDetailText(for summary: BrewSessionModel.NextActionSummary) -> String {
+        if summary.isComplete {
+            return "抽出は完了しています"
+        }
+
+        return "いまは +\(summary.currentStep.amountGrams)g / 累計 \(summary.currentStep.cumulativeGrams)g"
     }
 
     private func icon(for status: BrewSessionModel.StepStatus) -> String {

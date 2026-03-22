@@ -21,6 +21,7 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
 
         XCTAssertEqual(presentation.currentStepTitle, "第2投")
         XCTAssertEqual(presentation.currentStepCompactText, "2")
+        XCTAssertEqual(presentation.compactLeadingText, "2·120g")
         XCTAssertEqual(presentation.nextStepText, "次は第3投")
         XCTAssertEqual(presentation.targetCumulativeLabel, "次の累計")
         XCTAssertEqual(presentation.targetCumulativeValue, "120g")
@@ -28,6 +29,7 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.additionalAmountLabel, "今回足す量")
         XCTAssertEqual(presentation.additionalAmountValue, "+40g")
         XCTAssertEqual(presentation.remainingClockText, "0:40")
+        XCTAssertEqual(presentation.minimalText, "120g")
         XCTAssertNil(presentation.statusLabel)
     }
 
@@ -50,12 +52,14 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
 
         XCTAssertEqual(presentation.currentStepTitle, "第6投")
         XCTAssertEqual(presentation.currentStepCompactText, "6")
+        XCTAssertEqual(presentation.compactLeadingText, "6·完了")
         XCTAssertEqual(presentation.nextStepText, "抽出完了")
         XCTAssertEqual(presentation.targetCumulativeLabel, "仕上がり")
         XCTAssertEqual(presentation.targetCumulativeValue, "240g")
         XCTAssertEqual(presentation.targetCumulativeCompactText, "完了")
         XCTAssertEqual(presentation.additionalAmountLabel, "追加注湯")
         XCTAssertEqual(presentation.additionalAmountValue, "なし")
+        XCTAssertEqual(presentation.minimalText, "完了")
         XCTAssertEqual(presentation.statusLabel, "停止中")
     }
 
@@ -78,6 +82,7 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
 
         XCTAssertEqual(presentation.currentStepTitle, "準備中")
         XCTAssertEqual(presentation.currentStepCompactText, "0")
+        XCTAssertEqual(presentation.compactLeadingText, "0g")
         XCTAssertEqual(presentation.nextStepText, "次の注湯")
         XCTAssertEqual(presentation.targetCumulativeLabel, "次の累計")
         XCTAssertEqual(presentation.targetCumulativeValue, "0g")
@@ -85,6 +90,7 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.additionalAmountLabel, "今回足す量")
         XCTAssertEqual(presentation.additionalAmountValue, "+0g")
         XCTAssertEqual(presentation.remainingClockText, "0:00")
+        XCTAssertEqual(presentation.minimalText, "0g")
         XCTAssertEqual(presentation.statusLabel, "停止中")
     }
 }
