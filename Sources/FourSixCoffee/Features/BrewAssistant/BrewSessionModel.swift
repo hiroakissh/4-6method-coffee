@@ -170,8 +170,8 @@ final class BrewSessionModel {
             additionalGrams: additionalGrams,
             totalWaterGrams: safeTotalWater,
             segmentDurationSeconds: segmentDurationSeconds,
-            countdownProgress: segmentDurationSeconds > 0
-                ? Double(max(segmentDurationSeconds - elapsedInSegment, 0)) / Double(segmentDurationSeconds)
+            segmentProgress: segmentDurationSeconds > 0
+                ? Double(elapsedInSegment) / Double(segmentDurationSeconds)
                 : 0
         )
     }
@@ -277,7 +277,7 @@ extension BrewSessionModel {
         let additionalGrams: Int
         let totalWaterGrams: Int
         let segmentDurationSeconds: Int
-        let countdownProgress: Double
+        let segmentProgress: Double
 
         var isFinalPhase: Bool { nextStep == nil }
         var isComplete: Bool { isFinalPhase && remainingSeconds == 0 }

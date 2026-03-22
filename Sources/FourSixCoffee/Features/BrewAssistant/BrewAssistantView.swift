@@ -126,25 +126,29 @@ struct BrewAssistantView: View {
 
     private func timerHero(summary: BrewSessionModel.NextActionSummary) -> some View {
         let size: CGFloat = 300
-        let clampedProgress = min(max(summary.countdownProgress, 0), 1)
+        let clampedProgress = min(max(summary.segmentProgress, 0), 1)
 
         return ZStack {
             Circle()
                 .stroke(AppDesignTokens.Colors.timerRingTrack, lineWidth: 12)
 
-            Circle()
-                .trim(from: 0, to: max(clampedProgress, 0.015))
-                .stroke(
-                    AppDesignTokens.Colors.timerRingProgress,
-                    style: StrokeStyle(lineWidth: 12, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
+            if clampedProgress > 0 {
+                Circle()
+                    .trim(from: 0, to: clampedProgress)
+                    .stroke(
+                        AppDesignTokens.Colors.timerRingProgress,
+                        style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+            }
 
-            Circle()
-                .fill(AppDesignTokens.Colors.timerRingKnob)
-                .frame(width: 10, height: 10)
-                .offset(y: -(size / 2))
-                .rotationEffect(.degrees(-90 + (clampedProgress * 360)))
+            if clampedProgress > 0 {
+                Circle()
+                    .fill(AppDesignTokens.Colors.timerRingKnob)
+                    .frame(width: 10, height: 10)
+                    .offset(y: -(size / 2))
+                    .rotationEffect(.degrees(-90 + (clampedProgress * 360)))
+            }
 
             VStack(spacing: 12) {
                 Text("第\(summary.currentStep.id)投")
@@ -169,7 +173,8 @@ struct BrewAssistantView: View {
                     .foregroundStyle(AppDesignTokens.Colors.timerMainValue)
                     .shadow(color: Color.black.opacity(0.28), radius: 1, x: 0, y: 2)
             }
-            .padding(.top, 10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .multilineTextAlignment(.center)
         }
         .frame(width: size, height: size)
         .frame(maxWidth: .infinity)
