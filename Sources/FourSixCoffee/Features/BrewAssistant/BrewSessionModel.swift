@@ -138,6 +138,35 @@ final class BrewSessionModel {
         return plan.steps[safeIndex]
     }
 
+    func nextActionSummary(in plan: BrewPlan) -> NextActionSummary {
+        let currentStep = currentStep(in: plan)
+        let nextIndex = currentStepIndex + 1
+        let nextStep = plan.steps.indices.contains(nextIndex) ? plan.steps[nextIndex] : nil
+        let remainingSeconds = secondsToNextStep(in: plan)
+        let safeTotalWater = max(plan.totalWater, 0)
+
+        let targetCumulativeGrams: Int
+        let additionalGrams: Int
+
+        if let nextStep {
+            targetCumulativeGrams = min(max(nextStep.cumulativeGrams, 0), safeTotalWater)
+            additionalGrams = max(nextStep.amountGrams, 0)
+        } else {
+            targetCumulativeGrams = max(max(currentStep.cumulativeGrams, 0), safeTotalWater)
+            additionalGrams = 0
+        }
+
+        return NextActionSummary(
+            currentStep: currentStep,
+            nextStep: nextStep,
+            remainingSeconds: remainingSeconds,
+            elapsedSeconds: elapsedSeconds,
+            targetCumulativeGrams: targetCumulativeGrams,
+            additionalGrams: additionalGrams,
+            totalWaterGrams: safeTotalWater
+        )
+    }
+
     deinit {
         tickerTask?.cancel()
     }
@@ -229,6 +258,20 @@ final class BrewSessionModel {
 }
 
 extension BrewSessionModel {
+    struct NextActionSummary: Equatable {
+        let currentStep: PourStep
+        let nextStep: PourStep?
+        let remainingSeconds: Int
+        let elapsedSeconds: Int
+        let targetCumulativeGrams: Int
+        let additionalGrams: Int
+        let totalWaterGrams: Int
+
+        var isFinalPhase: Bool { nextStep == nil }
+        var isComplete: Bool { isFinalPhase && remainingSeconds == 0 }
+        var isAwaitingFinish: Bool { isFinalPhase && remainingSeconds > 0 }
+    }
+
     enum StepStatus {
         case done
         case active

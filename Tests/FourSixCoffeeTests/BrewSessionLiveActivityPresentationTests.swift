@@ -11,6 +11,7 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
                 cumulativeGrams: 80,
                 nextStepNumber: 3,
                 nextStepGrams: 40,
+                nextCumulativeGrams: 120,
                 remainingToNextStep: 40,
                 remainingTotalSeconds: 130,
                 nextStepDate: nil,
@@ -21,9 +22,11 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.currentStepTitle, "第2投")
         XCTAssertEqual(presentation.currentStepCompactText, "2")
         XCTAssertEqual(presentation.nextStepText, "次は第3投")
-        XCTAssertEqual(presentation.nextAmountLabel, "次に注ぐ量")
-        XCTAssertEqual(presentation.nextAmountValue, "40g")
-        XCTAssertEqual(presentation.nextAmountCompactText, "次 40g")
+        XCTAssertEqual(presentation.targetCumulativeLabel, "次の累計")
+        XCTAssertEqual(presentation.targetCumulativeValue, "120g")
+        XCTAssertEqual(presentation.targetCumulativeCompactText, "120g")
+        XCTAssertEqual(presentation.additionalAmountLabel, "今回足す量")
+        XCTAssertEqual(presentation.additionalAmountValue, "+40g")
         XCTAssertEqual(presentation.remainingClockText, "0:40")
         XCTAssertNil(presentation.statusLabel)
     }
@@ -33,10 +36,11 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
             attributes: BrewSessionActivityAttributes(totalWaterGrams: 240, totalSteps: 6),
             state: .init(
                 stepNumber: 6,
-                stepGrams: 50,
-                cumulativeGrams: 320,
+                stepGrams: 40,
+                cumulativeGrams: 240,
                 nextStepNumber: 0,
                 nextStepGrams: 0,
+                nextCumulativeGrams: 240,
                 remainingToNextStep: 0,
                 remainingTotalSeconds: 0,
                 nextStepDate: nil,
@@ -46,10 +50,12 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
 
         XCTAssertEqual(presentation.currentStepTitle, "第6投")
         XCTAssertEqual(presentation.currentStepCompactText, "6")
-        XCTAssertEqual(presentation.nextStepText, "仕上がり")
-        XCTAssertEqual(presentation.nextAmountLabel, "状態")
-        XCTAssertEqual(presentation.nextAmountValue, "完了")
-        XCTAssertEqual(presentation.nextAmountCompactText, "完了")
+        XCTAssertEqual(presentation.nextStepText, "抽出完了")
+        XCTAssertEqual(presentation.targetCumulativeLabel, "仕上がり")
+        XCTAssertEqual(presentation.targetCumulativeValue, "240g")
+        XCTAssertEqual(presentation.targetCumulativeCompactText, "完了")
+        XCTAssertEqual(presentation.additionalAmountLabel, "追加注湯")
+        XCTAssertEqual(presentation.additionalAmountValue, "なし")
         XCTAssertEqual(presentation.statusLabel, "停止中")
     }
 
@@ -62,6 +68,7 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
                 cumulativeGrams: -5,
                 nextStepNumber: -3,
                 nextStepGrams: -20,
+                nextCumulativeGrams: -25,
                 remainingToNextStep: -30,
                 remainingTotalSeconds: -90,
                 nextStepDate: nil,
@@ -72,9 +79,11 @@ final class BrewSessionLiveActivityPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.currentStepTitle, "準備中")
         XCTAssertEqual(presentation.currentStepCompactText, "0")
         XCTAssertEqual(presentation.nextStepText, "次の注湯")
-        XCTAssertEqual(presentation.nextAmountLabel, "次に注ぐ量")
-        XCTAssertEqual(presentation.nextAmountValue, "0g")
-        XCTAssertEqual(presentation.nextAmountCompactText, "次 0g")
+        XCTAssertEqual(presentation.targetCumulativeLabel, "次の累計")
+        XCTAssertEqual(presentation.targetCumulativeValue, "0g")
+        XCTAssertEqual(presentation.targetCumulativeCompactText, "0g")
+        XCTAssertEqual(presentation.additionalAmountLabel, "今回足す量")
+        XCTAssertEqual(presentation.additionalAmountValue, "+0g")
         XCTAssertEqual(presentation.remainingClockText, "0:00")
         XCTAssertEqual(presentation.statusLabel, "停止中")
     }

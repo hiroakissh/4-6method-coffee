@@ -24,6 +24,7 @@ enum BrewSessionLiveActivityPayloadBuilder {
                 cumulativeGrams: 0,
                 nextStepNumber: 0,
                 nextStepGrams: 0,
+                nextCumulativeGrams: 0,
                 remainingToNextStep: totalRemaining,
                 remainingTotalSeconds: totalRemaining,
                 nextStepDate: isRunning ? now.addingTimeInterval(TimeInterval(totalRemaining)) : nil,
@@ -46,14 +47,17 @@ enum BrewSessionLiveActivityPayloadBuilder {
         let remainingToNext: Int
         let nextStepNumber: Int
         let nextStepGrams: Int
+        let nextCumulativeGrams: Int
         if plan.steps.indices.contains(nextIndex) {
             remainingToNext = max(plan.steps[nextIndex].startSecond - safeElapsed, 0)
             nextStepNumber = plan.steps[nextIndex].id
             nextStepGrams = plan.steps[nextIndex].amountGrams
+            nextCumulativeGrams = max(plan.steps[nextIndex].cumulativeGrams, 0)
         } else {
             remainingToNext = totalRemaining
             nextStepNumber = 0
             nextStepGrams = 0
+            nextCumulativeGrams = max(max(step.cumulativeGrams, 0), max(plan.totalWater, 0))
         }
 
         let nextStepDate = isRunning
@@ -66,6 +70,7 @@ enum BrewSessionLiveActivityPayloadBuilder {
             cumulativeGrams: step.cumulativeGrams,
             nextStepNumber: nextStepNumber,
             nextStepGrams: nextStepGrams,
+            nextCumulativeGrams: nextCumulativeGrams,
             remainingToNextStep: remainingToNext,
             remainingTotalSeconds: totalRemaining,
             nextStepDate: nextStepDate,

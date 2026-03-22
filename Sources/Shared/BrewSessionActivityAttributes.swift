@@ -8,6 +8,7 @@ struct BrewSessionActivityAttributes: ActivityAttributes {
         var cumulativeGrams: Int
         var nextStepNumber: Int
         var nextStepGrams: Int
+        var nextCumulativeGrams: Int
         var remainingToNextStep: Int
         var remainingTotalSeconds: Int
         var nextStepDate: Date?
@@ -25,6 +26,7 @@ extension BrewSessionActivityAttributes.ContentState {
         case cumulativeGrams
         case nextStepNumber
         case nextStepGrams
+        case nextCumulativeGrams
         case remainingToNextStep
         case remainingTotalSeconds
         case nextStepDate
@@ -39,6 +41,8 @@ extension BrewSessionActivityAttributes.ContentState {
         cumulativeGrams = try container.decode(Int.self, forKey: .cumulativeGrams)
         nextStepNumber = try container.decodeIfPresent(Int.self, forKey: .nextStepNumber) ?? 0
         nextStepGrams = try container.decodeIfPresent(Int.self, forKey: .nextStepGrams) ?? 0
+        nextCumulativeGrams = try container.decodeIfPresent(Int.self, forKey: .nextCumulativeGrams)
+            ?? max(cumulativeGrams + nextStepGrams, cumulativeGrams)
         remainingToNextStep = try container.decode(Int.self, forKey: .remainingToNextStep)
         remainingTotalSeconds = try container.decode(Int.self, forKey: .remainingTotalSeconds)
         nextStepDate = try container.decodeIfPresent(Date.self, forKey: .nextStepDate)
@@ -52,6 +56,7 @@ extension BrewSessionActivityAttributes.ContentState {
         try container.encode(cumulativeGrams, forKey: .cumulativeGrams)
         try container.encode(nextStepNumber, forKey: .nextStepNumber)
         try container.encode(nextStepGrams, forKey: .nextStepGrams)
+        try container.encode(nextCumulativeGrams, forKey: .nextCumulativeGrams)
         try container.encode(remainingToNextStep, forKey: .remainingToNextStep)
         try container.encode(remainingTotalSeconds, forKey: .remainingTotalSeconds)
         try container.encode(nextStepDate, forKey: .nextStepDate)

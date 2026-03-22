@@ -101,6 +101,42 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
         XCTAssertEqual(manager.endCalls[0].currentStepIndex, plan.steps.count - 1)
     }
 
+    func testNextActionSummaryUsesUpcomingStepCumulativeTarget() {
+        let model = BrewSessionModel(liveActivityManager: SpyBrewSessionLiveActivityManager())
+        let plan = makePlan(stepStartOffset: 0)
+
+        model.load(plan: plan)
+
+        let summary = model.nextActionSummary(in: plan)
+
+        XCTAssertEqual(summary.currentStep.id, 1)
+        XCTAssertEqual(summary.nextStep?.id, 2)
+        XCTAssertEqual(summary.remainingSeconds, 45)
+        XCTAssertEqual(summary.targetCumulativeGrams, 80)
+        XCTAssertEqual(summary.additionalGrams, 40)
+        XCTAssertFalse(summary.isFinalPhase)
+        XCTAssertFalse(summary.isComplete)
+    }
+
+    func testNextActionSummaryMarksCompletionAfterFinalPour() {
+        let model = BrewSessionModel(liveActivityManager: SpyBrewSessionLiveActivityManager())
+        let plan = makePlan(stepStartOffset: 0)
+
+        model.load(plan: plan)
+        model.currentStepIndex = plan.steps.count - 1
+        model.elapsedSeconds = plan.estimatedTotalSeconds
+
+        let summary = model.nextActionSummary(in: plan)
+
+        XCTAssertEqual(summary.currentStep.id, 6)
+        XCTAssertNil(summary.nextStep)
+        XCTAssertEqual(summary.remainingSeconds, 0)
+        XCTAssertEqual(summary.targetCumulativeGrams, 240)
+        XCTAssertEqual(summary.additionalGrams, 0)
+        XCTAssertTrue(summary.isFinalPhase)
+        XCTAssertTrue(summary.isComplete)
+    }
+
     private func makePlan(stepStartOffset: Int) -> BrewPlan {
         BrewPlan(
             input: .default,
