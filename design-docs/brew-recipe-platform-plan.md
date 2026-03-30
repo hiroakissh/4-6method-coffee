@@ -4,6 +4,10 @@
 4-6メソッド専用の計算アプリから、世界大会レシピを分解・抽象化して扱える
 「抽出設計ツール」へ移行するための実装計画をまとめる。
 
+## Renewal stance
+- これは新規アプリ化ではなく、既存の 4-6 アプリを複数レシピ対応へ広げるリニューアルである。
+- 抽出ガイド、ログ、Live Activity は既存資産として再利用し、可変レシピ対応へ段階拡張する。
+
 ## Championship-inspired recipe examples
 以下は「史実の完全再現データ」ではなく、アプリ設計に必要な抽出構造の例として扱う。
 
@@ -136,6 +140,7 @@ struct PourAction: Codable, Hashable, Identifiable {
    - `RecipeResolver` で `BrewSessionPlan` を生成
    - `BrewSessionModel` を可変投数対応に変更
    - Live Activity を可変ステップ対応に変更
+   - 既存の `BrewSessionLiveActivityPayloadBuilder` と `BrewSessionLiveActivityManager` の責務は維持する
 4. **Phase 4: UI restructuring**
    - Home を Quick Brew / Research の2導線に再構成
    - Recipe Editor を追加
@@ -160,4 +165,5 @@ struct PourAction: Codable, Hashable, Identifiable {
 - 現行 `AppStore` と `BrewSessionModel` は 4-6前提の state を持っているため、途中で adapter 層が必要になる
 - 既存の `TasteProfile` は 4-6固有の意味を持つため、将来は「preset input」へ隔離する必要がある
 - Quick Brew の責務を広げすぎると Research と競合するため、入力項目数と編集範囲を厳しく制限する必要がある
+- Live Activity の payload を壊す変更は既存表示の回帰リスクが高いため、builder の後方互換を意識して進める必要がある
 - 永続化を細粒度 Entity に急いで分解すると移行コストが上がるため、MVP は JSON payload 保存が安全

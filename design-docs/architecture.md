@@ -9,6 +9,8 @@
 ## Architectural direction
 - **Recipe schema first**
   - 先にレシピの正規表現を決め、その後に UI と永続化を合わせる
+- **Renew instead of replace**
+  - 既存の抽出ガイド、ログ、Live Activity を捨てずに、可変レシピへ拡張する
 - **Preset as data**
   - 4-6や大会レシピはコード分岐ではなくデータとして表現する
 - **Resolved session timeline**
@@ -143,6 +145,7 @@ struct PourAction {
 3. **Guide migration**
    - `BrewSessionModel` を `BrewSessionPlan` ベースへ切り替える
    - `currentStepIndex` は可変長イベント列に対応させる
+   - 既存の Live Activity manager / builder / widget 構成は維持し、payload だけを可変レシピへ対応させる
 4. **UI migration**
    - Home を「Quick Brew / Research」の2導線中心へ置き換える
    - Quick Brew は最短入力、Research はレシピライブラリ / エディタ中心にする
@@ -171,6 +174,8 @@ struct PourAction {
   - 今回足すg
   - 現在または次の温度
 - Live Activity も `BrewSessionPlan` の表示項目だけを参照する
+- 既存の表示優先順位である `残り時間 -> 次の累計g -> 今回足すg` は維持する
+- 既存ユーザーが違和感なく使えるよう、タイマー開始・停止・終了導線は大きく変えない
 
 ## Testing policy
 - `QuickBrewGenerator` は入力数を絞ったルールベース生成としてテストする
