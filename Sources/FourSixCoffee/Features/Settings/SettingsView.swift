@@ -17,17 +17,19 @@ struct SettingsView: View {
                         cardContainer {
                             sectionTitle("単位")
                             Picker("重量単位", selection: $bindableStore.preferredUnit) {
-                                Text("グラム(g)").tag("g")
+                                Text("グラム(g)")
+                                    .appTextStyle(.sectionLabel)
+                                    .tag("g")
                             }
                             .pickerStyle(.menu)
-                            .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                            .appTextStyle(.sectionLabel)
                             .tint(AppDesignTokens.Colors.headingAccent)
                         }
 
                         cardContainer {
                             sectionTitle("アシスタント")
                             Toggle("ステップ時の通知ヒント", isOn: $bindableStore.enableStepHaptics)
-                                .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                                .appTextStyle(.sectionLabel)
                                 .tint(AppDesignTokens.Colors.headingAccent)
                                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                         }
@@ -101,7 +103,7 @@ struct SettingsView: View {
 
             Spacer()
             Text("設定")
-                .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                .appTextStyle(.screenTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             Spacer()
 
@@ -128,18 +130,18 @@ struct SettingsView: View {
 
     private func sectionTitle(_ title: String) -> some View {
         Text(title)
-            .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+            .appTextStyle(.sectionTitle)
             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
     }
 
     private func infoRow(_ title: String, _ value: String) -> some View {
         HStack {
             Text(title)
-                .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                .appTextStyle(.sectionLabel)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             Spacer()
             Text(value)
-                .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                .appTextStyle(.itemTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                 .multilineTextAlignment(.trailing)
         }

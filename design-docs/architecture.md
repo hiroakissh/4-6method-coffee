@@ -63,6 +63,7 @@ WidgetExtension/
 3. `Infrastructure` が `Domain` protocol を実装する。
 4. `Domain` は SwiftUI / SwiftData へ依存しない。
 5. UI の色・フォントは `Theme` のデザイントークン経由で参照する。
+6. テキストスタイルは `Theme` のセマンティックトークン経由で参照し、View から `Font.TextStyle` を直接選ばない。
 
 ## Data flow
 1. View から Store（`@Observable`）にイベントを渡す。
