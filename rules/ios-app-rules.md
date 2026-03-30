@@ -15,6 +15,13 @@
 - 大会レシピや独自レシピはコード分岐ではなくプリセットデータとして追加する。
 - Recipe 永続化では `schemaVersion` を必ず持たせ、payload互換性を壊す変更は移行方針を先に文書化する。
 - 4-6由来の `味を前半で制御する` といった概念は preset metadata や generator layer に閉じ込め、コアスキーマへ直書きしない。
+- `Quick Brew` が返す結果も同じ `BrewRecipe` スキーマに正規化し、専用の別モデルを増やさない。
+
+## Product modes
+- UI の入口は `Quick Brew` と `Research` に分ける。
+- `Quick Brew` は少数入力でおすすめレシピを返す最短導線にする。
+- `Research` は phase / pour / flow / temperature / agitation を直接扱う設計導線にする。
+- `Quick Brew` から Research へ降りられるようにし、逆に Research の複雑さを Quick Brew に持ち込まない。
 
 ## Persistence
 - Bean / Recipe / BrewLog は SwiftData に保存する。
@@ -37,9 +44,11 @@
 - 現在のフェーズと次アクションを混在させず、表示責務を分ける。
 - Live Activity 実装では、表示用データ整形を純粋関数（Builder）として分離し、`ActivityKit` 依存コードは Manager に閉じ込める。
 - Recipe Editor と Guide UI は、可変投数・可変フェーズ・温度変更ありのケースを前提に設計する。
+- `Quick Brew` の入力項目は増やしすぎない。詳細な flow や agitation の編集は Research へ逃がす。
 
 ## Testing
 - 変更には必ずテストを追加する。
+- `Quick Brew` では入力数を絞った推薦ロジックの回帰テストを追加する。
 - `RecipeResolver`、preset generator、JSON encode/decode 互換性を優先してテストする。
 - 効果的なテストを優先し、目安としてカバレッジ 90% 以上を目指す。
 - 目標未達の場合は理由と残リスクを PR に明記する。

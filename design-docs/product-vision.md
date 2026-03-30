@@ -27,12 +27,27 @@
 ## Core product pillars
 1. **Recipe primitives**
    - 抽出を固定メソッド名ではなく、フェーズと制御パラメータで表現する
-2. **Guided brewing**
+2. **Dual entry modes**
+   - すぐ淹れたい時の `Quick Brew` と、作り込みたい時の `Research` を入口で分ける
+3. **Guided brewing**
    - タイマー、注湯量、次アクション、温度変化を時間軸で案内する
-3. **Learning loop**
+4. **Learning loop**
    - 味の記録と再現ログから、次回の調整に繋げる
-4. **Preset library**
+5. **Preset library**
    - 世界大会レシピや代表的メソッドをプリセットとして持ち、比較できる
+
+## Experience modes
+### Quick Brew
+- 目的は「サクッと美味しく飲む」こと
+- 入力は `豆 / 焙煎度 / 味方向 / 杯数 or 湯量` 程度までに絞る
+- アプリはおすすめレシピを選ぶか軽く生成し、そのまま抽出ガイドへ進める
+- ユーザーにフェーズや流量を直接編集させない
+
+### Research
+- 目的は「味を詰める、比較する、学ぶ」こと
+- phase / pour / flow / temperature / agitation を直接編集できる
+- プリセット複製、比較、ログからの改善、A/Bテストはこのモードに寄せる
+- 世界大会レシピや独自レシピを分析対象として扱う
 
 ## Recipe archetypes to support
 - **4-6 / flavor-control**
@@ -49,21 +64,26 @@
   - 浸漬とドリップをまたぐハイブリッド抽出
 
 ## MVP scope
-1. **Recipe Composer**
+1. **Quick Brew**
+   - 豆や好みの少数入力から、おすすめ抽出レシピを提示できる
+   - 4-6を含むプリセット群から選択、または軽量ルールで生成できる
+   - レシピ詳細を開かなくても、そのまま抽出開始できる
+2. **Research Workspace**
    - レシピ名、器具、比率、総湯量、フェーズ、注湯回数、開始時刻、湯量を編集できる
    - フェーズごとに温度・攪拌・流量を保持できる
-   - 4-6を含む複数プリセットを読み込み、複製して編集できる
-2. **Guided Brew Session**
+   - プリセットを読み込み、複製して編集できる
+3. **Guided Brew Session**
    - 時間軸ベースの抽出ガイド
    - 次の注湯までの残り時間、次の累計g、今回足すg、現在フェーズを表示する
    - Haptics / Live Activity に対応する
-3. **Brew Log**
+4. **Brew Log**
    - 味の印象、濃度感、総合評価、自由メモ、実測時間を保存できる
    - 使用した豆とレシピを紐づけて再利用できる
-4. **Preset Library**
+   - `Quick Brew / Research` のどちらから淹れたかを記録できる
+5. **Preset Library**
    - 世界大会由来レシピを「出典つきプリセット」として持つ
    - レシピ比較のためにソース情報と設計意図を保存する
-5. **Local Persistence**
+6. **Local Persistence**
    - Bean / Recipe / BrewLog を SwiftData に保存する
 
 ## Non-goals for first release
@@ -74,6 +94,8 @@
 
 ## Success criteria
 - 4-6以外の少なくとも3系統のレシピを、コード変更なしで同一データ構造に保存できる
+- `Quick Brew` では少数入力から3タップ前後で抽出開始できる
+- `Research` では可変投数・可変フェーズのレシピを編集して保存できる
 - 抽出ガイドが「6投固定」ではなく任意の投数・フェーズ数で動作する
 - 保存されたログから、同じ豆 + 同じレシピの再利用ができる
 - レシピプリセットを複製し、ユーザー独自レシピとして編集できる
@@ -82,10 +104,13 @@
 1. **Foundation**
    - 抽象レシピJSONとSwiftモデルを定義する
    - 現行の `BrewInput / BrewPlan` 依存箇所を移行可能な形へ整理する
-2. **Preset-driven brewing**
+2. **Quick Brew**
+   - 少数入力からおすすめレシピを返す `QuickBrewGenerator` を追加する
+   - 4-6、短時間4投、浸漬ハイブリッドなどのプリセットを推薦できるようにする
+3. **Preset-driven brewing**
    - 4-6、短時間4投、浸漬ハイブリッドなどのプリセットを追加する
-   - 抽出ガイドを可変ステップ対応にする
-3. **Analysis**
+   - Research モードのエディタと抽出ガイドを可変ステップ対応にする
+4. **Analysis**
    - 味の結果から次回調整提案を返す
    - 豆とレシピの相性を学習する
 

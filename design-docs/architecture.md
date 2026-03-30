@@ -19,10 +19,14 @@
 ## Core domain models
 - **Bean**
   - 既存の豆プロファイルを継続利用する
+- **BrewEntryMode**
+  - `quick / research`。どの入口から抽出を開始したかを表す
 - **BrewRecipe**
   - レシピ全体。器具、比率、出典、フェーズ群を持つ
 - **RecipeMetadata**
   - レシピ名、作成者、出典、タグ、プリセット種別
+- **QuickBrewRequest**
+  - 豆、焙煎度、味方向、杯数などの少数入力
 - **BrewPhase**
   - `bloom / extraction / immersion / bypass / finish` などのフェーズ
 - **PourAction**
@@ -51,6 +55,7 @@ Domain/
   Services/
     RecipePresetFactory.swift
     RecipeResolver.swift
+    QuickBrewGenerator.swift
     RecipeSuggestionEngine.swift    // later
   Repositories/
     BeanRepository.swift
@@ -60,9 +65,12 @@ Application/
   UseCases/
     BeanUseCase.swift
     RecipeUseCase.swift
+    QuickBrewUseCase.swift
     BrewGuideUseCase.swift
     BrewLogUseCase.swift
 Features/
+  QuickBrew/
+  Research/
   RecipeLibrary/
   RecipeEditor/
   BrewGuide/
@@ -101,6 +109,8 @@ struct PourAction {
 2. 抽出ガイドは `BrewSessionPlan` の時系列イベントだけを見て動作し、投数固定の知識を持たない。
 3. 温度変化や攪拌は phase-level か action-level に持たせ、UI では同一タイムライン上に表示できるようにする。
 4. ハイブリッド抽出は `PhaseType` と `ExtractionMode` で表現し、特定器具の if 文を View に持ち込まない。
+5. `Quick Brew` も最終的には同じ `BrewRecipe` を返し、別のレシピ型を増やさない。
+6. `Quick Brew / Research` は Recipe の属性ではなく、セッション開始時の context または BrewLog 側で保持する。
 
 ## JSON persistence strategy
 - Recipe は MVP では **JSON payload + schemaVersion** で保存する
@@ -117,10 +127,11 @@ struct PourAction {
 
 ## Data flow
 1. View から Observation Store にイベントを渡す
-2. Store が UseCase を呼び、Recipe の取得・保存・複製・解決を行う
-3. `RecipeResolver` が `BrewRecipe` を `BrewSessionPlan` へ展開する
-4. `BrewSessionModel` は `BrewSessionPlan` を元にタイマー進行を管理する
-5. Repository が JSON payload と Domain model を相互変換する
+2. `Quick Brew` では `QuickBrewUseCase` が入力からおすすめ `BrewRecipe` を返す
+3. `Research` では `RecipeUseCase` が Recipe の取得・保存・複製を行う
+4. `RecipeResolver` が `BrewRecipe` を `BrewSessionPlan` へ展開する
+5. `BrewSessionModel` は `BrewSessionPlan` を元にタイマー進行を管理する
+6. Repository が JSON payload と Domain model を相互変換する
 
 ## Migration strategy from current code
 1. **Schema introduction**
@@ -133,7 +144,8 @@ struct PourAction {
    - `BrewSessionModel` を `BrewSessionPlan` ベースへ切り替える
    - `currentStepIndex` は可変長イベント列に対応させる
 4. **UI migration**
-   - Home を「プランナー」から「レシピライブラリ / エディタ」中心へ置き換える
+   - Home を「Quick Brew / Research」の2導線中心へ置き換える
+   - Quick Brew は最短入力、Research はレシピライブラリ / エディタ中心にする
    - 抽出ガイド UI は可変投数・温度変更表示に対応する
 5. **Legacy cleanup**
    - 6投固定の `PourStep.Phase.balance/strength` と `TasteProfile` 依存を段階的に整理する
@@ -149,8 +161,9 @@ struct PourAction {
   - 同一 `extraction` phase 内で `TemperatureProfile.stepwise`
 
 ## UI implications
-- Home の役割は「1つの 4-6 計算画面」から「レシピ選択 + プレビュー」に変える
-- Recipe Editor は phase list と pour list を中心にする
+- Home の役割は「1つの 4-6 計算画面」から「Quick Brew / Research の入口」に変える
+- Quick Brew は少数入力 + おすすめレシピカードを主役にする
+- Research は Recipe Library と Recipe Editor を中心にする
 - Brew Guide は以下を固定表示項目として扱う
   - 現在フェーズ
   - 次のアクションまでの残り時間
@@ -160,6 +173,7 @@ struct PourAction {
 - Live Activity も `BrewSessionPlan` の表示項目だけを参照する
 
 ## Testing policy
+- `QuickBrewGenerator` は入力数を絞ったルールベース生成としてテストする
 - `RecipeResolver` と `RecipePresetFactory` を純粋関数として重点テストする
 - JSON schema の encode/decode 互換性テストを追加する
 - 可変投数、温度変更、攪拌あり、浸漬フェーズありの代表ケースをテストする
