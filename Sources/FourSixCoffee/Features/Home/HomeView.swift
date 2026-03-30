@@ -72,10 +72,10 @@ struct HomeView: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text("プランナー")
-                    .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                    .appTextStyle(.screenTitle)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                 Text("入力を先に決めて、すぐ下で結果を確認")
-                    .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                    .appTextStyle(.supporting)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             }
             Spacer()
@@ -120,25 +120,25 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         Text(bean.name)
-                            .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                            .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                         Spacer()
                         beanBadge(text: bean.roastLevel.displayName)
                     }
                     if !bean.shopName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         Text(bean.shopName)
-                            .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                            .appTextStyle(.body)
                             .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                     }
                     if !bean.origin.isEmpty || !bean.process.isEmpty {
                         Text([bean.origin, bean.process].filter { !$0.isEmpty }.joined(separator: " · "))
-                            .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                            .appTextStyle(.supporting)
                             .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                     }
                 }
             } else {
                 Text("未選択でもプランは作れます。豆を選ぶと焙煎度の初期値に反映されます。")
-                    .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                    .appTextStyle(.body)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             }
         }
@@ -208,7 +208,7 @@ struct HomeView: View {
             cardHeader(systemImage: "wand.and.stars.inverse", title: "算出結果")
 
             Text("入力を変えると総湯量・比率・挽き目・時間目安が即時更新されます。")
-                .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                .appTextStyle(.supporting)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
             LazyVGrid(
@@ -227,10 +227,10 @@ struct HomeView: View {
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("湯温")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                    .appTextStyle(.sectionLabel)
                     .foregroundStyle(AppDesignTokens.Colors.headingAccent)
                 Text("\(currentPlan.recommendedTemperature)℃")
-                    .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                    .appTextStyle(.metricValue)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                 Spacer()
             }
@@ -244,7 +244,7 @@ struct HomeView: View {
             .clipShape(Capsule())
 
             Text(currentPlan.plannerMemo)
-                .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                .appTextStyle(.body)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
         }
     }
@@ -261,17 +261,17 @@ struct HomeView: View {
                         Circle()
                             .stroke(AppDesignTokens.Colors.timerStepBadgeBorder, lineWidth: 1)
                         Text("\(step.id)")
-                            .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                            .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.headingAccent)
                     }
                     .frame(width: 42, height: 42)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(step.phase.displayName) · \(step.amountGrams)g")
-                            .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                            .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                         Text("開始 \(step.startLabel) / 待ち \(step.waitSeconds)s / 累計 \(step.cumulativeGrams)g")
-                            .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                            .appTextStyle(.supporting)
                             .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                     }
 
@@ -294,15 +294,15 @@ struct HomeView: View {
             }
 
             Text("抽出ログが蓄積したら、この豆に合う比率・挽き目・時間を後続フェーズで提案します。")
-                .font(AppDesignTokens.Typography.font(.body, weight: .medium))
+                .appTextStyle(.body)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("将来の提案例")
-                    .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                    .appTextStyle(.supportingStrong)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                 Text("甘さ寄り / 1:16 / 粗挽き / 3:00")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                    .appTextStyle(.itemTitle)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             }
             .padding(18)
@@ -324,7 +324,7 @@ struct HomeView: View {
                 Image(systemName: "timer")
                 Text("このレシピでタイマーを開く")
             }
-            .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+            .appTextStyle(.sectionTitle)
             .foregroundStyle(AppDesignTokens.Colors.ctaText)
             .frame(maxWidth: .infinity)
             .frame(height: 82)
@@ -356,7 +356,7 @@ struct HomeView: View {
                 .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
                 .foregroundStyle(AppDesignTokens.Colors.headingAccent)
             Text(title)
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .appTextStyle(.sectionTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
         }
     }
@@ -371,14 +371,14 @@ struct HomeView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                .appTextStyle(.sectionLabel)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
             HStack {
                 stepperButton(symbol: "minus", isEnabled: isMinusEnabled, action: onMinusTap)
                 Spacer()
                 Text(valueText)
-                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                    .appTextStyle(.screenTitle)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                 Spacer()
                 stepperButton(symbol: "plus", isEnabled: isPlusEnabled, action: onPlusTap)
@@ -425,10 +425,10 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                    .appTextStyle(.sectionLabel)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                 Text(note)
-                    .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                    .appTextStyle(.supporting)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             }
 
@@ -447,10 +447,10 @@ struct HomeView: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Text(title)
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                    .appTextStyle(.itemTitle)
                 if let caption {
                     Text(caption)
-                        .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                        .appTextStyle(.supporting)
                 }
             }
             .foregroundStyle(
@@ -480,10 +480,10 @@ struct HomeView: View {
     private func resultMetric(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                .appTextStyle(.supportingStrong)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             Text(value)
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .appTextStyle(.metricValue)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
         }
         .padding(18)
@@ -498,7 +498,7 @@ struct HomeView: View {
 
     private func beanBadge(text: String) -> some View {
         Text(text)
-            .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+            .appTextStyle(.supportingStrong)
             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

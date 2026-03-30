@@ -99,7 +99,7 @@ struct BeansView: View {
 
             Spacer()
             Text("コーヒー豆")
-                .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                .appTextStyle(.screenTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             Spacer()
 
@@ -125,7 +125,7 @@ struct BeansView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 Text(bean.name)
-                    .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                    .appTextStyle(.screenTitle)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 beanBadge(text: bean.roastLevel.displayName)
@@ -137,16 +137,16 @@ struct BeansView: View {
 
             if !beanMetadata(for: bean).isEmpty {
                 Text(beanMetadata(for: bean))
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                    .appTextStyle(.sectionLabel)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             }
 
             HStack(spacing: 8) {
                 Text("登録日")
-                    .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                    .appTextStyle(.supportingStrong)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                 Text(bean.purchasedAt.formatted(date: .abbreviated, time: .omitted))
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .semibold))
+                    .appTextStyle(.sectionLabel)
                     .foregroundStyle(AppDesignTokens.Colors.headingAccent)
             }
         }
@@ -164,10 +164,10 @@ struct BeansView: View {
     private var emptyCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("豆がまだ登録されていません")
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .appTextStyle(.sectionTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             Text("右上の + から豆を追加できます")
-                .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                .appTextStyle(.sectionLabel)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
         }
         .padding(22)
@@ -194,7 +194,7 @@ struct BeansView: View {
 
     private func beanBadge(text: String) -> some View {
         Text(text)
-            .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+            .appTextStyle(.supportingStrong)
             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -231,23 +231,24 @@ private struct BeanProfileView: View {
                     let logs = store.logs(for: bean.id)
                     if logs.isEmpty {
                         Text("この豆の抽出ログはまだありません")
+                            .appTextStyle(.supporting)
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(logs) { log in
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(log.date.formatted(date: .abbreviated, time: .shortened))
-                                    .font(.footnote)
+                                    .appTextStyle(.supporting)
                                     .foregroundStyle(.secondary)
                                 Text("豆量 \(log.input.coffeeDose, specifier: "%.1f")g · \(log.input.tasteProfile.displayName)")
-                                    .font(.subheadline)
+                                    .appTextStyle(.body)
                                 Text(
                                     "\(log.ratings.tasteFeedbackSummary.displayName) / \(log.ratings.strengthFeedbackSummary.displayName) / \(log.ratings.overallFeedbackSummary.displayName)"
                                 )
-                                .font(.footnote)
+                                .appTextStyle(.supporting)
                                 .foregroundStyle(.secondary)
                                 if !log.memo.isEmpty {
                                     Text(log.memo)
-                                        .font(.footnote)
+                                        .appTextStyle(.supporting)
                                 }
                             }
                             .padding(.vertical, 2)
@@ -291,13 +292,14 @@ private struct AddBeanSheet: View {
             Form {
                 Section {
                     Text("まずは豆名と焙煎度だけで追加できます。")
-                        .font(.footnote)
+                        .appTextStyle(.supporting)
                         .foregroundStyle(.secondary)
                     TextField("豆名", text: $name)
 
                     Picker("焙煎度", selection: $roastLevel) {
                         ForEach(RoastLevel.allCases) { roast in
                             Text(roast.displayName).tag(roast)
+                                .appTextStyle(.sectionLabel)
                         }
                     }
                     .pickerStyle(.segmented)

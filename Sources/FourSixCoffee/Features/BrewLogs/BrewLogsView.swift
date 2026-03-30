@@ -83,7 +83,7 @@ struct BrewLogsView: View {
 
             Spacer()
             Text("抽出履歴")
-                .font(AppDesignTokens.Typography.font(.largeTitle, weight: .bold))
+                .appTextStyle(.screenTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             Spacer()
 
@@ -96,10 +96,10 @@ struct BrewLogsView: View {
     private var emptyCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("履歴がありません")
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .appTextStyle(.sectionTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             Text("タイマー画面で抽出を保存するとここに表示されます。")
-                .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                .appTextStyle(.sectionLabel)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
         }
         .padding(22)
@@ -116,26 +116,26 @@ struct BrewLogsView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(log.bean?.name ?? "Bean Unknown")
-                    .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                    .appTextStyle(.sectionTitle)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                 Spacer()
                 Text(log.date.formatted(date: .abbreviated, time: .shortened))
-                    .font(AppDesignTokens.Typography.font(.caption, weight: .semibold))
+                    .appTextStyle(.supportingStrong)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             }
 
             Text("豆量 \(log.input.coffeeDose, specifier: "%.1f")g · \(log.input.tasteProfile.displayName) · \(log.input.roastLevel.displayName)")
-                .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                .appTextStyle(.sectionLabel)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
             Text("総湯量 \(log.plan.totalWater)g / 湯温 \(log.plan.recommendedTemperature)℃ / 実測 \(PourStep.timeLabel(from: log.actualBrewSeconds))")
-                .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                .appTextStyle(.supporting)
                 .monospacedDigit()
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
             if !log.memo.isEmpty {
                 Text(log.memo)
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .medium))
+                    .appTextStyle(.body)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             }
 
@@ -147,7 +147,7 @@ struct BrewLogsView: View {
                     store.selectedTab = .planner
                 } label: {
                     Text("再利用")
-                        .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                        .appTextStyle(.itemTitle)
                         .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 40)
@@ -163,7 +163,7 @@ struct BrewLogsView: View {
                     delete(logID: log.id)
                 } label: {
                     Text("削除")
-                        .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                        .appTextStyle(.itemTitle)
                         .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 40)
@@ -199,7 +199,7 @@ struct BrewLogsView: View {
 
     private func metric(label: String, value: String) -> some View {
         Text("\(label) \(value)")
-            .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+            .appTextStyle(.supportingStrong)
             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             .padding(.vertical, 5)
             .padding(.horizontal, 10)

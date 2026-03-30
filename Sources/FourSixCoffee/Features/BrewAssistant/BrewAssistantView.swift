@@ -102,7 +102,7 @@ struct BrewAssistantView: View {
 
             Spacer()
             Text("抽出ガイド")
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .appTextStyle(.screenTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             Spacer()
 
@@ -144,7 +144,7 @@ struct BrewAssistantView: View {
 
             VStack(spacing: 12) {
                 Text("第\(summary.currentStep.id)投")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                    .appTextStyle(.itemTitle)
                     .foregroundStyle(AppDesignTokens.Colors.timerRingProgress)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 8)
@@ -156,12 +156,11 @@ struct BrewAssistantView: View {
                     .clipShape(Capsule())
 
                 Text(currentStateText(for: summary))
-                    .font(AppDesignTokens.Typography.font(.headline, weight: .bold))
+                    .appTextStyle(.sectionLabel)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
                 Text(PourStep.timeLabel(from: summary.remainingSeconds))
-                    .font(.system(size: 54, weight: .black, design: AppDesignTokens.Typography.design))
-                    .monospacedDigit()
+                    .appTextStyle(.heroValue)
                     .foregroundStyle(AppDesignTokens.Colors.timerMainValue)
                     .shadow(color: Color.black.opacity(0.28), radius: 1, x: 0, y: 2)
             }
@@ -222,10 +221,10 @@ struct BrewAssistantView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(nextActionTitle(for: summary))
-                        .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                        .appTextStyle(.sectionTitle)
                         .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                     Text(currentActionDetailText(for: summary))
-                        .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                        .appTextStyle(.supporting)
                         .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                 }
 
@@ -273,7 +272,7 @@ struct BrewAssistantView: View {
     private func schedule(plan: BrewPlan) -> some View {
         cardContainer(spacing: 12) {
             Text("スケジュール")
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .appTextStyle(.sectionTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
 
             ForEach(plan.steps) { step in
@@ -283,10 +282,10 @@ struct BrewAssistantView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("第\(step.id)投 · 累計 \(step.cumulativeGrams)g")
-                            .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                            .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                         Text("開始 \(step.startLabel) / 今回 +\(step.amountGrams)g / 待ち \(step.waitSeconds)s")
-                            .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                            .appTextStyle(.supporting)
                             .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                     }
                     Spacer()
@@ -303,11 +302,11 @@ struct BrewAssistantView: View {
     private func logComposer(plan: BrewPlan) -> some View {
         cardContainer(spacing: 14) {
             Text("抽出レビュー")
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
+                .appTextStyle(.sectionTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
 
             Text("抽出が終わったら、3つだけ選んで保存できます。")
-                .font(AppDesignTokens.Typography.font(.caption, weight: .medium))
+                .appTextStyle(.supporting)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
             feedbackChoiceGroup(title: "味の印象") {
@@ -351,7 +350,7 @@ struct BrewAssistantView: View {
                 didSaveLog = true
             } label: {
                 Label("この抽出を保存", systemImage: "square.and.arrow.down")
-                    .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                    .appTextStyle(.itemTitle)
                     .foregroundStyle(AppDesignTokens.Colors.ctaText)
                     .frame(height: 52)
                     .frame(maxWidth: .infinity)
@@ -372,7 +371,7 @@ struct BrewAssistantView: View {
             } label: {
                 HStack {
                     Text(showingNoteField || !session.note.isEmpty ? "詳細メモを閉じる" : "詳細メモを追加")
-                        .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                        .appTextStyle(.itemTitle)
                         .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                     Spacer()
                     Image(systemName: showingNoteField || !session.note.isEmpty ? "chevron.up" : "chevron.down")
@@ -392,7 +391,7 @@ struct BrewAssistantView: View {
 
             if showingNoteField || !session.note.isEmpty {
                 TextEditor(text: $session.note)
-                    .font(AppDesignTokens.Typography.font(.body))
+                    .appTextStyle(.body)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                     .scrollContentBackground(.hidden)
                     .frame(minHeight: 92)
@@ -413,7 +412,7 @@ struct BrewAssistantView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                .appTextStyle(.itemTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
             HStack(spacing: 8) {
                 content()
@@ -428,7 +427,7 @@ struct BrewAssistantView: View {
     ) -> some View {
         Button(action: action) {
             Text(title)
-                .font(AppDesignTokens.Typography.font(.title3, weight: .bold))
+                .appTextStyle(.itemTitle)
                 .foregroundStyle(
                     isSelected
                     ? AppDesignTokens.Colors.textPrimary
@@ -465,11 +464,10 @@ struct BrewAssistantView: View {
     private func timerMetricCard(title: String, value: String, accent: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                .appTextStyle(.supportingStrong)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             Text(value)
-                .font(AppDesignTokens.Typography.font(.title2, weight: .bold))
-                .monospacedDigit()
+                .appTextStyle(.metricValue)
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -488,10 +486,10 @@ struct BrewAssistantView: View {
     private func infoChip(title: String, value: String) -> some View {
         HStack(spacing: 6) {
             Text(title)
-                .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                .appTextStyle(.supportingStrong)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             Text(value)
-                .font(AppDesignTokens.Typography.font(.caption, weight: .bold))
+                .appTextStyle(.supportingStrong)
                 .monospacedDigit()
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
         }

@@ -41,7 +41,87 @@ enum AppDesignTokens {
     }
 
     enum Typography {
+        enum TextStyleToken: CaseIterable {
+            case screenTitle
+            case sectionTitle
+            case sectionLabel
+            case itemTitle
+            case body
+            case supporting
+            case supportingStrong
+            case metricValue
+            case heroValue
+        }
+
+        struct Token: Equatable {
+            enum Sizing: Equatable {
+                case textStyle(Font.TextStyle)
+                case fixed(CGFloat)
+            }
+
+            enum Weight: Equatable {
+                case regular
+                case medium
+                case semibold
+                case bold
+                case black
+
+                var fontWeight: Font.Weight {
+                    switch self {
+                    case .regular:
+                        return .regular
+                    case .medium:
+                        return .medium
+                    case .semibold:
+                        return .semibold
+                    case .bold:
+                        return .bold
+                    case .black:
+                        return .black
+                    }
+                }
+            }
+
+            let sizing: Sizing
+            let weight: Weight
+            let monospacedDigits: Bool
+        }
+
         static let design = CoffeeDesignPrimitives.Typography.design
+
+        static func configuration(for token: TextStyleToken) -> Token {
+            switch token {
+            case .screenTitle:
+                return Token(sizing: .textStyle(.largeTitle), weight: .bold, monospacedDigits: false)
+            case .sectionTitle:
+                return Token(sizing: .textStyle(.title2), weight: .bold, monospacedDigits: false)
+            case .sectionLabel:
+                return Token(sizing: .textStyle(.title3), weight: .semibold, monospacedDigits: false)
+            case .itemTitle:
+                return Token(sizing: .textStyle(.title3), weight: .bold, monospacedDigits: false)
+            case .body:
+                return Token(sizing: .textStyle(.body), weight: .medium, monospacedDigits: false)
+            case .supporting:
+                return Token(sizing: .textStyle(.caption), weight: .medium, monospacedDigits: false)
+            case .supportingStrong:
+                return Token(sizing: .textStyle(.caption), weight: .bold, monospacedDigits: false)
+            case .metricValue:
+                return Token(sizing: .textStyle(.title2), weight: .bold, monospacedDigits: true)
+            case .heroValue:
+                return Token(sizing: .fixed(54), weight: .black, monospacedDigits: true)
+            }
+        }
+
+        static func font(_ token: TextStyleToken) -> Font {
+            let configuration = configuration(for: token)
+
+            switch configuration.sizing {
+            case .textStyle(let textStyle):
+                return CoffeeDesignPrimitives.Typography.font(textStyle, weight: configuration.weight.fontWeight)
+            case .fixed(let size):
+                return .system(size: size, weight: configuration.weight.fontWeight, design: design)
+            }
+        }
 
         static func font(_ textStyle: Font.TextStyle, weight: Font.Weight = .regular) -> Font {
             CoffeeDesignPrimitives.Typography.font(textStyle, weight: weight)
@@ -51,5 +131,29 @@ enum AppDesignTokens {
     enum Radius {
         static let card = CoffeeDesignPrimitives.Radius.card
         static let capsule = CoffeeDesignPrimitives.Radius.capsule
+    }
+}
+
+private struct AppTextStyleModifier: ViewModifier {
+    let token: AppDesignTokens.Typography.TextStyleToken
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        let configuration = AppDesignTokens.Typography.configuration(for: token)
+
+        if configuration.monospacedDigits {
+            content
+                .font(AppDesignTokens.Typography.font(token))
+                .monospacedDigit()
+        } else {
+            content
+                .font(AppDesignTokens.Typography.font(token))
+        }
+    }
+}
+
+extension View {
+    func appTextStyle(_ token: AppDesignTokens.Typography.TextStyleToken) -> some View {
+        modifier(AppTextStyleModifier(token: token))
     }
 }
