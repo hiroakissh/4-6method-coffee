@@ -176,6 +176,11 @@ struct PourAction: Codable, Hashable, Identifiable {
 - SwiftData Entity では既存ログを読めるよう新しい紐づけ項目を optional とし、未設定の旧ログは `quick` として復元する。
 - Quick Brew で開始したレシピは保存してから抽出ログへ紐づけ、既存の再利用導線とログ削除導線は維持する。
 
+## Research UI checkpoint
+- Research は保存済みレシピの一覧を起点にし、レシピの複製・削除・基本編集を同じ `BrewRecipe` JSON契約へ保存する。
+- Editor は phase / pour / flow / temperature / agitation を直接編集できる最小構成とし、Researchで選んだレシピは `BrewSessionPlan` に解決して抽出ガイドへ渡す。
+- Quick Brew の入力体験は変更せず、Researchの編集項目をQuick Brewへ漏らさない。
+
 ## Immediate build order
 1. **レシピJSON設計**
    - 先に schemaVersion を含む JSON 契約を固定する

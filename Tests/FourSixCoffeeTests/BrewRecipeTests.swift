@@ -1,6 +1,7 @@
 import XCTest
 @testable import FourSixCoffee
 
+@MainActor
 final class BrewRecipeTests: XCTestCase {
     func testFourSixPresetUsesExistingPlanAsRecipeTimeline() {
         let input = BrewInput(
@@ -52,5 +53,21 @@ final class BrewRecipeTests: XCTestCase {
         XCTAssertEqual(decoded.mode, .stepwise)
         XCTAssertEqual(decoded.points.map(\.time), [0, 90])
         XCTAssertEqual(decoded.points.map(\.celsius), [94, 90])
+    }
+
+    func testRecipeEditorUpdatesVariableRecipeControls() {
+        let model = RecipeEditorModel()
+        let initialPhaseID = model.recipe.phases[0].id
+
+        model.addPour(to: initialPhaseID)
+        model.adjustTemperature(phaseID: initialPhaseID, by: 2)
+        model.setAgitation(.tap, phaseID: initialPhaseID)
+        model.addPhase()
+
+        XCTAssertEqual(model.recipe.phases.count, 2)
+        XCTAssertEqual(model.recipe.phases[0].pours.count, 2)
+        XCTAssertEqual(model.temperature(for: initialPhaseID), 94)
+        XCTAssertEqual(model.agitation(for: initialPhaseID), .tap)
+        XCTAssertEqual(RecipeResolver.resolve(model.recipe).actions.count, 3)
     }
 }

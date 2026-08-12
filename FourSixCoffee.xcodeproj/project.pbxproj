@@ -22,6 +22,7 @@
 		4B1C50F9765AA4909648C3E6 /* BeanUseCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700F9A3B36F51B53861686F1 /* BeanUseCaseTests.swift */; };
 		4DA2FA7BA3DFC57412C181C1 /* RecipeUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CE0BCFEF5C73FEED43E5A3 /* RecipeUseCase.swift */; };
 		4EB56BF69C2CA0E8606DD7E8 /* RecipeEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBAD994FC4C37075DBD8E14 /* RecipeEntity.swift */; };
+		4F71FE7843724C5C2E918682 /* RecipeEditorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 966079A9E74FE285135C139E /* RecipeEditorModel.swift */; };
 		509CEFD9ACB77A06B1DC1944 /* RecipePresetFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B16F482B7AB496DE722DED0 /* RecipePresetFactory.swift */; };
 		53DEFE0212A92F04FF5C99B2 /* BrewSessionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C395CB2099F34225071900F /* BrewSessionPlan.swift */; };
 		5409804587117F49AF4DC0AB /* BrewSessionLiveActivityPayloadBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399CDF4D1DB8BDFFC91542BE /* BrewSessionLiveActivityPayloadBuilderTests.swift */; };
@@ -64,6 +65,7 @@
 		E152A1EAAA86BEEE994C506F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134C29672E1D64C982C98011 /* MainTabView.swift */; };
 		E2D880844F9DE16D1432E92B /* SampleData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8108DC79E368692E9A3FDE /* SampleData.swift */; };
 		E61ED182B7FCCA94024C3D42 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D0A7FAAEA0A7B513F56D726 /* SettingsView.swift */; };
+		EB12BC8CBD6730266030E239 /* ResearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA046A23608D6D241823CA0 /* ResearchView.swift */; };
 		F60511F811FEA1C71F655B1C /* BrewLogUseCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F379F6852D93233258022E1 /* BrewLogUseCaseTests.swift */; };
 		FCCCAE43A391E0BA1F1A7403 /* BrewRecipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCCAACEA5EBAD3E89F3967D /* BrewRecipe.swift */; };
 /* End PBXBuildFile section */
@@ -118,6 +120,7 @@
 		362D82A6606D916D3A3A15A6 /* AppDesignTokensTypographyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDesignTokensTypographyTests.swift; sourceTree = "<group>"; };
 		39706010236FC957564111EE /* BrewLogsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewLogsView.swift; sourceTree = "<group>"; };
 		399CDF4D1DB8BDFFC91542BE /* BrewSessionLiveActivityPayloadBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionLiveActivityPayloadBuilderTests.swift; sourceTree = "<group>"; };
+		3FA046A23608D6D241823CA0 /* ResearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResearchView.swift; sourceTree = "<group>"; };
 		418AD1BFD9E2474A17E9B1BF /* RecipeRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeRepository.swift; sourceTree = "<group>"; };
 		44C8E86B7C15D777D790F919 /* BrewSessionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionModel.swift; sourceTree = "<group>"; };
 		45188282B1F4A03925C4BD1C /* BrewSessionLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionLiveActivityManager.swift; sourceTree = "<group>"; };
@@ -138,6 +141,7 @@
 		7A2A293276E23820EC4624F5 /* QuickBrewGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickBrewGenerator.swift; sourceTree = "<group>"; };
 		81A632FA20130E08AE4DDA98 /* BeanUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanUseCase.swift; sourceTree = "<group>"; };
 		94F7F03E78818132C9EF51BE /* SwiftDataBrewLogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataBrewLogRepository.swift; sourceTree = "<group>"; };
+		966079A9E74FE285135C139E /* RecipeEditorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeEditorModel.swift; sourceTree = "<group>"; };
 		9BA37463D3200204095F604F /* BrewSessionLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionLiveActivityWidget.swift; sourceTree = "<group>"; };
 		A032B286F9767A1531D5FED2 /* BrewAssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewAssistantView.swift; sourceTree = "<group>"; };
 		A1119D83DF0E94E9694F8624 /* SwiftDataRepositoriesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataRepositoriesTests.swift; sourceTree = "<group>"; };
@@ -269,6 +273,7 @@
 				0000D30E69E8095D2587352B /* BrewAssistant */,
 				AAFD6FC46E86A4F30924214F /* BrewLogs */,
 				1452F124E59936187A03581C /* Home */,
+				F5A80A09792AAEB17793FC50 /* Research */,
 				D0D0E5ECA5CF5EFF2B67805A /* Settings */,
 			);
 			path = Features;
@@ -460,6 +465,15 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		F5A80A09792AAEB17793FC50 /* Research */ = {
+			isa = PBXGroup;
+			children = (
+				966079A9E74FE285135C139E /* RecipeEditorModel.swift */,
+				3FA046A23608D6D241823CA0 /* ResearchView.swift */,
+			);
+			path = Research;
+			sourceTree = "<group>";
+		};
 		F7D3929E90B25307B94990E3 /* FourSixCoffeeLiveActivity */ = {
 			isa = PBXGroup;
 			children = (
@@ -581,11 +595,13 @@
 				BABC739BA5939366D8D4B6C2 /* PersistenceStack.swift in Sources */,
 				13B07E49630F49C7FF3A59F4 /* QuickBrewGenerator.swift in Sources */,
 				6A5889E60107480C5895D0D0 /* QuickBrewRequest.swift in Sources */,
+				4F71FE7843724C5C2E918682 /* RecipeEditorModel.swift in Sources */,
 				4EB56BF69C2CA0E8606DD7E8 /* RecipeEntity.swift in Sources */,
 				509CEFD9ACB77A06B1DC1944 /* RecipePresetFactory.swift in Sources */,
 				55F7D7810F5A14915D40F818 /* RecipeRepository.swift in Sources */,
 				2570A31E8727D5F23189A157 /* RecipeResolver.swift in Sources */,
 				4DA2FA7BA3DFC57412C181C1 /* RecipeUseCase.swift in Sources */,
+				EB12BC8CBD6730266030E239 /* ResearchView.swift in Sources */,
 				E2D880844F9DE16D1432E92B /* SampleData.swift in Sources */,
 				E61ED182B7FCCA94024C3D42 /* SettingsView.swift in Sources */,
 				7749B2136C9FC12EC3D1A724 /* SwiftDataBeanRepository.swift in Sources */,

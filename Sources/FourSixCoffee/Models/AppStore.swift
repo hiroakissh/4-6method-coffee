@@ -156,18 +156,11 @@ final class AppStore {
     func applyQuickBrew() {
         let recipe = quickBrewRecipe
 
-        do {
-            try recipeUseCase.save(recipe: recipe)
-            recipes.removeAll { $0.id == recipe.id }
-            recipes.insert(recipe, at: 0)
-            activeRecipeID = recipe.id
-            activeEntryMode = .quick
-            currentInput = quickBrewRequest.brewInput
-            selectedTab = .planner
-            lastErrorMessage = nil
-        } catch {
-            store(error: error)
-        }
+        guard saveRecipe(recipe) else { return }
+        activeRecipeID = recipe.id
+        activeEntryMode = .quick
+        currentInput = quickBrewRequest.brewInput
+        selectedTab = .planner
     }
 
     var quickBrewRecipe: BrewRecipe {
@@ -177,6 +170,71 @@ final class AppStore {
     var activeRecipe: BrewRecipe? {
         guard let activeRecipeID else { return nil }
         return recipes.first(where: { $0.id == activeRecipeID })
+    }
+
+    var currentSessionPlan: BrewSessionPlan {
+        if let activeRecipe {
+            return RecipeResolver.resolve(activeRecipe)
+        }
+        return RecipeResolver.resolve(currentPlan)
+    }
+
+    @discardableResult
+    func saveRecipe(_ recipe: BrewRecipe) -> Bool {
+        do {
+            try recipeUseCase.save(recipe: recipe)
+            recipes.removeAll { $0.id == recipe.id }
+            recipes.insert(recipe, at: 0)
+            lastErrorMessage = nil
+            return true
+        } catch {
+            store(error: error)
+            return false
+        }
+    }
+
+    func deleteRecipe(_ recipe: BrewRecipe) {
+        do {
+            try recipeUseCase.deleteRecipes(ids: [recipe.id])
+            recipes.removeAll { $0.id == recipe.id }
+            if activeRecipeID == recipe.id {
+                activeRecipeID = recipes.first?.id
+                activeEntryMode = .quick
+            }
+            lastErrorMessage = nil
+        } catch {
+            store(error: error)
+        }
+    }
+
+    @discardableResult
+    func duplicateRecipe(_ recipe: BrewRecipe) -> BrewRecipe? {
+        var copy = recipe
+        copy = BrewRecipe(
+            metadata: RecipeMetadata(
+                name: "\(recipe.metadata.name) のコピー",
+                device: recipe.metadata.device,
+                sourceType: .user,
+                sourceSummary: recipe.metadata.sourceSummary,
+                tags: recipe.metadata.tags
+            ),
+            defaults: recipe.defaults,
+            phases: recipe.phases
+        )
+        return saveRecipe(copy) ? copy : nil
+    }
+
+    func startResearch(with recipe: BrewRecipe) {
+        activeRecipeID = recipe.id
+        activeEntryMode = .research
+        currentInput = BrewInput(
+            coffeeDose: recipe.defaults.coffeeDoseGrams,
+            brewRatio: recipe.defaults.ratio,
+            tasteProfile: .balanced,
+            roastLevel: currentInput.roastLevel,
+            grindSize: recipe.defaults.grindSize
+        )
+        selectedTab = .assistant
     }
 
     func addBean(
@@ -342,6 +400,8 @@ final class AppStore {
         var updatedInput = currentInput
         update(&updatedInput)
         updatedInput.brewRatio = BrewPlanner.recommendedRatio(for: updatedInput)
+        activeRecipeID = nil
+        activeEntryMode = .quick
         currentInput = updatedInput
     }
 

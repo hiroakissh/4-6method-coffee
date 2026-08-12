@@ -3,6 +3,7 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(AppStore.self) private var store
+    @State private var showingResearch = false
 
     private let tasteOptions: [TasteProfile] = [.light, .balanced, .sweet]
     private let concentrationOptions: [ConcentrationOption] = ConcentrationOption.options
@@ -19,6 +20,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 20) {
                         header
                         quickBrewCard
+                        researchCard
                         beanCard
                         plannerInputCard
                         calculatedPlanCard
@@ -32,6 +34,9 @@ struct HomeView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showingResearch) {
+                ResearchView()
+            }
         }
     }
 
@@ -212,6 +217,40 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 58)
                 .background(AppDesignTokens.Colors.ctaBackground)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var researchCard: some View {
+        cardContainer {
+            cardHeader(systemImage: "flask", title: "Research")
+
+            Text("保存済みレシピを編集し、フェーズ・注湯・湯温・攪拌を試せます。")
+                .appTextStyle(.body)
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+            HStack(spacing: 12) {
+                resultMetric(title: "レシピ", value: "\(store.recipes.count)件")
+                resultMetric(title: "編集", value: "可変フェーズ")
+            }
+
+            Button {
+                showingResearch = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.right.circle.fill")
+                    Text("Researchを開く")
+                }
+                .appTextStyle(.sectionTitle)
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(AppDesignTokens.Colors.controlBackground)
+                .overlay {
+                    Capsule().stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                }
                 .clipShape(Capsule())
             }
             .buttonStyle(.plain)

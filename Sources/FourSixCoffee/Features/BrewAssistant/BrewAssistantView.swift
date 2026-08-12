@@ -13,8 +13,9 @@ struct BrewAssistantView: View {
 
     var body: some View {
         let plan = store.currentPlan
-        let progress = progressRatio(for: plan)
-        let summary = session.nextActionSummary(in: plan)
+        let sessionPlan = store.currentSessionPlan
+        let progress = progressRatio(for: sessionPlan)
+        let summary = session.nextActionSummary(in: sessionPlan)
 
         NavigationStack {
             ZStack {
@@ -26,7 +27,7 @@ struct BrewAssistantView: View {
                         timerHero(summary: summary)
                         nextActionCard(summary: summary, progress: progress)
                         controls
-                        schedule(plan: plan)
+                        schedule(sessionPlan: sessionPlan)
                         logComposer(plan: plan)
                     }
                     .padding(.horizontal, 20)
@@ -36,10 +37,10 @@ struct BrewAssistantView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
-                session.load(plan: plan)
+                session.load(sessionPlan: sessionPlan)
             }
-            .onChange(of: plan.id) { _, _ in
-                session.load(plan: plan)
+            .onChange(of: sessionPlan) { _, newPlan in
+                session.load(sessionPlan: newPlan)
             }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
@@ -269,9 +270,7 @@ struct BrewAssistantView: View {
         }
     }
 
-    private func schedule(plan: BrewPlan) -> some View {
-        let sessionPlan = RecipeResolver.resolve(plan)
-
+    private func schedule(sessionPlan: BrewSessionPlan) -> some View {
         return cardContainer(spacing: 12) {
             Text("スケジュール")
                 .appTextStyle(.sectionTitle)
@@ -516,7 +515,7 @@ struct BrewAssistantView: View {
         .shadow(color: AppDesignTokens.Colors.cardShadow, radius: 22, x: 0, y: 12)
     }
 
-    private func progressRatio(for plan: BrewPlan) -> Double {
+    private func progressRatio(for plan: BrewSessionPlan) -> Double {
         min(Double(session.elapsedSeconds) / Double(max(plan.estimatedTotalSeconds, 1)), 1)
     }
 

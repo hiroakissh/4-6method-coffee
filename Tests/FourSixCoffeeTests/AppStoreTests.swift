@@ -63,6 +63,23 @@ final class AppStoreTests: XCTestCase {
         XCTAssertNil(reloaded.brewLogs[0].bean)
     }
 
+    func testStartingResearchUsesRecipeSessionPlan() {
+        let store = AppStore(dependencies: .preview())
+        let recipe = store.recipes[0]
+
+        store.startResearch(with: recipe)
+
+        XCTAssertEqual(store.activeRecipeID, recipe.id)
+        XCTAssertEqual(store.activeEntryMode, .research)
+        XCTAssertEqual(store.currentSessionPlan.recipeID, recipe.id)
+        XCTAssertEqual(store.selectedTab, .assistant)
+
+        store.updateCoffeeDose(21)
+
+        XCTAssertNil(store.activeRecipeID)
+        XCTAssertEqual(store.activeEntryMode, .quick)
+    }
+
     func testAddBeanAllowsQuickEntryDefaults() {
         let dependencies = makeInMemoryDependencies()
         let store = AppStore(dependencies: dependencies)
