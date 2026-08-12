@@ -156,6 +156,11 @@ struct PourAction: Codable, Hashable, Identifiable {
 - Recipe の SwiftData Entity は設計どおりメタデータと `payloadJSON` に限定し、フェーズや注湯を個別 Entity へ分解しない。
 - Quick Brew / Research の画面置換と可変タイムラインへのガイド移行は、スキーマと保存形式がテストで固定された後の次段階とする。
 
+## Next implementation checkpoint
+- Phase 2 の最初の実装単位は、豆量・焙煎度・味方向だけを受け取る `QuickBrewRequest` と、`BrewRecipe` を返す `QuickBrewGenerator` とする。
+- Quick Brew は既存の4-6プリセット生成器を再利用し、現行プランナーの入力・結果表示を壊さない導線として Home に追加する。
+- Quick Brew の提案を既存プランナーへ反映した後は、従来どおりタイマーへ進める。Research 用の直接編集画面は次のUI段階で扱う。
+
 ## Immediate build order
 1. **レシピJSON設計**
    - 先に schemaVersion を含む JSON 契約を固定する

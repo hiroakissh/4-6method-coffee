@@ -27,6 +27,7 @@ final class AppStore {
     }
     var currentPlan: BrewPlan
 
+    var quickBrewRequest: QuickBrewRequest
     var brewLogs: [BrewLog]
     var recipes: [BrewRecipe]
 
@@ -49,6 +50,7 @@ final class AppStore {
         self.selectedBeanID = nil
         self.currentInput = .default
         self.currentPlan = BrewPlanner.makePlan(from: .default)
+        self.quickBrewRequest = .default
         self.brewLogs = []
         self.recipes = []
         self.enableStepHaptics = enableStepHaptics
@@ -117,6 +119,43 @@ final class AppStore {
         updateCurrentInput { input in
             input.grindSize = grind
         }
+    }
+
+    var canDecreaseQuickBrewDose: Bool {
+        quickBrewRequest.coffeeDoseGrams > QuickBrewRequest.minimumCoffeeDose
+    }
+
+    var canIncreaseQuickBrewDose: Bool {
+        quickBrewRequest.coffeeDoseGrams < QuickBrewRequest.maximumCoffeeDose
+    }
+
+    func updateQuickBrewDose(_ value: Double) {
+        quickBrewRequest.coffeeDoseGrams = QuickBrewRequest.normalizedCoffeeDose(value)
+    }
+
+    func incrementQuickBrewDose() {
+        updateQuickBrewDose(quickBrewRequest.coffeeDoseGrams + 0.5)
+    }
+
+    func decrementQuickBrewDose() {
+        updateQuickBrewDose(quickBrewRequest.coffeeDoseGrams - 0.5)
+    }
+
+    func updateQuickBrewTaste(_ profile: TasteProfile) {
+        quickBrewRequest.tasteProfile = profile
+    }
+
+    func updateQuickBrewRoast(_ roast: RoastLevel) {
+        quickBrewRequest.roastLevel = roast
+    }
+
+    func applyQuickBrew() {
+        currentInput = quickBrewRequest.brewInput
+        selectedTab = .planner
+    }
+
+    var quickBrewRecipe: BrewRecipe {
+        QuickBrewGenerator.generate(from: quickBrewRequest)
     }
 
     func addBean(

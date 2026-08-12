@@ -18,6 +18,7 @@ struct HomeView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
                         header
+                        quickBrewCard
                         beanCard
                         plannerInputCard
                         calculatedPlanCard
@@ -141,6 +142,79 @@ struct HomeView: View {
                     .appTextStyle(.body)
                     .foregroundStyle(AppDesignTokens.Colors.textSecondary)
             }
+        }
+    }
+
+    private var quickBrewCard: some View {
+        let recipe = store.quickBrewRecipe
+        let temperature = recipe.phases.first?.temperature.points.first?.celsius ?? 91
+
+        return cardContainer {
+            cardHeader(systemImage: "bolt.fill", title: "Quick Brew")
+
+            Text("豆量・焙煎度・味方向の3項目から、すぐ使える4-6提案を作ります。")
+                .appTextStyle(.body)
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+            capsuleStepper(
+                title: "豆量",
+                valueText: "\(coffeeDoseLabel(store.quickBrewRequest.coffeeDoseGrams)) g",
+                isMinusEnabled: store.canDecreaseQuickBrewDose,
+                isPlusEnabled: store.canIncreaseQuickBrewDose,
+                onMinusTap: { store.decrementQuickBrewDose() },
+                onPlusTap: { store.incrementQuickBrewDose() }
+            )
+
+            plannerChoiceGroup(
+                title: "味方向",
+                note: "前半の注湯配分を調整"
+            ) {
+                ForEach(tasteOptions, id: \.self) { profile in
+                    choiceButton(
+                        title: profile.displayName,
+                        caption: profile.shortNote,
+                        isSelected: store.quickBrewRequest.tasteProfile == profile
+                    ) {
+                        store.updateQuickBrewTaste(profile)
+                    }
+                }
+            }
+
+            plannerChoiceGroup(
+                title: "焙煎度",
+                note: "湯温と待ち時間の基準に使用"
+            ) {
+                ForEach(roastOptions, id: \.self) { roast in
+                    choiceButton(
+                        title: roast.displayName,
+                        isSelected: store.quickBrewRequest.roastLevel == roast
+                    ) {
+                        store.updateQuickBrewRoast(roast)
+                    }
+                }
+            }
+
+            HStack(spacing: 12) {
+                resultMetric(title: "総湯量", value: "\(recipe.defaults.totalWaterGrams) g")
+                resultMetric(title: "湯温", value: "\(temperature)℃")
+                resultMetric(title: "構成", value: "6投")
+            }
+
+            Button {
+                store.applyQuickBrew()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.down.circle.fill")
+                    Text("この提案をプランに反映")
+                }
+                .appTextStyle(.sectionTitle)
+                .foregroundStyle(AppDesignTokens.Colors.ctaText)
+                .frame(maxWidth: .infinity)
+                .frame(height: 58)
+                .background(AppDesignTokens.Colors.ctaBackground)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
     }
 

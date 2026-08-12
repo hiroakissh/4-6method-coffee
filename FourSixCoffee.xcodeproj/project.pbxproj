@@ -10,6 +10,7 @@
 		0327783C39D8C6B519D29966 /* BrewLogUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5110E53AC6D8F21D543414AC /* BrewLogUseCase.swift */; };
 		0AE30A67C5D3FF800732AC0F /* AppDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C98B2E0DE233066F7DFAD49 /* AppDependencies.swift */; };
 		0C9E9BC6DED66E5DA4C944E5 /* BeanRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3438AA798D007DFDA6AF5354 /* BeanRepository.swift */; };
+		13B07E49630F49C7FF3A59F4 /* QuickBrewGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2A293276E23820EC4624F5 /* QuickBrewGenerator.swift */; };
 		1850F3EC5260C71C53D35D1E /* BrewSessionLiveActivityResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4851DB1418B7E819CB7B8033 /* BrewSessionLiveActivityResolutionTests.swift */; };
 		1B31B21F8C9F99BCE5018644 /* BrewSessionActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3148B6E00BB7E9F110FC24 /* BrewSessionActivityAttributes.swift */; };
 		1F57B828223CE536A1AD8264 /* SwiftDataRecipeRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E1DDFE0EB4BD31A8967F621 /* SwiftDataRecipeRepositoryTests.swift */; };
@@ -23,9 +24,11 @@
 		509CEFD9ACB77A06B1DC1944 /* RecipePresetFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B16F482B7AB496DE722DED0 /* RecipePresetFactory.swift */; };
 		5409804587117F49AF4DC0AB /* BrewSessionLiveActivityPayloadBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399CDF4D1DB8BDFFC91542BE /* BrewSessionLiveActivityPayloadBuilderTests.swift */; };
 		55F7D7810F5A14915D40F818 /* RecipeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 418AD1BFD9E2474A17E9B1BF /* RecipeRepository.swift */; };
+		58CA61C12DC43D2964DA0959 /* QuickBrewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE615309BBAA29335D4D8E7A /* QuickBrewTests.swift */; };
 		5905477BD2809DC092E9A61C /* BrewSessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44C8E86B7C15D777D790F919 /* BrewSessionModel.swift */; };
 		5F847674FB7A27A17F30B181 /* BrewSessionLiveActivityPayloadBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6050068EB853E9C053DB5D7 /* BrewSessionLiveActivityPayloadBuilder.swift */; };
 		648CE2EBAAF51FA9055E669E /* BrewSessionModelLiveActivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E095BE452C75266B2BD04889 /* BrewSessionModelLiveActivityTests.swift */; };
+		6A5889E60107480C5895D0D0 /* QuickBrewRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = C76F421EEA27400C758AF4A5 /* QuickBrewRequest.swift */; };
 		6A8E6BDF11396A23F0ADC47F /* BrewPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4A1F41E3B717BD1D95ECF0 /* BrewPlanner.swift */; };
 		6D8B9FB53554029FCA918609 /* AppDesignTokensTypographyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 362D82A6606D916D3A3A15A6 /* AppDesignTokensTypographyTests.swift */; };
 		7041FBFEC87CAA20AE69AF76 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206EB8AD08062974E927C867 /* HomeView.swift */; };
@@ -127,6 +130,7 @@
 		6C98B2E0DE233066F7DFAD49 /* AppDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDependencies.swift; sourceTree = "<group>"; };
 		6D0A7FAAEA0A7B513F56D726 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		700F9A3B36F51B53861686F1 /* BeanUseCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanUseCaseTests.swift; sourceTree = "<group>"; };
+		7A2A293276E23820EC4624F5 /* QuickBrewGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickBrewGenerator.swift; sourceTree = "<group>"; };
 		81A632FA20130E08AE4DDA98 /* BeanUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanUseCase.swift; sourceTree = "<group>"; };
 		94F7F03E78818132C9EF51BE /* SwiftDataBrewLogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataBrewLogRepository.swift; sourceTree = "<group>"; };
 		9BA37463D3200204095F604F /* BrewSessionLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionLiveActivityWidget.swift; sourceTree = "<group>"; };
@@ -134,11 +138,13 @@
 		A1119D83DF0E94E9694F8624 /* SwiftDataRepositoriesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataRepositoriesTests.swift; sourceTree = "<group>"; };
 		A4E4C7F7F90236421E42B323 /* SwiftDataRecipeRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataRecipeRepository.swift; sourceTree = "<group>"; };
 		ABBAD994FC4C37075DBD8E14 /* RecipeEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeEntity.swift; sourceTree = "<group>"; };
+		AE615309BBAA29335D4D8E7A /* QuickBrewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickBrewTests.swift; sourceTree = "<group>"; };
 		AF3148B6E00BB7E9F110FC24 /* BrewSessionActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionActivityAttributes.swift; sourceTree = "<group>"; };
 		AFED3DF0A810133A7D772627 /* CoffeeDesignPrimitives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoffeeDesignPrimitives.swift; sourceTree = "<group>"; };
 		B95111BD7CBE2ABE52643E37 /* BrewPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewPlannerTests.swift; sourceTree = "<group>"; };
 		C5DF3D03AEB070C98DC5FEF4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C6050068EB853E9C053DB5D7 /* BrewSessionLiveActivityPayloadBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewSessionLiveActivityPayloadBuilder.swift; sourceTree = "<group>"; };
+		C76F421EEA27400C758AF4A5 /* QuickBrewRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickBrewRequest.swift; sourceTree = "<group>"; };
 		CA47F9EDB93CA791F0C0203E /* FourSixCoffee.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FourSixCoffee.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CACF9E85724130EA9BA9BDEB /* FourSixCoffeeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FourSixCoffeeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC038F387DDAA71E8C784FFD /* InMemoryRepositories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryRepositories.swift; sourceTree = "<group>"; };
@@ -226,6 +232,7 @@
 			isa = PBXGroup;
 			children = (
 				6BCCAACEA5EBAD3E89F3967D /* BrewRecipe.swift */,
+				C76F421EEA27400C758AF4A5 /* QuickBrewRequest.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -273,6 +280,7 @@
 		9D831B154852E11FDE449721 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				7A2A293276E23820EC4624F5 /* QuickBrewGenerator.swift */,
 				6B16F482B7AB496DE722DED0 /* RecipePresetFactory.swift */,
 			);
 			path = Services;
@@ -324,6 +332,7 @@
 				195638EBEEA89C9FE938B800 /* BrewSessionLiveActivityPresentationTests.swift */,
 				4851DB1418B7E819CB7B8033 /* BrewSessionLiveActivityResolutionTests.swift */,
 				E095BE452C75266B2BD04889 /* BrewSessionModelLiveActivityTests.swift */,
+				AE615309BBAA29335D4D8E7A /* QuickBrewTests.swift */,
 				5E1DDFE0EB4BD31A8967F621 /* SwiftDataRecipeRepositoryTests.swift */,
 				A1119D83DF0E94E9694F8624 /* SwiftDataRepositoriesTests.swift */,
 				6184D15868E0AEE4038D4EBF /* TasteRatingsTests.swift */,
@@ -560,6 +569,8 @@
 				7041FBFEC87CAA20AE69AF76 /* HomeView.swift in Sources */,
 				E152A1EAAA86BEEE994C506F /* MainTabView.swift in Sources */,
 				BABC739BA5939366D8D4B6C2 /* PersistenceStack.swift in Sources */,
+				13B07E49630F49C7FF3A59F4 /* QuickBrewGenerator.swift in Sources */,
+				6A5889E60107480C5895D0D0 /* QuickBrewRequest.swift in Sources */,
 				4EB56BF69C2CA0E8606DD7E8 /* RecipeEntity.swift in Sources */,
 				509CEFD9ACB77A06B1DC1944 /* RecipePresetFactory.swift in Sources */,
 				55F7D7810F5A14915D40F818 /* RecipeRepository.swift in Sources */,
@@ -598,6 +609,7 @@
 				1850F3EC5260C71C53D35D1E /* BrewSessionLiveActivityResolutionTests.swift in Sources */,
 				648CE2EBAAF51FA9055E669E /* BrewSessionModelLiveActivityTests.swift in Sources */,
 				DC0ADB8A60CB43CD152DF0CC /* InMemoryRepositories.swift in Sources */,
+				58CA61C12DC43D2964DA0959 /* QuickBrewTests.swift in Sources */,
 				1F57B828223CE536A1AD8264 /* SwiftDataRecipeRepositoryTests.swift in Sources */,
 				C673D320E4C4B5DA4659ACC6 /* SwiftDataRepositoriesTests.swift in Sources */,
 				90A16E6DB08BC73A881B130C /* TasteRatingsTests.swift in Sources */,
