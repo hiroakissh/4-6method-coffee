@@ -113,7 +113,10 @@ struct BrewLogsView: View {
     }
 
     private func logCard(_ log: BrewLog) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let sessionPlan = log.sessionPlan ?? RecipeResolver.resolve(log.plan)
+        let temperature = sessionPlan.recommendedTemperature ?? log.plan.recommendedTemperature
+
+        return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(log.bean?.name ?? "Bean Unknown")
                     .appTextStyle(.sectionTitle)
@@ -128,7 +131,11 @@ struct BrewLogsView: View {
                 .appTextStyle(.sectionLabel)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
-            Text("総湯量 \(log.plan.totalWater)g / 湯温 \(log.plan.recommendedTemperature)℃ / 実測 \(PourStep.timeLabel(from: log.actualBrewSeconds))")
+            Text("\(log.entryMode.displayName) · \(log.recipeName ?? "レシピ未設定")")
+                .appTextStyle(.supportingStrong)
+                .foregroundStyle(AppDesignTokens.Colors.timerAmountAccent)
+
+            Text("総湯量 \(sessionPlan.totalWaterGrams)g / \(sessionPlan.actions.count)投 / 湯温 \(temperature)℃ / 実測 \(PourStep.timeLabel(from: log.actualBrewSeconds))")
                 .appTextStyle(.supporting)
                 .monospacedDigit()
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)

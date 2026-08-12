@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftData
 
 @MainActor
 @Observable
@@ -14,6 +15,12 @@ final class AppStore {
     private let beanUseCase: BeanUseCase
     @ObservationIgnored
     private let brewLogUseCase: BrewLogUseCase
+    @ObservationIgnored
+    private let recipeUseCase: RecipeUseCase
+    @ObservationIgnored
+    private let recipeRevisionUseCase: RecipeRevisionUseCase
+    @ObservationIgnored
+    private let modelContainer: ModelContainer
 
     var selectedTab: AppTab = .planner
 
@@ -25,7 +32,11 @@ final class AppStore {
     }
     var currentPlan: BrewPlan
 
+    var quickBrewRequest: QuickBrewRequest
     var brewLogs: [BrewLog]
+    var recipes: [BrewRecipe]
+    var activeRecipeID: UUID?
+    var activeEntryMode: BrewEntryMode
 
     var enableStepHaptics: Bool
     var preferredUnit: String
@@ -38,14 +49,21 @@ final class AppStore {
         enableStepHaptics: Bool = true,
         preferredUnit: String = "g"
     ) {
+        self.modelContainer = dependencies.modelContainer
         self.beanUseCase = dependencies.beanUseCase
         self.brewLogUseCase = dependencies.brewLogUseCase
+        self.recipeUseCase = dependencies.recipeUseCase
+        self.recipeRevisionUseCase = dependencies.recipeRevisionUseCase
 
         self.beans = []
         self.selectedBeanID = nil
         self.currentInput = .default
         self.currentPlan = BrewPlanner.makePlan(from: .default)
+        self.quickBrewRequest = .default
         self.brewLogs = []
+        self.recipes = []
+        self.activeRecipeID = nil
+        self.activeEntryMode = .quick
         self.enableStepHaptics = enableStepHaptics
         self.preferredUnit = preferredUnit
         self.lastErrorMessage = nil
@@ -114,6 +132,135 @@ final class AppStore {
         }
     }
 
+    var canDecreaseQuickBrewDose: Bool {
+        quickBrewRequest.coffeeDoseGrams > QuickBrewRequest.minimumCoffeeDose
+    }
+
+    var canIncreaseQuickBrewDose: Bool {
+        quickBrewRequest.coffeeDoseGrams < QuickBrewRequest.maximumCoffeeDose
+    }
+
+    func updateQuickBrewDose(_ value: Double) {
+        quickBrewRequest.coffeeDoseGrams = QuickBrewRequest.normalizedCoffeeDose(value)
+    }
+
+    func incrementQuickBrewDose() {
+        updateQuickBrewDose(quickBrewRequest.coffeeDoseGrams + 0.5)
+    }
+
+    func decrementQuickBrewDose() {
+        updateQuickBrewDose(quickBrewRequest.coffeeDoseGrams - 0.5)
+    }
+
+    func updateQuickBrewTaste(_ profile: TasteProfile) {
+        quickBrewRequest.tasteProfile = profile
+    }
+
+    func updateQuickBrewRoast(_ roast: RoastLevel) {
+        quickBrewRequest.roastLevel = roast
+    }
+
+    func applyQuickBrew() {
+        let recipe = quickBrewRecipe
+
+        guard saveRecipe(recipe) else { return }
+        activeRecipeID = recipe.id
+        activeEntryMode = .quick
+        currentInput = quickBrewRequest.brewInput
+        selectedTab = .planner
+    }
+
+    var quickBrewRecipe: BrewRecipe {
+        QuickBrewGenerator.generate(from: quickBrewRequest)
+    }
+
+    var activeRecipe: BrewRecipe? {
+        guard let activeRecipeID else { return nil }
+        return recipes.first(where: { $0.id == activeRecipeID })
+    }
+
+    var currentSessionPlan: BrewSessionPlan {
+        if let activeRecipe {
+            return RecipeResolver.resolve(activeRecipe)
+        }
+        return RecipeResolver.resolve(currentPlan)
+    }
+
+    @discardableResult
+    func saveRecipe(_ recipe: BrewRecipe) -> Bool {
+        do {
+            let previousRecipe = recipes.first(where: { $0.id == recipe.id })
+            try recipeUseCase.save(recipe: recipe)
+            try recipeRevisionUseCase.recordSave(recipe: recipe, previousRecipe: previousRecipe)
+            recipes.removeAll { $0.id == recipe.id }
+            recipes.insert(recipe, at: 0)
+            lastErrorMessage = nil
+            return true
+        } catch {
+            store(error: error)
+            return false
+        }
+    }
+
+    func deleteRecipe(_ recipe: BrewRecipe) {
+        do {
+            try recipeUseCase.deleteRecipes(ids: [recipe.id])
+            try recipeRevisionUseCase.deleteRevisions(recipeID: recipe.id)
+            recipes.removeAll { $0.id == recipe.id }
+            if activeRecipeID == recipe.id {
+                activeRecipeID = recipes.first?.id
+                activeEntryMode = .quick
+            }
+            lastErrorMessage = nil
+        } catch {
+            store(error: error)
+        }
+    }
+
+    func revisions(for recipeID: UUID) -> [RecipeRevision] {
+        do {
+            return try recipeRevisionUseCase.fetchRevisions(recipeID: recipeID)
+        } catch {
+            store(error: error)
+            return []
+        }
+    }
+
+    @discardableResult
+    func duplicateRecipe(_ recipe: BrewRecipe) -> BrewRecipe? {
+        var copy = recipe
+        copy = BrewRecipe(
+            metadata: RecipeMetadata(
+                name: "\(recipe.metadata.name) のコピー",
+                device: recipe.metadata.device,
+                sourceType: .user,
+                sourceSummary: recipe.metadata.sourceSummary,
+                tags: recipe.metadata.tags
+            ),
+            defaults: recipe.defaults,
+            phases: recipe.phases
+        )
+        return saveRecipe(copy) ? copy : nil
+    }
+
+    func startResearch(with recipe: BrewRecipe) {
+        activeRecipeID = recipe.id
+        activeEntryMode = .research
+        currentInput = BrewInput(
+            coffeeDose: recipe.defaults.coffeeDoseGrams,
+            brewRatio: recipe.defaults.ratio,
+            tasteProfile: .balanced,
+            roastLevel: currentInput.roastLevel,
+            grindSize: recipe.defaults.grindSize
+        )
+        selectedTab = .assistant
+    }
+
+    func useManualPlanner() {
+        activeRecipeID = nil
+        activeEntryMode = .quick
+    }
+
     func addBean(
         name: String,
         shopName: String = "",
@@ -154,13 +301,18 @@ final class AppStore {
     func addBrewLog(
         memo: String,
         ratings: TasteRatings,
-        actualBrewSeconds: Int
+        actualBrewSeconds: Int,
+        sessionPlan: BrewSessionPlan? = nil
     ) {
         do {
             let log = try brewLogUseCase.createLog(
                 bean: selectedBean,
+                recipeID: activeRecipeID,
+                recipeName: activeRecipe?.metadata.name,
+                entryMode: activeEntryMode,
                 input: currentInput,
                 plan: currentPlan,
+                sessionPlan: sessionPlan ?? currentSessionPlan,
                 ratings: ratings,
                 memo: memo,
                 actualBrewSeconds: actualBrewSeconds
@@ -174,6 +326,8 @@ final class AppStore {
 
     func apply(log: BrewLog) {
         currentInput = log.input
+        activeRecipeID = log.recipeID
+        activeEntryMode = log.entryMode
         if let beanID = log.bean?.id,
            beans.contains(where: { $0.id == beanID }) {
             selectedBeanID = beanID
@@ -225,6 +379,10 @@ final class AppStore {
         do {
             beans = try beanUseCase.fetchBeans()
             brewLogs = try brewLogUseCase.fetchBrewLogs()
+            recipes = try recipeUseCase.seedFourSixIfNeeded()
+            try recipeRevisionUseCase.ensureInitialRevisions(for: recipes)
+            activeRecipeID = recipes.first?.id
+            activeEntryMode = .quick
 
             if seedSampleDataIfEmpty,
                beans.isEmpty,
@@ -269,6 +427,8 @@ final class AppStore {
         var updatedInput = currentInput
         update(&updatedInput)
         updatedInput.brewRatio = BrewPlanner.recommendedRatio(for: updatedInput)
+        activeRecipeID = nil
+        activeEntryMode = .quick
         currentInput = updatedInput
     }
 

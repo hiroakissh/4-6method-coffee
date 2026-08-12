@@ -35,6 +35,25 @@ final class InMemoryBrewLogRepository: BrewLogRepository {
     }
 }
 
+@MainActor
+final class InMemoryRecipeRevisionRepository: RecipeRevisionRepository {
+    private var storage: [UUID: RecipeRevision] = [:]
+
+    func fetchRevisions(recipeID: UUID) throws -> [RecipeRevision] {
+        storage.values
+            .filter { $0.recipeID == recipeID }
+            .sorted { $0.version < $1.version }
+    }
+
+    func save(revision: RecipeRevision) throws {
+        storage[revision.id] = revision
+    }
+
+    func deleteRevisions(recipeID: UUID) throws {
+        storage = storage.filter { $0.value.recipeID != recipeID }
+    }
+}
+
 enum TestFailure: LocalizedError {
     case forced
 
@@ -69,6 +88,36 @@ final class FailingBrewLogRepository: BrewLogRepository {
     }
 
     func delete(logID: UUID) throws {
+        throw TestFailure.forced
+    }
+}
+
+@MainActor
+final class FailingRecipeRepository: RecipeRepository {
+    func fetchRecipes() throws -> [BrewRecipe] {
+        throw TestFailure.forced
+    }
+
+    func save(recipe: BrewRecipe) throws {
+        throw TestFailure.forced
+    }
+
+    func delete(recipeID: UUID) throws {
+        throw TestFailure.forced
+    }
+}
+
+@MainActor
+final class FailingRecipeRevisionRepository: RecipeRevisionRepository {
+    func fetchRevisions(recipeID: UUID) throws -> [RecipeRevision] {
+        throw TestFailure.forced
+    }
+
+    func save(revision: RecipeRevision) throws {
+        throw TestFailure.forced
+    }
+
+    func deleteRevisions(recipeID: UUID) throws {
         throw TestFailure.forced
     }
 }

@@ -1,0 +1,219 @@
+# Brew Recipe Platform Plan
+
+## Purpose
+4-6メソッド専用の計算アプリから、世界大会レシピを分解・抽象化して扱える
+「抽出設計ツール」へ移行するための実装計画をまとめる。
+
+## Renewal stance
+- これは新規アプリ化ではなく、既存の 4-6 アプリを複数レシピ対応へ広げるリニューアルである。
+- 抽出ガイド、ログ、Live Activity は既存資産として再利用し、可変レシピ対応へ段階拡張する。
+
+## Championship-inspired recipe examples
+以下は「史実の完全再現データ」ではなく、アプリ設計に必要な抽出構造の例として扱う。
+
+- **4-6**
+  - 前半で味、後半で濃度を制御する複数回注湯
+- **flow-control**
+  - 前半高流量、後半低流量のように流量差で抽出を組む
+- **simple pulse**
+  - 少数パラメータで再現性を重視するシンプルなパルス注湯
+- **temperature-shift**
+  - 抽出途中で湯温を変化させる
+- **short extraction**
+  - 4投前後、短時間で設計された効率型抽出
+- **immersion hybrid**
+  - 浸漬からドリップへ移るハイブリッド抽出
+
+## Common structure
+全レシピで共通化する軸は以下の5つ。
+
+1. **Pour**
+   - 回数
+   - タイミング
+   - 量
+2. **Flow**
+   - 強い / 弱い
+   - 連続 / パルス
+3. **Temperature**
+   - 一定 / 変化
+4. **Agitation**
+   - なし / スワール / スプーンなど
+5. **Phase**
+   - 蒸らし / メイン抽出 / 調整 / 浸漬 / 仕上げ
+
+## Product entry modes
+### Quick Brew
+- 少数入力からおすすめレシピを返す
+- ユーザーは「設計」ではなく「選択」に集中する
+- 内部では既存プリセットの選択または軽量なルール生成を行う
+- 出力は最終的に `BrewRecipe` に正規化する
+
+### Research
+- `BrewRecipe` を直接編集し、比較し、分析する
+- プリセットの複製、改変、ログ比較はこちらに寄せる
+- 世界大会レシピは研究対象としてこのモードに自然に乗る
+
+## Recommended JSON v1
+```json
+{
+  "schemaVersion": 1,
+  "id": "recipe-four-six",
+  "metadata": {
+    "name": "4-6 Method",
+    "device": "v60",
+    "sourceType": "preset",
+    "tags": ["competition", "pulse", "flavor-control"]
+  },
+  "defaults": {
+    "coffeeDoseGrams": 20,
+    "totalWaterGrams": 300,
+    "grindLevel": "medium",
+    "ratio": 15.0
+  },
+  "phases": [
+    {
+      "id": "bloom",
+      "type": "bloom",
+      "temperature": {
+        "mode": "fixed",
+        "points": [{ "time": 0, "celsius": 92 }]
+      },
+      "agitation": [],
+      "pours": [
+        {
+          "id": "pour-1",
+          "startSecond": 0,
+          "amountGrams": 60,
+          "targetCumulativeGrams": 60,
+          "flowRate": "medium",
+          "position": "center"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Recommended Swift model v1
+```swift
+struct BrewRecipe: Codable, Hashable, Identifiable {
+    var id: UUID
+    var metadata: RecipeMetadata
+    var defaults: RecipeDefaults
+    var phases: [BrewPhase]
+}
+
+struct BrewPhase: Codable, Hashable, Identifiable {
+    var id: String
+    var type: PhaseType
+    var temperature: TemperatureProfile
+    var agitation: [AgitationAction]
+    var pours: [PourAction]
+}
+
+struct PourAction: Codable, Hashable, Identifiable {
+    var id: String
+    var startSecond: Int
+    var amountGrams: Int
+    var targetCumulativeGrams: Int
+    var flowRate: FlowRate
+    var position: PourPosition
+}
+```
+
+## Why this split is necessary
+- `BrewInput` は「4-6を計算するための入力」であり、一般レシピの表現には狭すぎる
+- `BrewPlan` は「6投の計算結果」であり、浸漬や4投や温度変更を自然に持てない
+- `BrewRecipe` は編集対象、`BrewSessionPlan` は再生対象として分けると UI と Domain が整理しやすい
+
+## Implementation phases
+1. **Phase 1: Schema foundation**
+   - `BrewRecipe` 系モデル追加
+   - `RecipeRepository` 追加
+   - `RecipeEntity(payloadJSON)` 追加
+   - 4-6プリセットを JSON 化
+2. **Phase 2: Quick Brew introduction**
+   - `QuickBrewRequest` と `QuickBrewGenerator` を追加
+   - 少数入力から `BrewRecipe` を返す
+   - おすすめ抽出のカードUIを追加
+3. **Phase 3: Session guide migration**
+   - `RecipeResolver` で `BrewSessionPlan` を生成
+   - `BrewSessionModel` を可変投数対応に変更
+   - Live Activity を可変ステップ対応に変更
+   - 既存の `BrewSessionLiveActivityPayloadBuilder` と `BrewSessionLiveActivityManager` の責務は維持する
+4. **Phase 4: UI restructuring**
+   - Home を Quick Brew / Research の2導線に再構成
+   - Recipe Editor を追加
+   - Brew Guide で phase / temperature / agitation を表示
+5. **Phase 5: Learning loop**
+   - `BrewLog` を `recipeID` 紐づきへ変更
+   - `quick / research` の利用モードも記録する
+   - 味結果から改善提案を返す仕組みを追加
+
+## Current implementation checkpoint
+- Phase 1 の最初の実装単位は、Domain の `BrewRecipe` スキーマ、4-6プリセット変換、Recipe の JSON payload 永続化とする。
+- 既存の `BrewInput / BrewPlan / BrewSessionModel` はこの段階では維持し、4-6の既存導線を壊さない adapter 境界を追加する。
+- Recipe の SwiftData Entity は設計どおりメタデータと `payloadJSON` に限定し、フェーズや注湯を個別 Entity へ分解しない。
+- Quick Brew / Research の画面置換と可変タイムラインへのガイド移行は、スキーマと保存形式がテストで固定された後の次段階とする。
+
+## Next implementation checkpoint
+- Phase 2 の最初の実装単位は、豆量・焙煎度・味方向だけを受け取る `QuickBrewRequest` と、`BrewRecipe` を返す `QuickBrewGenerator` とする。
+- Quick Brew は既存の4-6プリセット生成器を再利用し、現行プランナーの入力・結果表示を壊さない導線として Home に追加する。
+- Quick Brew の提案を既存プランナーへ反映した後は、従来どおりタイマーへ進める。Research 用の直接編集画面は次のUI段階で扱う。
+
+## Session guide checkpoint
+- Phase 3 の最初の実装単位は、`BrewRecipe` を時間軸へ展開する純粋な `RecipeResolver` と `BrewSessionPlan` とする。
+- Resolver はフェーズ順と注湯開始時刻を保った可変アクション列を生成し、各アクションへフェーズ・湯温・攪拌・次アクションまでの待ち時間を付与する。
+- `RecipeResolverTests` で可変タイムラインの契約を固定した後、`BrewSessionModel` と Live Activity の入力を `BrewSessionPlan` / `BrewSessionAction` へ切り替える。既存の `BrewPlan` 呼び出しは resolver adapter で互換維持する。
+
+## Current session migration checkpoint
+- 抽出ガイドのスケジュール、タイマー集計、Live Activity payload は `BrewSessionPlan.actions` を描画・同期の正規データとする。
+- UI は投数だけでなく、フェーズ名、注湯量、累計量、開始時刻、待ち時間を `BrewSessionAction` から表示する。
+- `BrewSessionLiveActivityPayloadBuilder` の表示項目と後方互換 decode は維持し、旧 `BrewPlan` 利用箇所は段階的に `load(sessionPlan:)` へ移行する。
+
+## Learning loop checkpoint
+- Phase 5 の最初の実装単位は、`BrewLog` に `recipeID` / レシピ名スナップショット / `BrewEntryMode` を追加することとする。
+- SwiftData Entity では既存ログを読めるよう新しい紐づけ項目を optional とし、未設定の旧ログは `quick` として復元する。
+- Quick Brew で開始したレシピは保存してから抽出ログへ紐づけ、既存の再利用導線とログ削除導線は維持する。
+
+## Research UI checkpoint
+- Research は保存済みレシピの一覧を起点にし、レシピの複製・削除・基本編集を同じ `BrewRecipe` JSON契約へ保存する。
+- Editor は phase / pour / flow / temperature / agitation を直接編集できる最小構成とし、Researchで選んだレシピは `BrewSessionPlan` に解決して抽出ガイドへ渡す。
+- Quick Brew の入力体験は変更せず、Researchの編集項目をQuick Brewへ漏らさない。
+
+## UI cleanup checkpoint
+- Home のタイムライン表示も `BrewSessionPlan.actions` を正規データとし、Researchレシピを選んだ時に旧6投固定表示へ戻らないようにする。
+- Research一覧はレシピ名・出典・タグで絞り込めるようにし、Editorでタグを編集して保存する。
+- 旧 `BrewPlan` はQuick Brew/既存ログ互換のため残すが、新規の可変レシピ表示では参照しない。
+- HomeではRecipe選択中に旧プランナー入力を常時表示せず、選択中レシピの概要を表示する。手動4-6入力へ戻る操作は明示的な切り替えとして提供する。
+
+## Brew log session snapshot checkpoint
+- 抽出ログは既存の `BrewPlan` に加えて、保存時点の `BrewSessionPlan` を optional JSON payload として保持する。
+- Researchレシピのログは、保存時の可変アクション列・フェーズ・湯温・攪拌・見積時間をスナップショットから再表示できるようにする。
+- 旧ログや旧形式の保存データは `BrewPlan` を残したまま読み込み、optional payload がない場合も履歴を表示できるようにする。
+- レシピ本体の後編集・削除に影響されないよう、ログの表示情報は保存時スナップショットを優先する。
+
+## Recipe version history checkpoint
+- Researchレシピの保存時に、変更後の `BrewRecipe` JSON を `RecipeRevision` として版番号付きで保存する。
+- 初回保存をv1とし、内容に変更がある保存だけ版を追加する。同一内容の再保存では重複版を作らない。
+- 既存のRecipeEntityに履歴がない場合は、現在のpayloadをv1として表示し、次回変更時に旧状態をv1・変更後をv2として補完する。
+- Research一覧からレシピの履歴を開き、各版の概要と直前版との差分（基本情報、デフォルト値、フェーズ、注湯、温度、攪拌）を確認できるようにする。
+- 履歴は保存時点のJSONスナップショットであり、現在のレシピを後から編集・削除しても過去版の表示内容は変わらない。
+
+## Immediate build order
+1. **レシピJSON設計**
+   - 先に schemaVersion を含む JSON 契約を固定する
+2. **Swiftモデル設計**
+   - 現行 repo は Observation 前提なので、Store は維持しつつ Domain model は UI 非依存にする
+   - TCA を後で採る場合でも、そのまま流用できる型境界にする
+3. **Quick Brew 入口**
+   - 少数入力からおすすめレシピを返す最短導線を先に作る
+4. **UI: 抽出ガイド**
+   - 可変投数へ対応し、次に phase / temperature 表示を足す
+
+## Risk notes
+- 現行 `AppStore` と `BrewSessionModel` は 4-6前提の state を持っているため、途中で adapter 層が必要になる
+- 既存の `TasteProfile` は 4-6固有の意味を持つため、将来は「preset input」へ隔離する必要がある
+- Quick Brew の責務を広げすぎると Research と競合するため、入力項目数と編集範囲を厳しく制限する必要がある
+- Live Activity の payload を壊す変更は既存表示の回帰リスクが高いため、builder の後方互換を意識して進める必要がある
+- 永続化を細粒度 Entity に急いで分解すると移行コストが上がるため、MVP は JSON payload 保存が安全

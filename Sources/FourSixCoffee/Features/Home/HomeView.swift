@@ -3,12 +3,14 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(AppStore.self) private var store
+    @State private var showingResearch = false
 
     private let tasteOptions: [TasteProfile] = [.light, .balanced, .sweet]
     private let concentrationOptions: [ConcentrationOption] = ConcentrationOption.options
     private let roastOptions: [RoastLevel] = RoastLevel.allCases
 
     private var currentPlan: BrewPlan { store.currentPlan }
+    private var currentSessionPlan: BrewSessionPlan { store.currentSessionPlan }
 
     var body: some View {
         NavigationStack {
@@ -18,8 +20,10 @@ struct HomeView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
                         header
+                        quickBrewCard
+                        researchCard
                         beanCard
-                        plannerInputCard
+                        plannerConfigurationCard
                         calculatedPlanCard
                         scheduleCard
                         recommendationPlaceholderCard
@@ -31,6 +35,9 @@ struct HomeView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showingResearch) {
+                ResearchView()
+            }
         }
     }
 
@@ -144,6 +151,113 @@ struct HomeView: View {
         }
     }
 
+    private var quickBrewCard: some View {
+        let recipe = store.quickBrewRecipe
+        let temperature = recipe.phases.first?.temperature.points.first?.celsius ?? 91
+
+        return cardContainer {
+            cardHeader(systemImage: "bolt.fill", title: "Quick Brew")
+
+            Text("豆量・焙煎度・味方向の3項目から、すぐ使える4-6提案を作ります。")
+                .appTextStyle(.body)
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+            capsuleStepper(
+                title: "豆量",
+                valueText: "\(coffeeDoseLabel(store.quickBrewRequest.coffeeDoseGrams)) g",
+                isMinusEnabled: store.canDecreaseQuickBrewDose,
+                isPlusEnabled: store.canIncreaseQuickBrewDose,
+                onMinusTap: { store.decrementQuickBrewDose() },
+                onPlusTap: { store.incrementQuickBrewDose() }
+            )
+
+            plannerChoiceGroup(
+                title: "味方向",
+                note: "前半の注湯配分を調整"
+            ) {
+                ForEach(tasteOptions, id: \.self) { profile in
+                    choiceButton(
+                        title: profile.displayName,
+                        caption: profile.shortNote,
+                        isSelected: store.quickBrewRequest.tasteProfile == profile
+                    ) {
+                        store.updateQuickBrewTaste(profile)
+                    }
+                }
+            }
+
+            plannerChoiceGroup(
+                title: "焙煎度",
+                note: "湯温と待ち時間の基準に使用"
+            ) {
+                ForEach(roastOptions, id: \.self) { roast in
+                    choiceButton(
+                        title: roast.displayName,
+                        isSelected: store.quickBrewRequest.roastLevel == roast
+                    ) {
+                        store.updateQuickBrewRoast(roast)
+                    }
+                }
+            }
+
+            HStack(spacing: 12) {
+                resultMetric(title: "総湯量", value: "\(recipe.defaults.totalWaterGrams) g")
+                resultMetric(title: "湯温", value: "\(temperature)℃")
+                resultMetric(title: "構成", value: "\(recipe.phases.flatMap(\.pours).count)投")
+            }
+
+            Button {
+                store.applyQuickBrew()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.down.circle.fill")
+                    Text("この提案をプランに反映")
+                }
+                .appTextStyle(.sectionTitle)
+                .foregroundStyle(AppDesignTokens.Colors.ctaText)
+                .frame(maxWidth: .infinity)
+                .frame(height: 58)
+                .background(AppDesignTokens.Colors.ctaBackground)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var researchCard: some View {
+        cardContainer {
+            cardHeader(systemImage: "flask", title: "Research")
+
+            Text("保存済みレシピを編集し、フェーズ・注湯・湯温・攪拌を試せます。")
+                .appTextStyle(.body)
+                .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+            HStack(spacing: 12) {
+                resultMetric(title: "レシピ", value: "\(store.recipes.count)件")
+                resultMetric(title: "編集", value: "可変フェーズ")
+            }
+
+            Button {
+                showingResearch = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.right.circle.fill")
+                    Text("Researchを開く")
+                }
+                .appTextStyle(.sectionTitle)
+                .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(AppDesignTokens.Colors.controlBackground)
+                .overlay {
+                    Capsule().stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                }
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
     private var plannerInputCard: some View {
         cardContainer {
             cardHeader(systemImage: "slider.horizontal.below.rectangle", title: "入力")
@@ -203,11 +317,66 @@ struct HomeView: View {
         }
     }
 
-    private var calculatedPlanCard: some View {
-        cardContainer {
-            cardHeader(systemImage: "wand.and.stars.inverse", title: "算出結果")
+    @ViewBuilder
+    private var plannerConfigurationCard: some View {
+        if store.activeRecipe == nil {
+            plannerInputCard
+        } else {
+            selectedRecipeCard
+        }
+    }
 
-            Text("入力を変えると総湯量・比率・挽き目・時間目安が即時更新されます。")
+    private var selectedRecipeCard: some View {
+        let recipe = store.activeRecipe
+
+        return cardContainer {
+            cardHeader(systemImage: "checkmark.seal.fill", title: "選択中のレシピ")
+
+            if let recipe {
+                Text(recipe.metadata.name)
+                    .appTextStyle(.sectionTitle)
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+
+                Text("\(recipe.phases.count)フェーズ · \(recipe.phases.flatMap(\.pours).count)アクション · \(recipe.defaults.totalWaterGrams)g")
+                    .appTextStyle(.supporting)
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+                Text(recipe.metadata.sourceSummary.isEmpty ? "保存済みのレシピを抽出ガイドへ使用します。" : recipe.metadata.sourceSummary)
+                    .appTextStyle(.body)
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+                Button {
+                    store.useManualPlanner()
+                } label: {
+                    Label("手動4-6入力へ切り替え", systemImage: "slider.horizontal.3")
+                        .appTextStyle(.itemTitle)
+                        .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(AppDesignTokens.Colors.controlBackground)
+                        .overlay {
+                            Capsule().stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                        }
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var calculatedPlanCard: some View {
+        let sessionPlan = currentSessionPlan
+        let recipe = store.activeRecipe
+        let ratio = recipe?.defaults.ratio ?? currentPlan.ratio
+        let grindSize = recipe?.defaults.grindSize ?? store.currentInput.grindSize
+        let sourceSummary = recipe?.metadata.sourceSummary ?? currentPlan.plannerMemo
+
+        return cardContainer {
+            cardHeader(systemImage: "wand.and.stars.inverse", title: recipe?.metadata.name ?? "算出結果")
+
+            Text(recipe == nil
+                ? "入力を変えると総湯量・比率・挽き目・時間目安が即時更新されます。"
+                : "Researchで選択中のレシピを抽出ガイドへ渡します。")
                 .appTextStyle(.supporting)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
@@ -219,17 +388,17 @@ struct HomeView: View {
                 alignment: .leading,
                 spacing: 12
             ) {
-                resultMetric(title: "総湯量", value: "\(currentPlan.totalWater) g")
-                resultMetric(title: "比率", value: ratioLabel(currentPlan.ratio))
-                resultMetric(title: "推奨挽き目", value: store.currentInput.grindSize.displayName)
-                resultMetric(title: "時間目安", value: PourStep.timeLabel(from: currentPlan.estimatedTotalSeconds))
+                resultMetric(title: "総湯量", value: "\(sessionPlan.totalWaterGrams) g")
+                resultMetric(title: "比率", value: ratioLabel(ratio))
+                resultMetric(title: "推奨挽き目", value: grindSize.displayName)
+                resultMetric(title: "時間目安", value: PourStep.timeLabel(from: sessionPlan.estimatedTotalSeconds))
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("湯温")
                     .appTextStyle(.sectionLabel)
                     .foregroundStyle(AppDesignTokens.Colors.headingAccent)
-                Text("\(currentPlan.recommendedTemperature)℃")
+                Text("\(sessionPlan.recommendedTemperature ?? currentPlan.recommendedTemperature)℃")
                     .appTextStyle(.metricValue)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                 Spacer()
@@ -243,34 +412,36 @@ struct HomeView: View {
             }
             .clipShape(Capsule())
 
-            Text(currentPlan.plannerMemo)
+            Text(sourceSummary)
                 .appTextStyle(.body)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
         }
     }
 
     private var scheduleCard: some View {
-        cardContainer {
-            cardHeader(systemImage: "drop.circle.fill", title: "6投レシピ")
+        let sessionPlan = currentSessionPlan
 
-            ForEach(currentPlan.steps) { step in
+        return cardContainer {
+            cardHeader(systemImage: "drop.circle.fill", title: "レシピタイムライン")
+
+            ForEach(sessionPlan.actions) { action in
                 HStack(alignment: .top, spacing: 14) {
                     ZStack {
                         Circle()
                             .fill(AppDesignTokens.Colors.timerStepBadgeBackground)
                         Circle()
                             .stroke(AppDesignTokens.Colors.timerStepBadgeBorder, lineWidth: 1)
-                        Text("\(step.id)")
+                        Text("\(action.sequenceNumber)")
                             .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.headingAccent)
                     }
                     .frame(width: 42, height: 42)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("\(step.phase.displayName) · \(step.amountGrams)g")
+                        Text("\(action.phaseType.displayName) · \(action.amountGrams)g")
                             .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                        Text("開始 \(step.startLabel) / 待ち \(step.waitSeconds)s / 累計 \(step.cumulativeGrams)g")
+                        Text("開始 \(PourStep.timeLabel(from: action.startSecond)) / 待ち \(action.waitSeconds)s / 累計 \(action.targetCumulativeGrams)g")
                             .appTextStyle(.supporting)
                             .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                     }
@@ -278,7 +449,7 @@ struct HomeView: View {
                     Spacer()
                 }
 
-                if step.id != currentPlan.steps.count {
+                if action.sequenceNumber != sessionPlan.actions.count {
                     Divider().overlay(AppDesignTokens.Colors.controlBorder)
                 }
             }

@@ -8,7 +8,7 @@ struct BrewSessionLiveActivityPayload {
 
 enum BrewSessionLiveActivityPayloadBuilder {
     static func makePayload(
-        plan: BrewPlan,
+        plan: BrewSessionPlan,
         elapsedSeconds: Int,
         currentStepIndex: Int,
         isRunning: Bool,
@@ -17,7 +17,7 @@ enum BrewSessionLiveActivityPayloadBuilder {
         let safeElapsed = max(0, elapsedSeconds)
         let totalRemaining = max(plan.estimatedTotalSeconds - safeElapsed, 0)
 
-        guard !plan.steps.isEmpty else {
+        guard !plan.actions.isEmpty else {
             let state = BrewSessionActivityAttributes.ContentState(
                 stepNumber: 0,
                 stepGrams: 0,
@@ -32,7 +32,7 @@ enum BrewSessionLiveActivityPayloadBuilder {
             )
             return BrewSessionLiveActivityPayload(
                 attributes: BrewSessionActivityAttributes(
-                    totalWaterGrams: plan.totalWater,
+                    totalWaterGrams: plan.totalWaterGrams,
                     totalSteps: 0
                 ),
                 state: state,
@@ -40,24 +40,24 @@ enum BrewSessionLiveActivityPayloadBuilder {
             )
         }
 
-        let stepIndex = max(0, min(currentStepIndex, plan.steps.count - 1))
-        let step = plan.steps[stepIndex]
+        let stepIndex = max(0, min(currentStepIndex, plan.actions.count - 1))
+        let step = plan.actions[stepIndex]
 
         let nextIndex = stepIndex + 1
         let remainingToNext: Int
         let nextStepNumber: Int
         let nextStepGrams: Int
         let nextCumulativeGrams: Int
-        if plan.steps.indices.contains(nextIndex) {
-            remainingToNext = max(plan.steps[nextIndex].startSecond - safeElapsed, 0)
-            nextStepNumber = plan.steps[nextIndex].id
-            nextStepGrams = plan.steps[nextIndex].amountGrams
-            nextCumulativeGrams = max(plan.steps[nextIndex].cumulativeGrams, 0)
+        if plan.actions.indices.contains(nextIndex) {
+            remainingToNext = max(plan.actions[nextIndex].startSecond - safeElapsed, 0)
+            nextStepNumber = plan.actions[nextIndex].sequenceNumber
+            nextStepGrams = plan.actions[nextIndex].amountGrams
+            nextCumulativeGrams = max(plan.actions[nextIndex].targetCumulativeGrams, 0)
         } else {
             remainingToNext = totalRemaining
             nextStepNumber = 0
             nextStepGrams = 0
-            nextCumulativeGrams = max(max(step.cumulativeGrams, 0), max(plan.totalWater, 0))
+            nextCumulativeGrams = max(max(step.targetCumulativeGrams, 0), max(plan.totalWaterGrams, 0))
         }
 
         let nextStepDate = isRunning
@@ -65,9 +65,9 @@ enum BrewSessionLiveActivityPayloadBuilder {
             : nil
 
         let state = BrewSessionActivityAttributes.ContentState(
-            stepNumber: step.id,
+            stepNumber: step.sequenceNumber,
             stepGrams: step.amountGrams,
-            cumulativeGrams: step.cumulativeGrams,
+            cumulativeGrams: step.targetCumulativeGrams,
             nextStepNumber: nextStepNumber,
             nextStepGrams: nextStepGrams,
             nextCumulativeGrams: nextCumulativeGrams,
@@ -79,8 +79,8 @@ enum BrewSessionLiveActivityPayloadBuilder {
 
         return BrewSessionLiveActivityPayload(
             attributes: BrewSessionActivityAttributes(
-                totalWaterGrams: plan.totalWater,
-                totalSteps: plan.steps.count
+                totalWaterGrams: plan.totalWaterGrams,
+                totalSteps: plan.actions.count
             ),
             state: state,
             staleDate: nextStepDate

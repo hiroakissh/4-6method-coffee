@@ -24,12 +24,21 @@ final class AppStoreTests: XCTestCase {
 
         XCTAssertEqual(firstStore.beans.count, 1)
         XCTAssertEqual(firstStore.brewLogs.count, 1)
+        XCTAssertEqual(firstStore.recipes.count, 1)
 
         let secondStore = AppStore(dependencies: dependencies)
 
         XCTAssertEqual(secondStore.beans.count, 1)
         XCTAssertEqual(secondStore.brewLogs.count, 1)
+        XCTAssertEqual(secondStore.recipes.count, 1)
+        XCTAssertEqual(secondStore.recipes[0].id, firstStore.recipes[0].id)
         XCTAssertEqual(secondStore.brewLogs[0].bean?.id, secondStore.beans[0].id)
+        XCTAssertNil(secondStore.brewLogs[0].recipeID)
+        XCTAssertEqual(secondStore.brewLogs[0].entryMode, .quick)
+        XCTAssertEqual(
+            secondStore.brewLogs[0].sessionPlan,
+            RecipeResolver.resolve(secondStore.brewLogs[0].plan)
+        )
     }
 
     func testDeleteBeanNullifiesPersistedLogBeanReference() {
@@ -56,6 +65,125 @@ final class AppStoreTests: XCTestCase {
         XCTAssertTrue(reloaded.beans.isEmpty)
         XCTAssertEqual(reloaded.brewLogs.count, 1)
         XCTAssertNil(reloaded.brewLogs[0].bean)
+    }
+
+    func testStartingResearchUsesRecipeSessionPlan() {
+        let store = AppStore(dependencies: .preview())
+        let recipe = store.recipes[0]
+
+        store.startResearch(with: recipe)
+
+        XCTAssertEqual(store.activeRecipeID, recipe.id)
+        XCTAssertEqual(store.activeEntryMode, .research)
+        XCTAssertEqual(store.currentSessionPlan.recipeID, recipe.id)
+        XCTAssertEqual(store.selectedTab, .assistant)
+
+        store.updateCoffeeDose(21)
+
+        XCTAssertNil(store.activeRecipeID)
+        XCTAssertEqual(store.activeEntryMode, .quick)
+    }
+
+    func testRecipeSaveCreatesVersionHistoryWithoutDuplicateVersions() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+        let original = store.recipes[0]
+
+        XCTAssertEqual(store.revisions(for: original.id).map(\.version), [1])
+
+        var updated = original
+        updated.metadata.name = "Edited Recipe"
+        XCTAssertTrue(store.saveRecipe(updated))
+        XCTAssertTrue(store.saveRecipe(updated))
+
+        let revisions = store.revisions(for: original.id)
+        XCTAssertEqual(revisions.map(\.version), [1, 2])
+        XCTAssertEqual(revisions[0].recipe.metadata.name, original.metadata.name)
+        XCTAssertEqual(revisions[1].recipe.metadata.name, "Edited Recipe")
+    }
+
+    func testDeletingRecipeAlsoDeletesItsVersionHistory() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+        let recipe = store.recipes[0]
+
+        store.deleteRecipe(recipe)
+
+        XCTAssertTrue(store.recipes.isEmpty)
+        XCTAssertTrue(store.revisions(for: recipe.id).isEmpty)
+    }
+
+    func testManualPlannerSwitchClearsSelectedRecipe() {
+        let store = AppStore(dependencies: .preview())
+        XCTAssertNotNil(store.activeRecipe)
+
+        store.useManualPlanner()
+
+        XCTAssertNil(store.activeRecipe)
+        XCTAssertEqual(store.activeEntryMode, .quick)
+    }
+
+    func testResearchLogPersistsVariableSessionSnapshot() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+        let recipe = BrewRecipe(
+            metadata: RecipeMetadata(
+                name: "Variable Research",
+                device: "v60",
+                sourceType: .user
+            ),
+            defaults: RecipeDefaults(
+                coffeeDoseGrams: 20,
+                totalWaterGrams: 280,
+                grindSize: .medium,
+                ratio: 14
+            ),
+            phases: [
+                BrewPhase(
+                    id: "bloom",
+                    type: .bloom,
+                    pours: [
+                        PourAction(
+                            id: "bloom-1",
+                            startSecond: 0,
+                            amountGrams: 50,
+                            targetCumulativeGrams: 50,
+                            flowRate: .low,
+                            position: .center
+                        )
+                    ],
+                    temperature: .fixed(celsius: 94),
+                    agitation: [.swirl]
+                ),
+                BrewPhase(
+                    id: "finish",
+                    type: .finish,
+                    pours: [
+                        PourAction(
+                            id: "finish-1",
+                            startSecond: 50,
+                            amountGrams: 230,
+                            targetCumulativeGrams: 280,
+                            flowRate: .medium,
+                            position: .circle
+                        )
+                    ],
+                    temperature: .fixed(celsius: 88),
+                    agitation: [.tap]
+                )
+            ]
+        )
+
+        XCTAssertTrue(store.saveRecipe(recipe))
+        store.startResearch(with: recipe)
+        store.addBrewLog(memo: "variable", ratings: .neutral, actualBrewSeconds: 80)
+
+        let expected = RecipeResolver.resolve(recipe)
+        XCTAssertEqual(store.brewLogs.first?.sessionPlan, expected)
+
+        let reloaded = AppStore(dependencies: dependencies)
+        XCTAssertEqual(reloaded.brewLogs.first?.sessionPlan, expected)
+        XCTAssertEqual(reloaded.brewLogs.first?.sessionPlan?.actions.map(\.phaseType), [.bloom, .finish])
     }
 
     func testAddBeanAllowsQuickEntryDefaults() {
@@ -280,6 +408,7 @@ final class AppStoreTests: XCTestCase {
 
         XCTAssertNotNil(dependencies.modelContainer)
         XCTAssertFalse(previewStore.beans.isEmpty)
+        XCTAssertFalse(previewStore.recipes.isEmpty)
     }
 
     private func makeInMemoryDependencies() -> AppDependencies {
@@ -289,7 +418,11 @@ final class AppStoreTests: XCTestCase {
         return AppDependencies(
             modelContainer: container,
             beanUseCase: BeanUseCase(repository: SwiftDataBeanRepository(context: context)),
-            brewLogUseCase: BrewLogUseCase(repository: SwiftDataBrewLogRepository(context: context))
+            brewLogUseCase: BrewLogUseCase(repository: SwiftDataBrewLogRepository(context: context)),
+            recipeUseCase: RecipeUseCase(repository: SwiftDataRecipeRepository(context: context)),
+            recipeRevisionUseCase: RecipeRevisionUseCase(
+                repository: SwiftDataRecipeRevisionRepository(context: context)
+            )
         )
     }
 
@@ -297,11 +430,15 @@ final class AppStoreTests: XCTestCase {
         let container = PersistenceStack.makeModelContainer(inMemory: true)
         let beanUseCase = BeanUseCase(repository: FailingBeanRepository())
         let logUseCase = BrewLogUseCase(repository: FailingBrewLogRepository())
+        let recipeUseCase = RecipeUseCase(repository: FailingRecipeRepository())
+        let recipeRevisionUseCase = RecipeRevisionUseCase(repository: FailingRecipeRevisionRepository())
 
         return AppDependencies(
             modelContainer: container,
             beanUseCase: beanUseCase,
-            brewLogUseCase: logUseCase
+            brewLogUseCase: logUseCase,
+            recipeUseCase: recipeUseCase,
+            recipeRevisionUseCase: recipeRevisionUseCase
         )
     }
 }

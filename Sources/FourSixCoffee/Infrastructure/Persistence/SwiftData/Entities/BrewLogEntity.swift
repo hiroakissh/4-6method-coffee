@@ -7,8 +7,12 @@ final class BrewLogEntity {
     var date: Date
     var beanID: UUID?
     var beanSnapshotName: String?
+    var recipeID: UUID?
+    var recipeSnapshotName: String?
+    var entryModeRawValue: String?
     var inputData: Data
     var planData: Data
+    var sessionPlanData: Data?
     var ratingsData: Data
     var memo: String
     var actualBrewSeconds: Int
@@ -18,8 +22,12 @@ final class BrewLogEntity {
         date: Date,
         beanID: UUID?,
         beanSnapshotName: String?,
+        recipeID: UUID? = nil,
+        recipeSnapshotName: String? = nil,
+        entryModeRawValue: String? = nil,
         inputData: Data,
         planData: Data,
+        sessionPlanData: Data? = nil,
         ratingsData: Data,
         memo: String,
         actualBrewSeconds: Int
@@ -28,8 +36,12 @@ final class BrewLogEntity {
         self.date = date
         self.beanID = beanID
         self.beanSnapshotName = beanSnapshotName
+        self.recipeID = recipeID
+        self.recipeSnapshotName = recipeSnapshotName
+        self.entryModeRawValue = entryModeRawValue
         self.inputData = inputData
         self.planData = planData
+        self.sessionPlanData = sessionPlanData
         self.ratingsData = ratingsData
         self.memo = memo
         self.actualBrewSeconds = actualBrewSeconds

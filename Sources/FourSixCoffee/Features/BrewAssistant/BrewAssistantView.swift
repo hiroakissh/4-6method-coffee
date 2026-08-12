@@ -13,8 +13,9 @@ struct BrewAssistantView: View {
 
     var body: some View {
         let plan = store.currentPlan
-        let progress = progressRatio(for: plan)
-        let summary = session.nextActionSummary(in: plan)
+        let sessionPlan = store.currentSessionPlan
+        let progress = progressRatio(for: sessionPlan)
+        let summary = session.nextActionSummary(in: sessionPlan)
 
         NavigationStack {
             ZStack {
@@ -26,7 +27,7 @@ struct BrewAssistantView: View {
                         timerHero(summary: summary)
                         nextActionCard(summary: summary, progress: progress)
                         controls
-                        schedule(plan: plan)
+                        schedule(sessionPlan: sessionPlan)
                         logComposer(plan: plan)
                     }
                     .padding(.horizontal, 20)
@@ -36,10 +37,10 @@ struct BrewAssistantView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
-                session.load(plan: plan)
+                session.load(sessionPlan: sessionPlan)
             }
-            .onChange(of: plan.id) { _, _ in
-                session.load(plan: plan)
+            .onChange(of: sessionPlan) { _, newPlan in
+                session.load(sessionPlan: newPlan)
             }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
@@ -143,7 +144,7 @@ struct BrewAssistantView: View {
             }
 
             VStack(spacing: 12) {
-                Text("第\(summary.currentStep.id)投")
+                Text("第\(summary.currentStep.sequenceNumber)投")
                     .appTextStyle(.itemTitle)
                     .foregroundStyle(AppDesignTokens.Colors.timerRingProgress)
                     .padding(.horizontal, 18)
@@ -249,9 +250,9 @@ struct BrewAssistantView: View {
 
             HStack(spacing: 10) {
                 infoChip(title: "経過", value: PourStep.timeLabel(from: summary.elapsedSeconds))
-                infoChip(title: "現在", value: "第\(summary.currentStep.id)投")
+                infoChip(title: "現在", value: "第\(summary.currentStep.sequenceNumber)投")
                 if let nextStep = summary.nextStep {
-                    infoChip(title: "次", value: "第\(nextStep.id)投")
+                    infoChip(title: "次", value: "第\(nextStep.sequenceNumber)投")
                 }
             }
 
@@ -269,22 +270,22 @@ struct BrewAssistantView: View {
         }
     }
 
-    private func schedule(plan: BrewPlan) -> some View {
-        cardContainer(spacing: 12) {
+    private func schedule(sessionPlan: BrewSessionPlan) -> some View {
+        return cardContainer(spacing: 12) {
             Text("スケジュール")
                 .appTextStyle(.sectionTitle)
                 .foregroundStyle(AppDesignTokens.Colors.textPrimary)
 
-            ForEach(plan.steps) { step in
+            ForEach(sessionPlan.actions) { action in
                 HStack(alignment: .top, spacing: 12) {
-                    statusDot(for: session.stepStatus(for: step))
+                    statusDot(for: session.stepStatus(for: action))
                         .padding(.top, 2)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("第\(step.id)投 · 累計 \(step.cumulativeGrams)g")
+                        Text("第\(action.sequenceNumber)投 · \(action.phaseType.displayName) · 累計 \(action.targetCumulativeGrams)g")
                             .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                        Text("開始 \(step.startLabel) / 今回 +\(step.amountGrams)g / 待ち \(step.waitSeconds)s")
+                        Text("開始 \(PourStep.timeLabel(from: action.startSecond)) / 今回 +\(action.amountGrams)g / 待ち \(action.waitSeconds)s")
                             .appTextStyle(.supporting)
                             .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                     }
@@ -292,7 +293,7 @@ struct BrewAssistantView: View {
                 }
                 .padding(.vertical, 8)
 
-                if step.id != plan.steps.count {
+                if action.sequenceNumber != sessionPlan.actions.count {
                     Divider().overlay(AppDesignTokens.Colors.controlBorder)
                 }
             }
@@ -514,13 +515,13 @@ struct BrewAssistantView: View {
         .shadow(color: AppDesignTokens.Colors.cardShadow, radius: 22, x: 0, y: 12)
     }
 
-    private func progressRatio(for plan: BrewPlan) -> Double {
+    private func progressRatio(for plan: BrewSessionPlan) -> Double {
         min(Double(session.elapsedSeconds) / Double(max(plan.estimatedTotalSeconds, 1)), 1)
     }
 
     private func nextActionTitle(for summary: BrewSessionModel.NextActionSummary) -> String {
         if let nextStep = summary.nextStep {
-            return "次は第\(nextStep.id)投"
+            return "次は第\(nextStep.sequenceNumber)投"
         }
         if summary.isAwaitingFinish {
             return "仕上がりまで"
@@ -553,7 +554,7 @@ struct BrewAssistantView: View {
         if !summary.isRunning, summary.elapsedSeconds > 0 {
             return "停止中"
         }
-        return summary.currentStep.phase.displayName
+        return summary.currentStep.phaseType.displayName
     }
 
     private func currentActionDetailText(for summary: BrewSessionModel.NextActionSummary) -> String {
@@ -561,7 +562,7 @@ struct BrewAssistantView: View {
             return "抽出は完了しています"
         }
 
-        return "いまは +\(summary.currentStep.amountGrams)g / 累計 \(summary.currentStep.cumulativeGrams)g"
+        return "いまは +\(summary.currentStep.amountGrams)g / 累計 \(summary.currentStep.targetCumulativeGrams)g"
     }
 
     private func icon(for status: BrewSessionModel.StepStatus) -> String {

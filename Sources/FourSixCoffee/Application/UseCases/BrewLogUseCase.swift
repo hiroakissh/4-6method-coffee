@@ -14,8 +14,12 @@ struct BrewLogUseCase {
 
     func createLog(
         bean: Bean?,
+        recipeID: UUID? = nil,
+        recipeName: String? = nil,
+        entryMode: BrewEntryMode = .quick,
         input: BrewInput,
         plan: BrewPlan,
+        sessionPlan: BrewSessionPlan? = nil,
         ratings: TasteRatings,
         memo: String,
         actualBrewSeconds: Int,
@@ -24,8 +28,12 @@ struct BrewLogUseCase {
         let log = BrewLog(
             date: date,
             bean: bean,
+            recipeID: recipeID,
+            recipeName: recipeName,
+            entryMode: entryMode,
             input: input,
             plan: plan,
+            sessionPlan: sessionPlan,
             ratings: ratings,
             memo: memo.trimmingCharacters(in: .whitespacesAndNewlines),
             actualBrewSeconds: max(actualBrewSeconds, 0)

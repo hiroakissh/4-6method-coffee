@@ -54,10 +54,15 @@ final class SwiftDataRepositoriesTests: XCTestCase {
 
         let input = BrewInput.default
         let plan = BrewPlanner.makePlan(from: input)
+        let sessionPlan = RecipeResolver.resolve(plan)
         let log = BrewLog(
             bean: bean,
+            recipeID: UUID(),
+            recipeName: "4-6 Method",
+            entryMode: .research,
             input: input,
             plan: plan,
+            sessionPlan: sessionPlan,
             ratings: TasteRatings(
                 sweetness: 4,
                 acidity: 3,
@@ -76,6 +81,10 @@ final class SwiftDataRepositoriesTests: XCTestCase {
         XCTAssertEqual(fetched[0].memo, "test")
         XCTAssertEqual(fetched[0].bean?.id, bean.id)
         XCTAssertEqual(fetched[0].plan.totalWater, plan.totalWater)
+        XCTAssertEqual(fetched[0].recipeID, log.recipeID)
+        XCTAssertEqual(fetched[0].recipeName, "4-6 Method")
+        XCTAssertEqual(fetched[0].entryMode, .research)
+        XCTAssertEqual(fetched[0].sessionPlan, sessionPlan)
 
         try repository.delete(logID: log.id)
         fetched = try repository.fetchBrewLogs()
@@ -103,6 +112,34 @@ final class SwiftDataRepositoriesTests: XCTestCase {
         let repository = SwiftDataBrewLogRepository(context: context)
 
         XCTAssertThrowsError(try repository.fetchBrewLogs())
+    }
+
+    func testBrewLogRepositoryDefaultsMissingRecipeContextForLegacyEntity() throws {
+        let container = PersistenceStack.makeModelContainer(inMemory: true)
+        let context = container.mainContext
+        let input = BrewInput.default
+        let plan = BrewPlanner.makePlan(from: input)
+
+        let entity = BrewLogEntity(
+            id: UUID(),
+            date: .now,
+            beanID: nil,
+            beanSnapshotName: nil,
+            inputData: try JSONEncoder().encode(input),
+            planData: try JSONEncoder().encode(plan),
+            ratingsData: try JSONEncoder().encode(TasteRatings.neutral),
+            memo: "legacy",
+            actualBrewSeconds: 180
+        )
+        context.insert(entity)
+        try context.save()
+
+        let fetched = try SwiftDataBrewLogRepository(context: context).fetchBrewLogs()
+
+        XCTAssertNil(fetched[0].recipeID)
+        XCTAssertNil(fetched[0].recipeName)
+        XCTAssertEqual(fetched[0].entryMode, .quick)
+        XCTAssertNil(fetched[0].sessionPlan)
     }
 
     func testBrewLogRepositoryBackfillsLegacyInputRatioFromPlan() throws {
