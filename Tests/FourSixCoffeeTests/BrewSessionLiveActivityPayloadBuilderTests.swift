@@ -81,14 +81,14 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
     }
 
     func testMakePayloadWithEmptyStepsFallsBackToSafeValues() {
-        let emptyPlan = BrewPlan(
-            input: .default,
-            ratio: 15,
-            totalWater: 0,
-            recommendedTemperature: 92,
-            steps: [],
-            estimatedTotalSeconds: 0,
-            plannerMemo: ""
+        let emptyPlan = BrewSessionPlan(
+            id: UUID(),
+            recipeID: UUID(),
+            recipeName: "",
+            totalWaterGrams: 0,
+            recommendedTemperature: nil,
+            actions: [],
+            estimatedTotalSeconds: 0
         )
 
         let payload = BrewSessionLiveActivityPayloadBuilder.makePayload(
@@ -110,8 +110,9 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
         XCTAssertEqual(payload.state.remainingTotalSeconds, 0)
     }
 
-    private func makePlan() -> BrewPlan {
-        BrewPlan(
+    private func makePlan() -> BrewSessionPlan {
+        RecipeResolver.resolve(
+            BrewPlan(
             input: .default,
             ratio: 15,
             totalWater: 240,
@@ -126,6 +127,7 @@ final class BrewSessionLiveActivityPayloadBuilderTests: XCTestCase {
             ],
             estimatedTotalSeconds: 180,
             plannerMemo: ""
+            )
         )
     }
 }

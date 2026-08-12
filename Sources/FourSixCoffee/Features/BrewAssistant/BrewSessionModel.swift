@@ -23,7 +23,7 @@ final class BrewSessionModel {
     @ObservationIgnored
     private let liveActivityManager: BrewSessionLiveActivityManaging
     @ObservationIgnored
-    private var loadedPlan: BrewPlan?
+    private var loadedPlan: BrewSessionPlan?
     @ObservationIgnored
     private var timerReferenceDate: Date?
     @ObservationIgnored
@@ -38,8 +38,14 @@ final class BrewSessionModel {
     }
 
     func load(plan: BrewPlan) {
-        guard loadedPlanID != plan.id else {
-            loadedPlan = plan
+        load(sessionPlan: RecipeResolver.resolve(plan))
+    }
+
+    func load(sessionPlan: BrewSessionPlan) {
+        guard loadedPlanID != sessionPlan.id else {
+            loadedPlan = sessionPlan
+            stepStartSeconds = sessionPlan.actions.map(\.startSecond)
+            estimatedTotalSeconds = sessionPlan.estimatedTotalSeconds
             return
         }
 
@@ -57,10 +63,10 @@ final class BrewSessionModel {
         }
 
         resetRuntime()
-        loadedPlan = plan
-        loadedPlanID = plan.id
-        stepStartSeconds = plan.steps.map(\.startSecond)
-        estimatedTotalSeconds = plan.estimatedTotalSeconds
+        loadedPlan = sessionPlan
+        loadedPlanID = sessionPlan.id
+        stepStartSeconds = sessionPlan.actions.map(\.startSecond)
+        estimatedTotalSeconds = sessionPlan.estimatedTotalSeconds
     }
 
     func start() {
@@ -112,38 +118,46 @@ final class BrewSessionModel {
             ratings: ratings,
             actualBrewSeconds: elapsedSeconds
         )
-        liveActivityManager.end(
-            plan: plan,
-            elapsedSeconds: elapsedSeconds,
-            currentStepIndex: currentStepIndex
-        )
+        endLiveActivityIfPossible()
     }
 
-    func stepStatus(for step: PourStep) -> StepStatus {
-        if step.id - 1 < currentStepIndex { return .done }
-        if step.id - 1 == currentStepIndex { return .active }
+    func stepStatus(for action: BrewSessionAction) -> StepStatus {
+        if action.sequenceNumber - 1 < currentStepIndex { return .done }
+        if action.sequenceNumber - 1 == currentStepIndex { return .active }
         return .upcoming
     }
 
     func secondsToNextStep(in plan: BrewPlan) -> Int {
-        let nextIndex = currentStepIndex + 1
-        guard plan.steps.indices.contains(nextIndex) else {
-            return max(plan.estimatedTotalSeconds - elapsedSeconds, 0)
-        }
-        return max(plan.steps[nextIndex].startSecond - elapsedSeconds, 0)
+        secondsToNextStep(in: RecipeResolver.resolve(plan))
     }
 
-    func currentStep(in plan: BrewPlan) -> PourStep {
-        let safeIndex = max(0, min(currentStepIndex, plan.steps.count - 1))
-        return plan.steps[safeIndex]
+    func secondsToNextStep(in plan: BrewSessionPlan) -> Int {
+        let nextIndex = currentStepIndex + 1
+        guard plan.actions.indices.contains(nextIndex) else {
+            return max(plan.estimatedTotalSeconds - elapsedSeconds, 0)
+        }
+        return max(plan.actions[nextIndex].startSecond - elapsedSeconds, 0)
+    }
+
+    func currentStep(in plan: BrewPlan) -> BrewSessionAction {
+        currentStep(in: RecipeResolver.resolve(plan))
+    }
+
+    func currentStep(in plan: BrewSessionPlan) -> BrewSessionAction {
+        let safeIndex = max(0, min(currentStepIndex, plan.actions.count - 1))
+        return plan.actions[safeIndex]
     }
 
     func nextActionSummary(in plan: BrewPlan) -> NextActionSummary {
+        nextActionSummary(in: RecipeResolver.resolve(plan))
+    }
+
+    func nextActionSummary(in plan: BrewSessionPlan) -> NextActionSummary {
         let currentStep = currentStep(in: plan)
         let nextIndex = currentStepIndex + 1
-        let nextStep = plan.steps.indices.contains(nextIndex) ? plan.steps[nextIndex] : nil
+        let nextStep = plan.actions.indices.contains(nextIndex) ? plan.actions[nextIndex] : nil
         let remainingSeconds = secondsToNextStep(in: plan)
-        let safeTotalWater = max(plan.totalWater, 0)
+        let safeTotalWater = max(plan.totalWaterGrams, 0)
         let currentSegmentStart = max(currentStep.startSecond, 0)
         let currentSegmentEnd = max(nextStep?.startSecond ?? plan.estimatedTotalSeconds, currentSegmentStart)
         let segmentDurationSeconds = max(currentSegmentEnd - currentSegmentStart, 0)
@@ -153,10 +167,10 @@ final class BrewSessionModel {
         let additionalGrams: Int
 
         if let nextStep {
-            targetCumulativeGrams = min(max(nextStep.cumulativeGrams, 0), safeTotalWater)
+            targetCumulativeGrams = min(max(nextStep.targetCumulativeGrams, 0), safeTotalWater)
             additionalGrams = max(nextStep.amountGrams, 0)
         } else {
-            targetCumulativeGrams = max(max(currentStep.cumulativeGrams, 0), safeTotalWater)
+            targetCumulativeGrams = max(max(currentStep.targetCumulativeGrams, 0), safeTotalWater)
             additionalGrams = 0
         }
 
@@ -268,8 +282,8 @@ final class BrewSessionModel {
 
 extension BrewSessionModel {
     struct NextActionSummary: Equatable {
-        let currentStep: PourStep
-        let nextStep: PourStep?
+        let currentStep: BrewSessionAction
+        let nextStep: BrewSessionAction?
         let remainingSeconds: Int
         let elapsedSeconds: Int
         let isRunning: Bool

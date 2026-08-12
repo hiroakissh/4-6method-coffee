@@ -109,8 +109,8 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
 
         let summary = model.nextActionSummary(in: plan)
 
-        XCTAssertEqual(summary.currentStep.id, 1)
-        XCTAssertEqual(summary.nextStep?.id, 2)
+        XCTAssertEqual(summary.currentStep.sequenceNumber, 1)
+        XCTAssertEqual(summary.nextStep?.sequenceNumber, 2)
         XCTAssertEqual(summary.remainingSeconds, 45)
         XCTAssertEqual(summary.targetCumulativeGrams, 80)
         XCTAssertEqual(summary.additionalGrams, 40)
@@ -130,8 +130,8 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
 
         let summary = model.nextActionSummary(in: plan)
 
-        XCTAssertEqual(summary.currentStep.id, 2)
-        XCTAssertEqual(summary.nextStep?.id, 3)
+        XCTAssertEqual(summary.currentStep.sequenceNumber, 2)
+        XCTAssertEqual(summary.nextStep?.sequenceNumber, 3)
         XCTAssertEqual(summary.remainingSeconds, 40)
         XCTAssertEqual(summary.segmentDurationSeconds, 45)
         XCTAssertEqual(summary.segmentProgress, 5.0 / 45.0, accuracy: 0.0001)
@@ -147,7 +147,7 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
 
         let summary = model.nextActionSummary(in: plan)
 
-        XCTAssertEqual(summary.currentStep.id, 6)
+        XCTAssertEqual(summary.currentStep.sequenceNumber, 6)
         XCTAssertNil(summary.nextStep)
         XCTAssertEqual(summary.remainingSeconds, 0)
         XCTAssertEqual(summary.targetCumulativeGrams, 240)
@@ -156,6 +156,71 @@ final class BrewSessionModelLiveActivityTests: XCTestCase {
         XCTAssertEqual(summary.segmentProgress, 0, accuracy: 0.0001)
         XCTAssertTrue(summary.isFinalPhase)
         XCTAssertTrue(summary.isComplete)
+    }
+
+    func testSessionPlanDrivesVariableTimelineAndPhaseDetails() {
+        let model = BrewSessionModel(liveActivityManager: SpyBrewSessionLiveActivityManager())
+        let sessionPlan = BrewSessionPlan(
+            id: UUID(),
+            recipeID: UUID(),
+            recipeName: "Research Recipe",
+            totalWaterGrams: 100,
+            recommendedTemperature: 91,
+            actions: [
+                BrewSessionAction(
+                    id: "bloom-1",
+                    sequenceNumber: 1,
+                    phaseID: "bloom",
+                    phaseType: .bloom,
+                    startSecond: 0,
+                    amountGrams: 30,
+                    targetCumulativeGrams: 30,
+                    waitSeconds: 30,
+                    temperatureCelsius: 92,
+                    agitation: []
+                ),
+                BrewSessionAction(
+                    id: "extraction-1",
+                    sequenceNumber: 2,
+                    phaseID: "extraction",
+                    phaseType: .extraction,
+                    startSecond: 30,
+                    amountGrams: 50,
+                    targetCumulativeGrams: 80,
+                    waitSeconds: 50,
+                    temperatureCelsius: 91,
+                    agitation: []
+                ),
+                BrewSessionAction(
+                    id: "finish-1",
+                    sequenceNumber: 3,
+                    phaseID: "finish",
+                    phaseType: .finish,
+                    startSecond: 80,
+                    amountGrams: 20,
+                    targetCumulativeGrams: 100,
+                    waitSeconds: 20,
+                    temperatureCelsius: 90,
+                    agitation: []
+                )
+            ],
+            estimatedTotalSeconds: 100
+        )
+
+        model.load(sessionPlan: sessionPlan)
+        model.currentStepIndex = 1
+        model.elapsedSeconds = 45
+
+        let summary = model.nextActionSummary(in: sessionPlan)
+
+        XCTAssertEqual(summary.currentStep.sequenceNumber, 2)
+        XCTAssertEqual(summary.currentStep.phaseType, .extraction)
+        XCTAssertEqual(summary.nextStep?.sequenceNumber, 3)
+        XCTAssertEqual(summary.remainingSeconds, 35)
+        XCTAssertEqual(summary.targetCumulativeGrams, 100)
+        XCTAssertEqual(summary.additionalGrams, 20)
+        XCTAssertEqual(summary.segmentDurationSeconds, 50)
+        XCTAssertEqual(summary.segmentProgress, 0.3, accuracy: 0.0001)
     }
 
     private func makePlan(stepStartOffset: Int) -> BrewPlan {
@@ -191,7 +256,7 @@ private final class SpyBrewSessionLiveActivityManager: BrewSessionLiveActivityMa
     private(set) var endCalls: [Call] = []
 
     func sync(
-        plan: BrewPlan,
+        plan: BrewSessionPlan,
         elapsedSeconds: Int,
         currentStepIndex: Int,
         isRunning: Bool
@@ -207,7 +272,7 @@ private final class SpyBrewSessionLiveActivityManager: BrewSessionLiveActivityMa
     }
 
     func end(
-        plan: BrewPlan,
+        plan: BrewSessionPlan,
         elapsedSeconds: Int,
         currentStepIndex: Int
     ) {

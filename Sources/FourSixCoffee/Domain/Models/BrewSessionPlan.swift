@@ -64,3 +64,20 @@ struct BrewSessionAction: Codable, Hashable, Identifiable {
         self.agitation = agitation
     }
 }
+
+extension PhaseType {
+    var displayName: String {
+        switch self {
+        case .bloom:
+            return "蒸らし"
+        case .extraction:
+            return "抽出"
+        case .immersion:
+            return "浸漬"
+        case .bypass:
+            return "バイパス"
+        case .finish:
+            return "仕上げ"
+        }
+    }
+}

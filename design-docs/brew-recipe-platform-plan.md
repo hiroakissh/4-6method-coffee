@@ -164,7 +164,12 @@ struct PourAction: Codable, Hashable, Identifiable {
 ## Session guide checkpoint
 - Phase 3 の最初の実装単位は、`BrewRecipe` を時間軸へ展開する純粋な `RecipeResolver` と `BrewSessionPlan` とする。
 - Resolver はフェーズ順と注湯開始時刻を保った可変アクション列を生成し、各アクションへフェーズ・湯温・攪拌・次アクションまでの待ち時間を付与する。
-- 既存の `BrewSessionModel` と Live Activity はこの段階では `BrewPlan` のまま維持し、Resolver の可変投数テストが固定された後に切り替える。
+- `RecipeResolverTests` で可変タイムラインの契約を固定した後、`BrewSessionModel` と Live Activity の入力を `BrewSessionPlan` / `BrewSessionAction` へ切り替える。既存の `BrewPlan` 呼び出しは resolver adapter で互換維持する。
+
+## Current session migration checkpoint
+- 抽出ガイドのスケジュール、タイマー集計、Live Activity payload は `BrewSessionPlan.actions` を描画・同期の正規データとする。
+- UI は投数だけでなく、フェーズ名、注湯量、累計量、開始時刻、待ち時間を `BrewSessionAction` から表示する。
+- `BrewSessionLiveActivityPayloadBuilder` の表示項目と後方互換 decode は維持し、旧 `BrewPlan` 利用箇所は段階的に `load(sessionPlan:)` へ移行する。
 
 ## Immediate build order
 1. **レシピJSON設計**

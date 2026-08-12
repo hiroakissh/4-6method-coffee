@@ -3,6 +3,37 @@ import Foundation
 enum RecipeResolver {
     static let defaultDrawdownSeconds = 20
 
+    static func resolve(_ plan: BrewPlan) -> BrewSessionPlan {
+        let actions = plan.steps.enumerated().map { index, step in
+            let nextStart = plan.steps.indices.contains(index + 1)
+                ? plan.steps[index + 1].startSecond
+                : plan.estimatedTotalSeconds
+
+            return BrewSessionAction(
+                id: "legacy-\(step.id)",
+                sequenceNumber: index + 1,
+                phaseID: step.phase == .balance ? "legacy-balance" : "legacy-strength",
+                phaseType: .extraction,
+                startSecond: max(step.startSecond, 0),
+                amountGrams: max(step.amountGrams, 0),
+                targetCumulativeGrams: max(step.cumulativeGrams, 0),
+                waitSeconds: max(nextStart - step.startSecond, 0),
+                temperatureCelsius: plan.recommendedTemperature,
+                agitation: []
+            )
+        }
+
+        return BrewSessionPlan(
+            id: plan.id,
+            recipeID: plan.id,
+            recipeName: "4-6 Method",
+            totalWaterGrams: max(plan.totalWater, 0),
+            recommendedTemperature: plan.recommendedTemperature,
+            actions: actions,
+            estimatedTotalSeconds: max(plan.estimatedTotalSeconds, 0)
+        )
+    }
+
     static func resolve(
         _ recipe: BrewRecipe,
         drawdownSeconds: Int = defaultDrawdownSeconds

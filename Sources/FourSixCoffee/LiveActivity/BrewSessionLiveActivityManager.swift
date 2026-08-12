@@ -48,14 +48,14 @@ enum BrewSessionLiveActivityResolution {
 @MainActor
 protocol BrewSessionLiveActivityManaging: AnyObject {
     func sync(
-        plan: BrewPlan,
+        plan: BrewSessionPlan,
         elapsedSeconds: Int,
         currentStepIndex: Int,
         isRunning: Bool
     )
 
     func end(
-        plan: BrewPlan,
+        plan: BrewSessionPlan,
         elapsedSeconds: Int,
         currentStepIndex: Int
     )
@@ -73,7 +73,7 @@ final class BrewSessionLiveActivityManager: BrewSessionLiveActivityManaging {
     }
 
     func sync(
-        plan: BrewPlan,
+        plan: BrewSessionPlan,
         elapsedSeconds: Int,
         currentStepIndex: Int,
         isRunning: Bool
@@ -129,7 +129,7 @@ final class BrewSessionLiveActivityManager: BrewSessionLiveActivityManaging {
     }
 
     func end(
-        plan: BrewPlan,
+        plan: BrewSessionPlan,
         elapsedSeconds: Int,
         currentStepIndex: Int
     ) {
