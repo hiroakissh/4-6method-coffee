@@ -171,6 +171,11 @@ struct PourAction: Codable, Hashable, Identifiable {
 - UI は投数だけでなく、フェーズ名、注湯量、累計量、開始時刻、待ち時間を `BrewSessionAction` から表示する。
 - `BrewSessionLiveActivityPayloadBuilder` の表示項目と後方互換 decode は維持し、旧 `BrewPlan` 利用箇所は段階的に `load(sessionPlan:)` へ移行する。
 
+## Learning loop checkpoint
+- Phase 5 の最初の実装単位は、`BrewLog` に `recipeID` / レシピ名スナップショット / `BrewEntryMode` を追加することとする。
+- SwiftData Entity では既存ログを読めるよう新しい紐づけ項目を optional とし、未設定の旧ログは `quick` として復元する。
+- Quick Brew で開始したレシピは保存してから抽出ログへ紐づけ、既存の再利用導線とログ削除導線は維持する。
+
 ## Immediate build order
 1. **レシピJSON設計**
    - 先に schemaVersion を含む JSON 契約を固定する

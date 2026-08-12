@@ -54,5 +54,7 @@ final class QuickBrewTests: XCTestCase {
         XCTAssertEqual(store.currentInput.tasteProfile, .light)
         XCTAssertEqual(store.currentInput.grindSize, .medium)
         XCTAssertEqual(store.selectedTab, .planner)
+        XCTAssertEqual(store.activeRecipe?.metadata.name, "Quick Brew")
+        XCTAssertEqual(store.activeEntryMode, .quick)
     }
 }

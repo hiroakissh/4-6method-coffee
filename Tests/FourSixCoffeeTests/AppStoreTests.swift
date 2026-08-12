@@ -33,6 +33,8 @@ final class AppStoreTests: XCTestCase {
         XCTAssertEqual(secondStore.recipes.count, 1)
         XCTAssertEqual(secondStore.recipes[0].id, firstStore.recipes[0].id)
         XCTAssertEqual(secondStore.brewLogs[0].bean?.id, secondStore.beans[0].id)
+        XCTAssertEqual(secondStore.brewLogs[0].recipeID, secondStore.recipes[0].id)
+        XCTAssertEqual(secondStore.brewLogs[0].entryMode, .quick)
     }
 
     func testDeleteBeanNullifiesPersistedLogBeanReference() {

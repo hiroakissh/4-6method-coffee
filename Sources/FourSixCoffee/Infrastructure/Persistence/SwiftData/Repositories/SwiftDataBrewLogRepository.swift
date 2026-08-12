@@ -61,6 +61,9 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
                     id: entity.id,
                     date: entity.date,
                     bean: bean,
+                    recipeID: entity.recipeID,
+                    recipeName: entity.recipeSnapshotName,
+                    entryMode: BrewEntryMode(rawValue: entity.entryModeRawValue ?? "") ?? .quick,
                     input: input,
                     plan: plan,
                     ratings: ratings,
@@ -82,6 +85,9 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
             existing.date = log.date
             existing.beanID = log.bean?.id
             existing.beanSnapshotName = log.bean?.name
+            existing.recipeID = log.recipeID
+            existing.recipeSnapshotName = log.recipeName
+            existing.entryModeRawValue = log.entryMode.rawValue
             existing.inputData = inputData
             existing.planData = planData
             existing.ratingsData = ratingsData
@@ -93,6 +99,9 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
                 date: log.date,
                 beanID: log.bean?.id,
                 beanSnapshotName: log.bean?.name,
+                recipeID: log.recipeID,
+                recipeSnapshotName: log.recipeName,
+                entryModeRawValue: log.entryMode.rawValue,
                 inputData: inputData,
                 planData: planData,
                 ratingsData: ratingsData,

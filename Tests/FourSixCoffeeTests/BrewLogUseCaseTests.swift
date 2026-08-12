@@ -58,4 +58,28 @@ final class BrewLogUseCaseTests: XCTestCase {
         XCTAssertEqual(logs.count, 1)
         XCTAssertEqual(logs.first?.memo, "second")
     }
+
+    func testCreateLogPreservesRecipeContext() throws {
+        let repository = InMemoryBrewLogRepository()
+        let useCase = BrewLogUseCase(repository: repository)
+        let recipeID = UUID()
+        let input = BrewInput.default
+        let plan = BrewPlanner.makePlan(from: input)
+
+        let log = try useCase.createLog(
+            bean: nil,
+            recipeID: recipeID,
+            recipeName: "Quick Brew",
+            entryMode: .quick,
+            input: input,
+            plan: plan,
+            ratings: .neutral,
+            memo: "",
+            actualBrewSeconds: 120
+        )
+
+        XCTAssertEqual(log.recipeID, recipeID)
+        XCTAssertEqual(log.recipeName, "Quick Brew")
+        XCTAssertEqual(log.entryMode, .quick)
+    }
 }

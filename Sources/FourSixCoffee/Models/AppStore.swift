@@ -30,6 +30,8 @@ final class AppStore {
     var quickBrewRequest: QuickBrewRequest
     var brewLogs: [BrewLog]
     var recipes: [BrewRecipe]
+    var activeRecipeID: UUID?
+    var activeEntryMode: BrewEntryMode
 
     var enableStepHaptics: Bool
     var preferredUnit: String
@@ -53,6 +55,8 @@ final class AppStore {
         self.quickBrewRequest = .default
         self.brewLogs = []
         self.recipes = []
+        self.activeRecipeID = nil
+        self.activeEntryMode = .quick
         self.enableStepHaptics = enableStepHaptics
         self.preferredUnit = preferredUnit
         self.lastErrorMessage = nil
@@ -150,12 +154,29 @@ final class AppStore {
     }
 
     func applyQuickBrew() {
-        currentInput = quickBrewRequest.brewInput
-        selectedTab = .planner
+        let recipe = quickBrewRecipe
+
+        do {
+            try recipeUseCase.save(recipe: recipe)
+            recipes.removeAll { $0.id == recipe.id }
+            recipes.insert(recipe, at: 0)
+            activeRecipeID = recipe.id
+            activeEntryMode = .quick
+            currentInput = quickBrewRequest.brewInput
+            selectedTab = .planner
+            lastErrorMessage = nil
+        } catch {
+            store(error: error)
+        }
     }
 
     var quickBrewRecipe: BrewRecipe {
         QuickBrewGenerator.generate(from: quickBrewRequest)
+    }
+
+    var activeRecipe: BrewRecipe? {
+        guard let activeRecipeID else { return nil }
+        return recipes.first(where: { $0.id == activeRecipeID })
     }
 
     func addBean(
@@ -203,6 +224,9 @@ final class AppStore {
         do {
             let log = try brewLogUseCase.createLog(
                 bean: selectedBean,
+                recipeID: activeRecipeID,
+                recipeName: activeRecipe?.metadata.name,
+                entryMode: activeEntryMode,
                 input: currentInput,
                 plan: currentPlan,
                 ratings: ratings,
@@ -218,6 +242,8 @@ final class AppStore {
 
     func apply(log: BrewLog) {
         currentInput = log.input
+        activeRecipeID = log.recipeID
+        activeEntryMode = log.entryMode
         if let beanID = log.bean?.id,
            beans.contains(where: { $0.id == beanID }) {
             selectedBeanID = beanID
@@ -270,6 +296,8 @@ final class AppStore {
             beans = try beanUseCase.fetchBeans()
             brewLogs = try brewLogUseCase.fetchBrewLogs()
             recipes = try recipeUseCase.seedFourSixIfNeeded()
+            activeRecipeID = recipes.first?.id
+            activeEntryMode = .quick
 
             if seedSampleDataIfEmpty,
                beans.isEmpty,

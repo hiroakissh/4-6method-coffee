@@ -128,6 +128,10 @@ struct BrewLogsView: View {
                 .appTextStyle(.sectionLabel)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
+            Text("\(log.entryMode.displayName) · \(log.recipeName ?? "レシピ未設定")")
+                .appTextStyle(.supportingStrong)
+                .foregroundStyle(AppDesignTokens.Colors.timerAmountAccent)
+
             Text("総湯量 \(log.plan.totalWater)g / 湯温 \(log.plan.recommendedTemperature)℃ / 実測 \(PourStep.timeLabel(from: log.actualBrewSeconds))")
                 .appTextStyle(.supporting)
                 .monospacedDigit()

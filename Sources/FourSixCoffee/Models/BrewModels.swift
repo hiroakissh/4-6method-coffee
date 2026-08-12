@@ -8,6 +8,22 @@ enum AppTab: Hashable {
     case settings
 }
 
+enum BrewEntryMode: String, Codable, Hashable, Identifiable {
+    case quick
+    case research
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .quick:
+            return "Quick Brew"
+        case .research:
+            return "Research"
+        }
+    }
+}
+
 enum TasteProfile: String, CaseIterable, Identifiable, Hashable, Codable {
     case sweet
     case balanced
@@ -387,6 +403,9 @@ struct BrewLog: Identifiable, Hashable, Codable {
     let id: UUID
     var date: Date
     var bean: Bean?
+    var recipeID: UUID?
+    var recipeName: String?
+    var entryMode: BrewEntryMode
     var input: BrewInput
     var plan: BrewPlan
     var ratings: TasteRatings
@@ -397,6 +416,9 @@ struct BrewLog: Identifiable, Hashable, Codable {
         id: UUID = UUID(),
         date: Date = .now,
         bean: Bean?,
+        recipeID: UUID? = nil,
+        recipeName: String? = nil,
+        entryMode: BrewEntryMode = .quick,
         input: BrewInput,
         plan: BrewPlan,
         ratings: TasteRatings = .neutral,
@@ -406,6 +428,9 @@ struct BrewLog: Identifiable, Hashable, Codable {
         self.id = id
         self.date = date
         self.bean = bean
+        self.recipeID = recipeID
+        self.recipeName = recipeName
+        self.entryMode = entryMode
         self.input = input
         self.plan = plan
         self.ratings = ratings

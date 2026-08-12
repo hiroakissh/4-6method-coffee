@@ -14,6 +14,9 @@ struct BrewLogUseCase {
 
     func createLog(
         bean: Bean?,
+        recipeID: UUID? = nil,
+        recipeName: String? = nil,
+        entryMode: BrewEntryMode = .quick,
         input: BrewInput,
         plan: BrewPlan,
         ratings: TasteRatings,
@@ -24,6 +27,9 @@ struct BrewLogUseCase {
         let log = BrewLog(
             date: date,
             bean: bean,
+            recipeID: recipeID,
+            recipeName: recipeName,
+            entryMode: entryMode,
             input: input,
             plan: plan,
             ratings: ratings,
