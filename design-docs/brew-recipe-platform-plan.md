@@ -161,6 +161,11 @@ struct PourAction: Codable, Hashable, Identifiable {
 - Quick Brew は既存の4-6プリセット生成器を再利用し、現行プランナーの入力・結果表示を壊さない導線として Home に追加する。
 - Quick Brew の提案を既存プランナーへ反映した後は、従来どおりタイマーへ進める。Research 用の直接編集画面は次のUI段階で扱う。
 
+## Session guide checkpoint
+- Phase 3 の最初の実装単位は、`BrewRecipe` を時間軸へ展開する純粋な `RecipeResolver` と `BrewSessionPlan` とする。
+- Resolver はフェーズ順と注湯開始時刻を保った可変アクション列を生成し、各アクションへフェーズ・湯温・攪拌・次アクションまでの待ち時間を付与する。
+- 既存の `BrewSessionModel` と Live Activity はこの段階では `BrewPlan` のまま維持し、Resolver の可変投数テストが固定された後に切り替える。
+
 ## Immediate build order
 1. **レシピJSON設計**
    - 先に schemaVersion を含む JSON 契約を固定する
