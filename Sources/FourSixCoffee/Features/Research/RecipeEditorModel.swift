@@ -5,9 +5,20 @@ import Observation
 @Observable
 final class RecipeEditorModel {
     var recipe: BrewRecipe
+    var tagsText: String
 
     init(recipe: BrewRecipe? = nil) {
-        self.recipe = recipe ?? Self.newRecipe()
+        let initialRecipe = recipe ?? Self.newRecipe()
+        self.recipe = initialRecipe
+        self.tagsText = initialRecipe.metadata.tags.joined(separator: ", ")
+    }
+
+    func prepareForSave() {
+        var seen: Set<String> = []
+        recipe.metadata.tags = tagsText
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && seen.insert($0.lowercased()).inserted }
     }
 
     func addPhase() {

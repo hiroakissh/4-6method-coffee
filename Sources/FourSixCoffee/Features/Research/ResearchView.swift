@@ -5,6 +5,7 @@ struct ResearchView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingNewEditor = false
     @State private var editingRecipe: BrewRecipe?
+    @State private var searchText = ""
 
     var body: some View {
         NavigationStack {
@@ -15,8 +16,10 @@ struct ResearchView: View {
                     VStack(spacing: 16) {
                         if store.recipes.isEmpty {
                             emptyState
+                        } else if filteredRecipes.isEmpty {
+                            filteredEmptyState
                         } else {
-                            ForEach(store.recipes) { recipe in
+                            ForEach(filteredRecipes) { recipe in
                                 recipeCard(recipe)
                             }
                         }
@@ -25,6 +28,7 @@ struct ResearchView: View {
                 }
             }
             .navigationTitle("Research")
+            .searchable(text: $searchText, prompt: "レシピ名・タグ・出典で検索")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") { dismiss() }
@@ -75,6 +79,31 @@ struct ResearchView: View {
         .clipShape(RoundedRectangle(cornerRadius: AppDesignTokens.Radius.card, style: .continuous))
     }
 
+    private var filteredEmptyState: some View {
+        Text("条件に一致するレシピがありません")
+            .appTextStyle(.supporting)
+            .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(22)
+    }
+
+    private var filteredRecipes: [BrewRecipe] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !query.isEmpty else { return store.recipes }
+
+        return store.recipes.filter { recipe in
+            let searchableText = [
+                recipe.metadata.name,
+                recipe.metadata.sourceSummary,
+                recipe.metadata.device,
+                recipe.metadata.tags.joined(separator: " ")
+            ]
+            .joined(separator: " ")
+            .lowercased()
+            return searchableText.contains(query)
+        }
+    }
+
     private func recipeCard(_ recipe: BrewRecipe) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
@@ -85,6 +114,11 @@ struct ResearchView: View {
                     Text("\(recipe.phases.count)フェーズ · \(recipe.phases.flatMap(\.pours).count)アクション · \(recipe.defaults.totalWaterGrams)g")
                         .appTextStyle(.supporting)
                         .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+                    if !recipe.metadata.tags.isEmpty {
+                        Text(recipe.metadata.tags.joined(separator: " · "))
+                            .appTextStyle(.supporting)
+                            .foregroundStyle(AppDesignTokens.Colors.headingAccent)
+                    }
                 }
                 Spacer()
                 Text(recipe.metadata.sourceType == .preset ? "Preset" : "User")
@@ -145,6 +179,7 @@ struct RecipeEditorView: View {
                 Section("基本情報") {
                     TextField("レシピ名", text: $bindableModel.recipe.metadata.name)
                     TextField("器具", text: $bindableModel.recipe.metadata.device)
+                    TextField("タグ（カンマ区切り）", text: $bindableModel.tagsText)
                     Stepper(
                         "豆量 \(model.recipe.defaults.coffeeDoseGrams, specifier: "%.1f")g",
                         value: $bindableModel.recipe.defaults.coffeeDoseGrams,
@@ -293,6 +328,7 @@ struct RecipeEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
+                        model.prepareForSave()
                         if store.saveRecipe(model.recipe) {
                             dismiss()
                         }

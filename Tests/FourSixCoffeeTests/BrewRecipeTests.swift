@@ -70,4 +70,13 @@ final class BrewRecipeTests: XCTestCase {
         XCTAssertEqual(model.agitation(for: initialPhaseID), .tap)
         XCTAssertEqual(RecipeResolver.resolve(model.recipe).actions.count, 3)
     }
+
+    func testRecipeEditorNormalizesCommaSeparatedTags() {
+        let model = RecipeEditorModel()
+        model.tagsText = "  floral, pulse, , floral  "
+
+        model.prepareForSave()
+
+        XCTAssertEqual(model.recipe.metadata.tags, ["floral", "pulse"])
+    }
 }

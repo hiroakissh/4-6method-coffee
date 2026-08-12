@@ -10,6 +10,7 @@ struct HomeView: View {
     private let roastOptions: [RoastLevel] = RoastLevel.allCases
 
     private var currentPlan: BrewPlan { store.currentPlan }
+    private var currentSessionPlan: BrewSessionPlan { store.currentSessionPlan }
 
     var body: some View {
         NavigationStack {
@@ -202,7 +203,7 @@ struct HomeView: View {
             HStack(spacing: 12) {
                 resultMetric(title: "総湯量", value: "\(recipe.defaults.totalWaterGrams) g")
                 resultMetric(title: "湯温", value: "\(temperature)℃")
-                resultMetric(title: "構成", value: "6投")
+                resultMetric(title: "構成", value: "\(recipe.phases.flatMap(\.pours).count)投")
             }
 
             Button {
@@ -317,10 +318,18 @@ struct HomeView: View {
     }
 
     private var calculatedPlanCard: some View {
-        cardContainer {
-            cardHeader(systemImage: "wand.and.stars.inverse", title: "算出結果")
+        let sessionPlan = currentSessionPlan
+        let recipe = store.activeRecipe
+        let ratio = recipe?.defaults.ratio ?? currentPlan.ratio
+        let grindSize = recipe?.defaults.grindSize ?? store.currentInput.grindSize
+        let sourceSummary = recipe?.metadata.sourceSummary ?? currentPlan.plannerMemo
 
-            Text("入力を変えると総湯量・比率・挽き目・時間目安が即時更新されます。")
+        return cardContainer {
+            cardHeader(systemImage: "wand.and.stars.inverse", title: recipe?.metadata.name ?? "算出結果")
+
+            Text(recipe == nil
+                ? "入力を変えると総湯量・比率・挽き目・時間目安が即時更新されます。"
+                : "Researchで選択中のレシピを抽出ガイドへ渡します。")
                 .appTextStyle(.supporting)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
 
@@ -332,17 +341,17 @@ struct HomeView: View {
                 alignment: .leading,
                 spacing: 12
             ) {
-                resultMetric(title: "総湯量", value: "\(currentPlan.totalWater) g")
-                resultMetric(title: "比率", value: ratioLabel(currentPlan.ratio))
-                resultMetric(title: "推奨挽き目", value: store.currentInput.grindSize.displayName)
-                resultMetric(title: "時間目安", value: PourStep.timeLabel(from: currentPlan.estimatedTotalSeconds))
+                resultMetric(title: "総湯量", value: "\(sessionPlan.totalWaterGrams) g")
+                resultMetric(title: "比率", value: ratioLabel(ratio))
+                resultMetric(title: "推奨挽き目", value: grindSize.displayName)
+                resultMetric(title: "時間目安", value: PourStep.timeLabel(from: sessionPlan.estimatedTotalSeconds))
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("湯温")
                     .appTextStyle(.sectionLabel)
                     .foregroundStyle(AppDesignTokens.Colors.headingAccent)
-                Text("\(currentPlan.recommendedTemperature)℃")
+                Text("\(sessionPlan.recommendedTemperature ?? currentPlan.recommendedTemperature)℃")
                     .appTextStyle(.metricValue)
                     .foregroundStyle(AppDesignTokens.Colors.textPrimary)
                 Spacer()
@@ -356,34 +365,36 @@ struct HomeView: View {
             }
             .clipShape(Capsule())
 
-            Text(currentPlan.plannerMemo)
+            Text(sourceSummary)
                 .appTextStyle(.body)
                 .foregroundStyle(AppDesignTokens.Colors.textSecondary)
         }
     }
 
     private var scheduleCard: some View {
-        cardContainer {
-            cardHeader(systemImage: "drop.circle.fill", title: "6投レシピ")
+        let sessionPlan = currentSessionPlan
 
-            ForEach(currentPlan.steps) { step in
+        return cardContainer {
+            cardHeader(systemImage: "drop.circle.fill", title: "レシピタイムライン")
+
+            ForEach(sessionPlan.actions) { action in
                 HStack(alignment: .top, spacing: 14) {
                     ZStack {
                         Circle()
                             .fill(AppDesignTokens.Colors.timerStepBadgeBackground)
                         Circle()
                             .stroke(AppDesignTokens.Colors.timerStepBadgeBorder, lineWidth: 1)
-                        Text("\(step.id)")
+                        Text("\(action.sequenceNumber)")
                             .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.headingAccent)
                     }
                     .frame(width: 42, height: 42)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("\(step.phase.displayName) · \(step.amountGrams)g")
+                        Text("\(action.phaseType.displayName) · \(action.amountGrams)g")
                             .appTextStyle(.itemTitle)
                             .foregroundStyle(AppDesignTokens.Colors.textPrimary)
-                        Text("開始 \(step.startLabel) / 待ち \(step.waitSeconds)s / 累計 \(step.cumulativeGrams)g")
+                        Text("開始 \(PourStep.timeLabel(from: action.startSecond)) / 待ち \(action.waitSeconds)s / 累計 \(action.targetCumulativeGrams)g")
                             .appTextStyle(.supporting)
                             .foregroundStyle(AppDesignTokens.Colors.textSecondary)
                     }
@@ -391,7 +402,7 @@ struct HomeView: View {
                     Spacer()
                 }
 
-                if step.id != currentPlan.steps.count {
+                if action.sequenceNumber != sessionPlan.actions.count {
                     Divider().overlay(AppDesignTokens.Colors.controlBorder)
                 }
             }
