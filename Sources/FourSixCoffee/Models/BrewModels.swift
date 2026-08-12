@@ -408,6 +408,7 @@ struct BrewLog: Identifiable, Hashable, Codable {
     var entryMode: BrewEntryMode
     var input: BrewInput
     var plan: BrewPlan
+    var sessionPlan: BrewSessionPlan?
     var ratings: TasteRatings
     var memo: String
     var actualBrewSeconds: Int
@@ -421,6 +422,7 @@ struct BrewLog: Identifiable, Hashable, Codable {
         entryMode: BrewEntryMode = .quick,
         input: BrewInput,
         plan: BrewPlan,
+        sessionPlan: BrewSessionPlan? = nil,
         ratings: TasteRatings = .neutral,
         memo: String = "",
         actualBrewSeconds: Int = 0
@@ -433,6 +435,7 @@ struct BrewLog: Identifiable, Hashable, Codable {
         self.entryMode = entryMode
         self.input = input
         self.plan = plan
+        self.sessionPlan = sessionPlan
         self.ratings = ratings
         self.memo = memo
         self.actualBrewSeconds = actualBrewSeconds

@@ -65,6 +65,7 @@ final class BrewLogUseCaseTests: XCTestCase {
         let recipeID = UUID()
         let input = BrewInput.default
         let plan = BrewPlanner.makePlan(from: input)
+        let sessionPlan = RecipeResolver.resolve(plan)
 
         let log = try useCase.createLog(
             bean: nil,
@@ -73,6 +74,7 @@ final class BrewLogUseCaseTests: XCTestCase {
             entryMode: .quick,
             input: input,
             plan: plan,
+            sessionPlan: sessionPlan,
             ratings: .neutral,
             memo: "",
             actualBrewSeconds: 120
@@ -81,5 +83,6 @@ final class BrewLogUseCaseTests: XCTestCase {
         XCTAssertEqual(log.recipeID, recipeID)
         XCTAssertEqual(log.recipeName, "Quick Brew")
         XCTAssertEqual(log.entryMode, .quick)
+        XCTAssertEqual(log.sessionPlan, sessionPlan)
     }
 }

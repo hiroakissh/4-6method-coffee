@@ -33,8 +33,12 @@ final class AppStoreTests: XCTestCase {
         XCTAssertEqual(secondStore.recipes.count, 1)
         XCTAssertEqual(secondStore.recipes[0].id, firstStore.recipes[0].id)
         XCTAssertEqual(secondStore.brewLogs[0].bean?.id, secondStore.beans[0].id)
-        XCTAssertEqual(secondStore.brewLogs[0].recipeID, secondStore.recipes[0].id)
+        XCTAssertNil(secondStore.brewLogs[0].recipeID)
         XCTAssertEqual(secondStore.brewLogs[0].entryMode, .quick)
+        XCTAssertEqual(
+            secondStore.brewLogs[0].sessionPlan,
+            RecipeResolver.resolve(secondStore.brewLogs[0].plan)
+        )
     }
 
     func testDeleteBeanNullifiesPersistedLogBeanReference() {
@@ -78,6 +82,69 @@ final class AppStoreTests: XCTestCase {
 
         XCTAssertNil(store.activeRecipeID)
         XCTAssertEqual(store.activeEntryMode, .quick)
+    }
+
+    func testResearchLogPersistsVariableSessionSnapshot() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+        let recipe = BrewRecipe(
+            metadata: RecipeMetadata(
+                name: "Variable Research",
+                device: "v60",
+                sourceType: .user
+            ),
+            defaults: RecipeDefaults(
+                coffeeDoseGrams: 20,
+                totalWaterGrams: 280,
+                grindSize: .medium,
+                ratio: 14
+            ),
+            phases: [
+                BrewPhase(
+                    id: "bloom",
+                    type: .bloom,
+                    pours: [
+                        PourAction(
+                            id: "bloom-1",
+                            startSecond: 0,
+                            amountGrams: 50,
+                            targetCumulativeGrams: 50,
+                            flowRate: .low,
+                            position: .center
+                        )
+                    ],
+                    temperature: .fixed(celsius: 94),
+                    agitation: [.swirl]
+                ),
+                BrewPhase(
+                    id: "finish",
+                    type: .finish,
+                    pours: [
+                        PourAction(
+                            id: "finish-1",
+                            startSecond: 50,
+                            amountGrams: 230,
+                            targetCumulativeGrams: 280,
+                            flowRate: .medium,
+                            position: .circle
+                        )
+                    ],
+                    temperature: .fixed(celsius: 88),
+                    agitation: [.tap]
+                )
+            ]
+        )
+
+        XCTAssertTrue(store.saveRecipe(recipe))
+        store.startResearch(with: recipe)
+        store.addBrewLog(memo: "variable", ratings: .neutral, actualBrewSeconds: 80)
+
+        let expected = RecipeResolver.resolve(recipe)
+        XCTAssertEqual(store.brewLogs.first?.sessionPlan, expected)
+
+        let reloaded = AppStore(dependencies: dependencies)
+        XCTAssertEqual(reloaded.brewLogs.first?.sessionPlan, expected)
+        XCTAssertEqual(reloaded.brewLogs.first?.sessionPlan?.actions.map(\.phaseType), [.bloom, .finish])
     }
 
     func testAddBeanAllowsQuickEntryDefaults() {

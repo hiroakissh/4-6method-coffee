@@ -186,6 +186,12 @@ struct PourAction: Codable, Hashable, Identifiable {
 - Research一覧はレシピ名・出典・タグで絞り込めるようにし、Editorでタグを編集して保存する。
 - 旧 `BrewPlan` はQuick Brew/既存ログ互換のため残すが、新規の可変レシピ表示では参照しない。
 
+## Brew log session snapshot checkpoint
+- 抽出ログは既存の `BrewPlan` に加えて、保存時点の `BrewSessionPlan` を optional JSON payload として保持する。
+- Researchレシピのログは、保存時の可変アクション列・フェーズ・湯温・攪拌・見積時間をスナップショットから再表示できるようにする。
+- 旧ログや旧形式の保存データは `BrewPlan` を残したまま読み込み、optional payload がない場合も履歴を表示できるようにする。
+- レシピ本体の後編集・削除に影響されないよう、ログの表示情報は保存時スナップショットを優先する。
+
 ## Immediate build order
 1. **レシピJSON設計**
    - 先に schemaVersion を含む JSON 契約を固定する

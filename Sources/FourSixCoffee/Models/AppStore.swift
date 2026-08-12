@@ -277,7 +277,8 @@ final class AppStore {
     func addBrewLog(
         memo: String,
         ratings: TasteRatings,
-        actualBrewSeconds: Int
+        actualBrewSeconds: Int,
+        sessionPlan: BrewSessionPlan? = nil
     ) {
         do {
             let log = try brewLogUseCase.createLog(
@@ -287,6 +288,7 @@ final class AppStore {
                 entryMode: activeEntryMode,
                 input: currentInput,
                 plan: currentPlan,
+                sessionPlan: sessionPlan ?? currentSessionPlan,
                 ratings: ratings,
                 memo: memo,
                 actualBrewSeconds: actualBrewSeconds

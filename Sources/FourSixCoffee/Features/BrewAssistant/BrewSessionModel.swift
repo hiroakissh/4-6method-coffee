@@ -116,7 +116,8 @@ final class BrewSessionModel {
         store.addBrewLog(
             memo: note,
             ratings: ratings,
-            actualBrewSeconds: elapsedSeconds
+            actualBrewSeconds: elapsedSeconds,
+            sessionPlan: loadedPlan ?? RecipeResolver.resolve(plan)
         )
         endLiveActivityIfPossible()
     }

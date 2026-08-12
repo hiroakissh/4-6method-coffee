@@ -36,6 +36,7 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
         return try context.fetch(descriptor).map { entity in
             do {
                 let plan = try decoder.decode(BrewPlan.self, from: entity.planData)
+                let sessionPlan = try decodeSessionPlan(from: entity.sessionPlanData)
                 let input = try decodeInput(
                     from: entity.inputData,
                     legacyRatioFallback: plan.ratio
@@ -66,6 +67,7 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
                     entryMode: BrewEntryMode(rawValue: entity.entryModeRawValue ?? "") ?? .quick,
                     input: input,
                     plan: plan,
+                    sessionPlan: sessionPlan,
                     ratings: ratings,
                     memo: entity.memo,
                     actualBrewSeconds: entity.actualBrewSeconds
@@ -79,6 +81,7 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
     func save(log: BrewLog) throws {
         let inputData = try encoder.encode(log.input)
         let planData = try encoder.encode(log.plan)
+        let sessionPlanData = try log.sessionPlan.map { try encoder.encode($0) }
         let ratingsData = try encoder.encode(log.ratings)
 
         if let existing = try fetchEntity(id: log.id) {
@@ -90,6 +93,7 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
             existing.entryModeRawValue = log.entryMode.rawValue
             existing.inputData = inputData
             existing.planData = planData
+            existing.sessionPlanData = sessionPlanData
             existing.ratingsData = ratingsData
             existing.memo = log.memo
             existing.actualBrewSeconds = log.actualBrewSeconds
@@ -104,6 +108,7 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
                 entryModeRawValue: log.entryMode.rawValue,
                 inputData: inputData,
                 planData: planData,
+                sessionPlanData: sessionPlanData,
                 ratingsData: ratingsData,
                 memo: log.memo,
                 actualBrewSeconds: log.actualBrewSeconds
@@ -138,6 +143,11 @@ struct SwiftDataBrewLogRepository: BrewLogRepository {
         }
 
         return input
+    }
+
+    private func decodeSessionPlan(from data: Data?) throws -> BrewSessionPlan? {
+        guard let data else { return nil }
+        return try decoder.decode(BrewSessionPlan.self, from: data)
     }
 
     private func payloadIsMissingBrewRatio(in data: Data) -> Bool {

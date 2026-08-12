@@ -12,6 +12,7 @@ final class BrewLogEntity {
     var entryModeRawValue: String?
     var inputData: Data
     var planData: Data
+    var sessionPlanData: Data?
     var ratingsData: Data
     var memo: String
     var actualBrewSeconds: Int
@@ -26,6 +27,7 @@ final class BrewLogEntity {
         entryModeRawValue: String? = nil,
         inputData: Data,
         planData: Data,
+        sessionPlanData: Data? = nil,
         ratingsData: Data,
         memo: String,
         actualBrewSeconds: Int
@@ -39,6 +41,7 @@ final class BrewLogEntity {
         self.entryModeRawValue = entryModeRawValue
         self.inputData = inputData
         self.planData = planData
+        self.sessionPlanData = sessionPlanData
         self.ratingsData = ratingsData
         self.memo = memo
         self.actualBrewSeconds = actualBrewSeconds

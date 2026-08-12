@@ -19,6 +19,7 @@ struct BrewLogUseCase {
         entryMode: BrewEntryMode = .quick,
         input: BrewInput,
         plan: BrewPlan,
+        sessionPlan: BrewSessionPlan? = nil,
         ratings: TasteRatings,
         memo: String,
         actualBrewSeconds: Int,
@@ -32,6 +33,7 @@ struct BrewLogUseCase {
             entryMode: entryMode,
             input: input,
             plan: plan,
+            sessionPlan: sessionPlan,
             ratings: ratings,
             memo: memo.trimmingCharacters(in: .whitespacesAndNewlines),
             actualBrewSeconds: max(actualBrewSeconds, 0)

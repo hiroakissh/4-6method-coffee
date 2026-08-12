@@ -54,6 +54,7 @@ final class SwiftDataRepositoriesTests: XCTestCase {
 
         let input = BrewInput.default
         let plan = BrewPlanner.makePlan(from: input)
+        let sessionPlan = RecipeResolver.resolve(plan)
         let log = BrewLog(
             bean: bean,
             recipeID: UUID(),
@@ -61,6 +62,7 @@ final class SwiftDataRepositoriesTests: XCTestCase {
             entryMode: .research,
             input: input,
             plan: plan,
+            sessionPlan: sessionPlan,
             ratings: TasteRatings(
                 sweetness: 4,
                 acidity: 3,
@@ -82,6 +84,7 @@ final class SwiftDataRepositoriesTests: XCTestCase {
         XCTAssertEqual(fetched[0].recipeID, log.recipeID)
         XCTAssertEqual(fetched[0].recipeName, "4-6 Method")
         XCTAssertEqual(fetched[0].entryMode, .research)
+        XCTAssertEqual(fetched[0].sessionPlan, sessionPlan)
 
         try repository.delete(logID: log.id)
         fetched = try repository.fetchBrewLogs()
@@ -136,6 +139,7 @@ final class SwiftDataRepositoriesTests: XCTestCase {
         XCTAssertNil(fetched[0].recipeID)
         XCTAssertNil(fetched[0].recipeName)
         XCTAssertEqual(fetched[0].entryMode, .quick)
+        XCTAssertNil(fetched[0].sessionPlan)
     }
 
     func testBrewLogRepositoryBackfillsLegacyInputRatioFromPlan() throws {
