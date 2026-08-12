@@ -14,6 +14,8 @@ final class AppStore {
     private let beanUseCase: BeanUseCase
     @ObservationIgnored
     private let brewLogUseCase: BrewLogUseCase
+    @ObservationIgnored
+    private let recipeUseCase: RecipeUseCase
 
     var selectedTab: AppTab = .planner
 
@@ -26,6 +28,7 @@ final class AppStore {
     var currentPlan: BrewPlan
 
     var brewLogs: [BrewLog]
+    var recipes: [BrewRecipe]
 
     var enableStepHaptics: Bool
     var preferredUnit: String
@@ -40,12 +43,14 @@ final class AppStore {
     ) {
         self.beanUseCase = dependencies.beanUseCase
         self.brewLogUseCase = dependencies.brewLogUseCase
+        self.recipeUseCase = dependencies.recipeUseCase
 
         self.beans = []
         self.selectedBeanID = nil
         self.currentInput = .default
         self.currentPlan = BrewPlanner.makePlan(from: .default)
         self.brewLogs = []
+        self.recipes = []
         self.enableStepHaptics = enableStepHaptics
         self.preferredUnit = preferredUnit
         self.lastErrorMessage = nil
@@ -225,6 +230,7 @@ final class AppStore {
         do {
             beans = try beanUseCase.fetchBeans()
             brewLogs = try brewLogUseCase.fetchBrewLogs()
+            recipes = try recipeUseCase.seedFourSixIfNeeded()
 
             if seedSampleDataIfEmpty,
                beans.isEmpty,

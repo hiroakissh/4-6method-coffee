@@ -5,7 +5,8 @@ enum PersistenceStack {
     static func makeModelContainer(inMemory: Bool = false) -> ModelContainer {
         let schema = Schema([
             BeanEntity.self,
-            BrewLogEntity.self
+            BrewLogEntity.self,
+            RecipeEntity.self
         ])
 
         let configuration = ModelConfiguration(

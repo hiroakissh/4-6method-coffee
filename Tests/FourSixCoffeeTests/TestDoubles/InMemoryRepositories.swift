@@ -72,3 +72,18 @@ final class FailingBrewLogRepository: BrewLogRepository {
         throw TestFailure.forced
     }
 }
+
+@MainActor
+final class FailingRecipeRepository: RecipeRepository {
+    func fetchRecipes() throws -> [BrewRecipe] {
+        throw TestFailure.forced
+    }
+
+    func save(recipe: BrewRecipe) throws {
+        throw TestFailure.forced
+    }
+
+    func delete(recipeID: UUID) throws {
+        throw TestFailure.forced
+    }
+}

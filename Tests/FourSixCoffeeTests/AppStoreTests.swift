@@ -24,11 +24,14 @@ final class AppStoreTests: XCTestCase {
 
         XCTAssertEqual(firstStore.beans.count, 1)
         XCTAssertEqual(firstStore.brewLogs.count, 1)
+        XCTAssertEqual(firstStore.recipes.count, 1)
 
         let secondStore = AppStore(dependencies: dependencies)
 
         XCTAssertEqual(secondStore.beans.count, 1)
         XCTAssertEqual(secondStore.brewLogs.count, 1)
+        XCTAssertEqual(secondStore.recipes.count, 1)
+        XCTAssertEqual(secondStore.recipes[0].id, firstStore.recipes[0].id)
         XCTAssertEqual(secondStore.brewLogs[0].bean?.id, secondStore.beans[0].id)
     }
 
@@ -280,6 +283,7 @@ final class AppStoreTests: XCTestCase {
 
         XCTAssertNotNil(dependencies.modelContainer)
         XCTAssertFalse(previewStore.beans.isEmpty)
+        XCTAssertFalse(previewStore.recipes.isEmpty)
     }
 
     private func makeInMemoryDependencies() -> AppDependencies {
@@ -289,7 +293,8 @@ final class AppStoreTests: XCTestCase {
         return AppDependencies(
             modelContainer: container,
             beanUseCase: BeanUseCase(repository: SwiftDataBeanRepository(context: context)),
-            brewLogUseCase: BrewLogUseCase(repository: SwiftDataBrewLogRepository(context: context))
+            brewLogUseCase: BrewLogUseCase(repository: SwiftDataBrewLogRepository(context: context)),
+            recipeUseCase: RecipeUseCase(repository: SwiftDataRecipeRepository(context: context))
         )
     }
 
@@ -297,11 +302,13 @@ final class AppStoreTests: XCTestCase {
         let container = PersistenceStack.makeModelContainer(inMemory: true)
         let beanUseCase = BeanUseCase(repository: FailingBeanRepository())
         let logUseCase = BrewLogUseCase(repository: FailingBrewLogRepository())
+        let recipeUseCase = RecipeUseCase(repository: FailingRecipeRepository())
 
         return AppDependencies(
             modelContainer: container,
             beanUseCase: beanUseCase,
-            brewLogUseCase: logUseCase
+            brewLogUseCase: logUseCase,
+            recipeUseCase: recipeUseCase
         )
     }
 }

@@ -150,6 +150,12 @@ struct PourAction: Codable, Hashable, Identifiable {
    - `quick / research` の利用モードも記録する
    - 味結果から改善提案を返す仕組みを追加
 
+## Current implementation checkpoint
+- Phase 1 の最初の実装単位は、Domain の `BrewRecipe` スキーマ、4-6プリセット変換、Recipe の JSON payload 永続化とする。
+- 既存の `BrewInput / BrewPlan / BrewSessionModel` はこの段階では維持し、4-6の既存導線を壊さない adapter 境界を追加する。
+- Recipe の SwiftData Entity は設計どおりメタデータと `payloadJSON` に限定し、フェーズや注湯を個別 Entity へ分解しない。
+- Quick Brew / Research の画面置換と可変タイムラインへのガイド移行は、スキーマと保存形式がテストで固定された後の次段階とする。
+
 ## Immediate build order
 1. **レシピJSON設計**
    - 先に schemaVersion を含む JSON 契約を固定する
