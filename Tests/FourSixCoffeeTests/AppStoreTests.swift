@@ -84,6 +84,45 @@ final class AppStoreTests: XCTestCase {
         XCTAssertEqual(store.activeEntryMode, .quick)
     }
 
+    func testRecipeSaveCreatesVersionHistoryWithoutDuplicateVersions() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+        let original = store.recipes[0]
+
+        XCTAssertEqual(store.revisions(for: original.id).map(\.version), [1])
+
+        var updated = original
+        updated.metadata.name = "Edited Recipe"
+        XCTAssertTrue(store.saveRecipe(updated))
+        XCTAssertTrue(store.saveRecipe(updated))
+
+        let revisions = store.revisions(for: original.id)
+        XCTAssertEqual(revisions.map(\.version), [1, 2])
+        XCTAssertEqual(revisions[0].recipe.metadata.name, original.metadata.name)
+        XCTAssertEqual(revisions[1].recipe.metadata.name, "Edited Recipe")
+    }
+
+    func testDeletingRecipeAlsoDeletesItsVersionHistory() {
+        let dependencies = makeInMemoryDependencies()
+        let store = AppStore(dependencies: dependencies)
+        let recipe = store.recipes[0]
+
+        store.deleteRecipe(recipe)
+
+        XCTAssertTrue(store.recipes.isEmpty)
+        XCTAssertTrue(store.revisions(for: recipe.id).isEmpty)
+    }
+
+    func testManualPlannerSwitchClearsSelectedRecipe() {
+        let store = AppStore(dependencies: .preview())
+        XCTAssertNotNil(store.activeRecipe)
+
+        store.useManualPlanner()
+
+        XCTAssertNil(store.activeRecipe)
+        XCTAssertEqual(store.activeEntryMode, .quick)
+    }
+
     func testResearchLogPersistsVariableSessionSnapshot() {
         let dependencies = makeInMemoryDependencies()
         let store = AppStore(dependencies: dependencies)
@@ -380,7 +419,10 @@ final class AppStoreTests: XCTestCase {
             modelContainer: container,
             beanUseCase: BeanUseCase(repository: SwiftDataBeanRepository(context: context)),
             brewLogUseCase: BrewLogUseCase(repository: SwiftDataBrewLogRepository(context: context)),
-            recipeUseCase: RecipeUseCase(repository: SwiftDataRecipeRepository(context: context))
+            recipeUseCase: RecipeUseCase(repository: SwiftDataRecipeRepository(context: context)),
+            recipeRevisionUseCase: RecipeRevisionUseCase(
+                repository: SwiftDataRecipeRevisionRepository(context: context)
+            )
         )
     }
 
@@ -389,12 +431,14 @@ final class AppStoreTests: XCTestCase {
         let beanUseCase = BeanUseCase(repository: FailingBeanRepository())
         let logUseCase = BrewLogUseCase(repository: FailingBrewLogRepository())
         let recipeUseCase = RecipeUseCase(repository: FailingRecipeRepository())
+        let recipeRevisionUseCase = RecipeRevisionUseCase(repository: FailingRecipeRevisionRepository())
 
         return AppDependencies(
             modelContainer: container,
             beanUseCase: beanUseCase,
             brewLogUseCase: logUseCase,
-            recipeUseCase: recipeUseCase
+            recipeUseCase: recipeUseCase,
+            recipeRevisionUseCase: recipeRevisionUseCase
         )
     }
 }

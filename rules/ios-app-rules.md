@@ -32,6 +32,8 @@
 - 永続化エラーは握りつぶさず、呼び出し元へ伝播または UI で扱える形に変換する。
 - Domain model と SwiftData Entity の変換責務は Repository 実装に集約する。
 - Recipe の内部構造は MVP では JSON payload 保存を優先し、Entity を細かく分けすぎない。
+- Recipeの変更履歴は保存時点のJSONスナップショットとして保持し、履歴差分の算出は副作用のないDomain serviceに置く。
+- 既存RecipeEntityに履歴がないデータは現在値をv1として扱い、履歴導入後の保存で過去状態を失わない。
 
 ## Coding
 - 新規機能は最小単位で追加する。

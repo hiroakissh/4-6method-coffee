@@ -68,4 +68,27 @@ final class SwiftDataRecipeRepositoryTests: XCTestCase {
             }
         }
     }
+
+    func testRecipeRevisionRepositoryPersistsOrderedJSONSnapshots() throws {
+        let container = PersistenceStack.makeModelContainer(inMemory: true)
+        let repository = SwiftDataRecipeRevisionRepository(context: container.mainContext)
+        let first = RecipePresetFactory.fourSix()
+        var second = first
+        second.metadata.name = "Version 2"
+
+        try repository.save(
+            revision: RecipeRevision(recipeID: first.id, version: 1, recipe: first)
+        )
+        try repository.save(
+            revision: RecipeRevision(recipeID: first.id, version: 2, recipe: second)
+        )
+
+        let fetched = try repository.fetchRevisions(recipeID: first.id)
+        XCTAssertEqual(fetched.map(\.version), [1, 2])
+        XCTAssertEqual(fetched[0].recipe.metadata.name, "4-6 Method")
+        XCTAssertEqual(fetched[1].recipe.metadata.name, "Version 2")
+
+        try repository.deleteRevisions(recipeID: first.id)
+        XCTAssertTrue(try repository.fetchRevisions(recipeID: first.id).isEmpty)
+    }
 }

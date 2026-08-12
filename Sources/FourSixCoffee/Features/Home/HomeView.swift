@@ -23,7 +23,7 @@ struct HomeView: View {
                         quickBrewCard
                         researchCard
                         beanCard
-                        plannerInputCard
+                        plannerConfigurationCard
                         calculatedPlanCard
                         scheduleCard
                         recommendationPlaceholderCard
@@ -313,6 +313,53 @@ struct HomeView: View {
                         store.updateRoastLevel(roast)
                     }
                 }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var plannerConfigurationCard: some View {
+        if store.activeRecipe == nil {
+            plannerInputCard
+        } else {
+            selectedRecipeCard
+        }
+    }
+
+    private var selectedRecipeCard: some View {
+        let recipe = store.activeRecipe
+
+        return cardContainer {
+            cardHeader(systemImage: "checkmark.seal.fill", title: "選択中のレシピ")
+
+            if let recipe {
+                Text(recipe.metadata.name)
+                    .appTextStyle(.sectionTitle)
+                    .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+
+                Text("\(recipe.phases.count)フェーズ · \(recipe.phases.flatMap(\.pours).count)アクション · \(recipe.defaults.totalWaterGrams)g")
+                    .appTextStyle(.supporting)
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+                Text(recipe.metadata.sourceSummary.isEmpty ? "保存済みのレシピを抽出ガイドへ使用します。" : recipe.metadata.sourceSummary)
+                    .appTextStyle(.body)
+                    .foregroundStyle(AppDesignTokens.Colors.textSecondary)
+
+                Button {
+                    store.useManualPlanner()
+                } label: {
+                    Label("手動4-6入力へ切り替え", systemImage: "slider.horizontal.3")
+                        .appTextStyle(.itemTitle)
+                        .foregroundStyle(AppDesignTokens.Colors.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                        .background(AppDesignTokens.Colors.controlBackground)
+                        .overlay {
+                            Capsule().stroke(AppDesignTokens.Colors.controlBorder, lineWidth: 1)
+                        }
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
             }
         }
     }

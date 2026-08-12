@@ -185,12 +185,20 @@ struct PourAction: Codable, Hashable, Identifiable {
 - Home のタイムライン表示も `BrewSessionPlan.actions` を正規データとし、Researchレシピを選んだ時に旧6投固定表示へ戻らないようにする。
 - Research一覧はレシピ名・出典・タグで絞り込めるようにし、Editorでタグを編集して保存する。
 - 旧 `BrewPlan` はQuick Brew/既存ログ互換のため残すが、新規の可変レシピ表示では参照しない。
+- HomeではRecipe選択中に旧プランナー入力を常時表示せず、選択中レシピの概要を表示する。手動4-6入力へ戻る操作は明示的な切り替えとして提供する。
 
 ## Brew log session snapshot checkpoint
 - 抽出ログは既存の `BrewPlan` に加えて、保存時点の `BrewSessionPlan` を optional JSON payload として保持する。
 - Researchレシピのログは、保存時の可変アクション列・フェーズ・湯温・攪拌・見積時間をスナップショットから再表示できるようにする。
 - 旧ログや旧形式の保存データは `BrewPlan` を残したまま読み込み、optional payload がない場合も履歴を表示できるようにする。
 - レシピ本体の後編集・削除に影響されないよう、ログの表示情報は保存時スナップショットを優先する。
+
+## Recipe version history checkpoint
+- Researchレシピの保存時に、変更後の `BrewRecipe` JSON を `RecipeRevision` として版番号付きで保存する。
+- 初回保存をv1とし、内容に変更がある保存だけ版を追加する。同一内容の再保存では重複版を作らない。
+- 既存のRecipeEntityに履歴がない場合は、現在のpayloadをv1として表示し、次回変更時に旧状態をv1・変更後をv2として補完する。
+- Research一覧からレシピの履歴を開き、各版の概要と直前版との差分（基本情報、デフォルト値、フェーズ、注湯、温度、攪拌）を確認できるようにする。
+- 履歴は保存時点のJSONスナップショットであり、現在のレシピを後から編集・削除しても過去版の表示内容は変わらない。
 
 ## Immediate build order
 1. **レシピJSON設計**

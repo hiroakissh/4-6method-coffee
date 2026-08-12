@@ -6,7 +6,8 @@ enum PersistenceStack {
         let schema = Schema([
             BeanEntity.self,
             BrewLogEntity.self,
-            RecipeEntity.self
+            RecipeEntity.self,
+            RecipeRevisionEntity.self
         ])
 
         let configuration = ModelConfiguration(

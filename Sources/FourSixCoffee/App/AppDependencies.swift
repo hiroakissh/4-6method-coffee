@@ -6,17 +6,20 @@ struct AppDependencies {
     let beanUseCase: BeanUseCase
     let brewLogUseCase: BrewLogUseCase
     let recipeUseCase: RecipeUseCase
+    let recipeRevisionUseCase: RecipeRevisionUseCase
 
     init(
         modelContainer: ModelContainer,
         beanUseCase: BeanUseCase,
         brewLogUseCase: BrewLogUseCase,
-        recipeUseCase: RecipeUseCase
+        recipeUseCase: RecipeUseCase,
+        recipeRevisionUseCase: RecipeRevisionUseCase
     ) {
         self.modelContainer = modelContainer
         self.beanUseCase = beanUseCase
         self.brewLogUseCase = brewLogUseCase
         self.recipeUseCase = recipeUseCase
+        self.recipeRevisionUseCase = recipeRevisionUseCase
     }
 
     static func live() -> AppDependencies {
@@ -26,12 +29,14 @@ struct AppDependencies {
         let beanRepository = SwiftDataBeanRepository(context: context)
         let logRepository = SwiftDataBrewLogRepository(context: context)
         let recipeRepository = SwiftDataRecipeRepository(context: context)
+        let revisionRepository = SwiftDataRecipeRevisionRepository(context: context)
 
         return AppDependencies(
             modelContainer: container,
             beanUseCase: BeanUseCase(repository: beanRepository),
             brewLogUseCase: BrewLogUseCase(repository: logRepository),
-            recipeUseCase: RecipeUseCase(repository: recipeRepository)
+            recipeUseCase: RecipeUseCase(repository: recipeRepository),
+            recipeRevisionUseCase: RecipeRevisionUseCase(repository: revisionRepository)
         )
     }
 
@@ -42,12 +47,14 @@ struct AppDependencies {
         let beanRepository = SwiftDataBeanRepository(context: context)
         let logRepository = SwiftDataBrewLogRepository(context: context)
         let recipeRepository = SwiftDataRecipeRepository(context: context)
+        let revisionRepository = SwiftDataRecipeRevisionRepository(context: context)
 
         return AppDependencies(
             modelContainer: container,
             beanUseCase: BeanUseCase(repository: beanRepository),
             brewLogUseCase: BrewLogUseCase(repository: logRepository),
-            recipeUseCase: RecipeUseCase(repository: recipeRepository)
+            recipeUseCase: RecipeUseCase(repository: recipeRepository),
+            recipeRevisionUseCase: RecipeRevisionUseCase(repository: revisionRepository)
         )
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftData
 
 @MainActor
 @Observable
@@ -16,6 +17,10 @@ final class AppStore {
     private let brewLogUseCase: BrewLogUseCase
     @ObservationIgnored
     private let recipeUseCase: RecipeUseCase
+    @ObservationIgnored
+    private let recipeRevisionUseCase: RecipeRevisionUseCase
+    @ObservationIgnored
+    private let modelContainer: ModelContainer
 
     var selectedTab: AppTab = .planner
 
@@ -44,9 +49,11 @@ final class AppStore {
         enableStepHaptics: Bool = true,
         preferredUnit: String = "g"
     ) {
+        self.modelContainer = dependencies.modelContainer
         self.beanUseCase = dependencies.beanUseCase
         self.brewLogUseCase = dependencies.brewLogUseCase
         self.recipeUseCase = dependencies.recipeUseCase
+        self.recipeRevisionUseCase = dependencies.recipeRevisionUseCase
 
         self.beans = []
         self.selectedBeanID = nil
@@ -182,7 +189,9 @@ final class AppStore {
     @discardableResult
     func saveRecipe(_ recipe: BrewRecipe) -> Bool {
         do {
+            let previousRecipe = recipes.first(where: { $0.id == recipe.id })
             try recipeUseCase.save(recipe: recipe)
+            try recipeRevisionUseCase.recordSave(recipe: recipe, previousRecipe: previousRecipe)
             recipes.removeAll { $0.id == recipe.id }
             recipes.insert(recipe, at: 0)
             lastErrorMessage = nil
@@ -196,6 +205,7 @@ final class AppStore {
     func deleteRecipe(_ recipe: BrewRecipe) {
         do {
             try recipeUseCase.deleteRecipes(ids: [recipe.id])
+            try recipeRevisionUseCase.deleteRevisions(recipeID: recipe.id)
             recipes.removeAll { $0.id == recipe.id }
             if activeRecipeID == recipe.id {
                 activeRecipeID = recipes.first?.id
@@ -204,6 +214,15 @@ final class AppStore {
             lastErrorMessage = nil
         } catch {
             store(error: error)
+        }
+    }
+
+    func revisions(for recipeID: UUID) -> [RecipeRevision] {
+        do {
+            return try recipeRevisionUseCase.fetchRevisions(recipeID: recipeID)
+        } catch {
+            store(error: error)
+            return []
         }
     }
 
@@ -235,6 +254,11 @@ final class AppStore {
             grindSize: recipe.defaults.grindSize
         )
         selectedTab = .assistant
+    }
+
+    func useManualPlanner() {
+        activeRecipeID = nil
+        activeEntryMode = .quick
     }
 
     func addBean(
@@ -356,6 +380,7 @@ final class AppStore {
             beans = try beanUseCase.fetchBeans()
             brewLogs = try brewLogUseCase.fetchBrewLogs()
             recipes = try recipeUseCase.seedFourSixIfNeeded()
+            try recipeRevisionUseCase.ensureInitialRevisions(for: recipes)
             activeRecipeID = recipes.first?.id
             activeEntryMode = .quick
 

@@ -5,6 +5,7 @@ struct ResearchView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingNewEditor = false
     @State private var editingRecipe: BrewRecipe?
+    @State private var historyRecipe: BrewRecipe?
     @State private var searchText = ""
 
     var body: some View {
@@ -47,6 +48,9 @@ struct ResearchView: View {
             }
             .sheet(item: $editingRecipe) { recipe in
                 RecipeEditorView(recipe: recipe)
+            }
+            .sheet(item: $historyRecipe) { recipe in
+                RecipeHistoryView(recipe: recipe)
             }
         }
         .presentationDetents([.large])
@@ -139,6 +143,9 @@ struct ResearchView: View {
                 .buttonStyle(.bordered)
 
                 Menu {
+                    Button("履歴") {
+                        historyRecipe = recipe
+                    }
                     Button("複製") {
                         _ = store.duplicateRecipe(recipe)
                     }
